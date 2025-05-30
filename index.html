@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StorageManager Test</title>
+</head>
+<body>
+    <h1>StorageManager Test</h1>
+    <button onclick="testStorageManager()">Run Tests</button>
+    <button onclick="demonstrateUsage()">Show Usage Examples</button>
+    <button onclick="cleanupTestData()">Cleanup Test Data</button>
+    
+    <script type="module">
+        import StorageManager from './js/utils/StorageManager.js';
+        window.StorageManager = StorageManager;
+    </script>
+    <script src="./js/utils/StorageManager.test.js"></script>
+</body>
+</html>
