@@ -1,19 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Buddy - StorageManager Test</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <h1>Book Buddy - StorageManager Test</h1>
-    <button onclick="testStorageManager()">Run Tests</button>
-    <button onclick="demonstrateUsage()">Show Usage Examples</button>
-    <button onclick="cleanupTestData()">Cleanup Test Data</button>
+    <header>
+        <h1>📚 Book Buddy - StorageManager Test</h1>
+    </header>
+    
+    <main>
+        <section class="test-controls">
+            <button onclick="testStorageManager()" class="btn btn-primary">Run Tests</button>
+            <button onclick="demonstrateUsage()" class="btn btn-secondary">Show Usage Examples</button>
+            <button onclick="cleanupTestData()" class="btn btn-danger">Cleanup Test Data</button>
+        </section>
+        
+        <section class="status">
+            <p id="status-message">Hello Book Buddy! 👋</p>
+        </section>
+    </main>
     
     <script type="module" src="js/app.js"></script>
     <script type="module">
         import StorageManager from './js/utils/StorageManager.js';
         window.StorageManager = StorageManager;
     </script>
-    <script src="./js/utils/StorageManager.test.js"></script>
+    <script src="js/utils/StorageManager.test.js"></script>
 </body>
 </html>

@@ -8,6 +8,12 @@ const storage = new StorageManager('book-buddy');
 console.log('📚 Book Buddy initialized!');
 console.log('Storage available:', storage.isAvailable);
 
+// Update status message
+const statusElement = document.getElementById('status-message');
+if (statusElement) {
+    statusElement.textContent = `Hello Book Buddy! Storage available: ${storage.isAvailable ? '✅' : '❌'}`;
+}
+
 // Example usage (replace bookArray with actual data later)
 const sampleBooks = [
     { id: 1, title: 'Sample Book', author: 'Test Author' }
