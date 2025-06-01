@@ -3,8 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Buddy - Component 7: Integration Testing</title>
+    <title>Book Buddy - Modular Architecture</title>
+    
+    <!-- Enhanced CSS with component-specific styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components/navigation.css">
+    <link rel="stylesheet" href="css/components/book-cards.css">
+    <link rel="stylesheet" href="css/components/reading-interface.css">
+    <link rel="stylesheet" href="css/components/modals.css">
+    
     <style>
+        /* Enhanced main styles for modular architecture */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --border-radius: 0.5rem;
+            --transition: all 0.2s ease-in-out;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -12,1877 +39,1166 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
         }
 
-        .integration-container {
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation Styles */
+        .main-nav {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #f8f9fa;
-        }
-
-        .header h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #6c757d;
-            font-size: 1.1em;
-        }
-
-        .test-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .test-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 25px;
-            border-left: 5px solid #007bff;
-        }
-
-        .test-section.success {
-            border-left-color: #28a745;
-            background: #d4edda;
-        }
-
-        .test-section.error {
-            border-left-color: #dc3545;
-            background: #f8d7da;
-        }
-
-        .test-section.warning {
-            border-left-color: #ffc107;
-            background: #fff3cd;
-        }
-
-        .test-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        .test-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .status-pass {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-fail {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .test-details {
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: #495057;
-        }
-
-        .test-actions {
-            margin-top: 15px;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
         }
 
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85em;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        .nav-brand h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            width: 100%;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .view-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .view-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.875rem;
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, #007bff, #0056b3);
+            background: var(--primary-color);
             color: white;
         }
 
-        .btn-success {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            color: white;
-        }
-
-        .btn-danger {
-            background: linear-gradient(45deg, #dc3545, #c82333);
-            color: white;
-        }
-
-        .btn-warning {
-            background: linear-gradient(45deg, #ffc107, #e0a800);
-            color: #212529;
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-outline {
             background: transparent;
-            border: 2px solid #007bff;
-            color: #007bff;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
         }
 
-        .integration-flow {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .flow-step {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .flow-step.active {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-        }
-
-        .flow-step.complete {
-            background: #e8f5e8;
-            border-left: 4px solid #4caf50;
-        }
-
-        .flow-step.error {
-            background: #ffebee;
-            border-left: 4px solid #f44336;
-        }
-
-        .step-number {
-            width: 30px;
-            height: 30px;
-            background: #007bff;
+        .btn-outline:hover {
+            background: var(--primary-color);
             color: white;
-            border-radius: 50%;
+        }
+
+        /* Library Stats */
+        .library-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-background);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Search and Filters */
+        .search-bar {
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .book-filters {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 15px;
-            font-size: 0.9em;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
 
-        .step-content {
-            flex: 1;
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--card-background);
+            color: var(--text-secondary);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
         }
 
-        .step-title {
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Books Grid */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .book-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .book-title {
+            font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
         }
 
-        .step-description {
-            color: #6c757d;
-            font-size: 0.9em;
+        .book-meta {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
         }
 
-        .step-status {
-            margin-left: 15px;
-            font-size: 1.2em;
-        }
-
-        .console-output {
-            background: #1a1a1a;
-            color: #00ff00;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            margin-top: 20px;
+        .book-progress {
+            margin-bottom: 1rem;
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e9ecef;
+            background: var(--border-color);
             border-radius: 4px;
             overflow: hidden;
-            margin: 20px 0;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(45deg, #28a745, #20c997);
-            width: 0%;
-            transition: width 0.5s ease;
+            background: linear-gradient(90deg, var(--success-color), #22d3ee);
+            transition: width 0.3s ease;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 25px 0;
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
         }
 
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+        .book-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Empty State */
+        .empty-state {
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
         }
 
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #2c3e50;
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
         }
 
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9em;
-            margin-top: 5px;
+        /* Loading States */
+        .loading {
+            position: relative;
+            overflow: hidden;
         }
 
-        .final-checklist {
-            background: #e8f5e8;
-            border: 2px solid #28a745;
-            border-radius: 12px;
-            padding: 25px;
-            margin-top: 30px;
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: loading 1.5s infinite;
         }
 
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 6px;
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Modal Styles */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
             transition: background 0.3s ease;
+            pointer-events: none;
         }
 
-        .checklist-item:hover {
-            background: rgba(40, 167, 69, 0.1);
+        .modal-backdrop.show {
+            background: rgba(0, 0, 0, 0.5);
+            pointer-events: all;
         }
 
-        .checklist-checkbox {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #28a745;
-            border-radius: 4px;
-            margin-right: 12px;
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 400px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .modal.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            color: #28a745;
-            font-weight: bold;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .integration-container {
-                margin: 10px;
-                padding: 20px;
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--primary-color);
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: var(--shadow-md);
             }
 
-            .test-grid {
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .view-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .view-actions {
+                width: 100%;
+            }
+
+            .books-grid {
                 grid-template-columns: 1fr;
-                gap: 15px;
             }
 
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
+            .book-filters {
+                justify-content: center;
+            }
+
+            .modal {
+                min-width: 0;
+                margin: 1rem;
             }
         }
+
+        /* Component-specific styles will be loaded from separate CSS files */
     </style>
 </head>
 <body>
-    <div class="integration-container">
-        <div class="header">
-            <h1>🧪 Component 7: Week 1 Integration & Testing</h1>
-            <p>Comprehensive testing and validation of all Week 1 components working together</p>
-            <div class="progress-bar">
-                <div class="progress-fill" id="overall-progress"></div>
-            </div>
-        </div>
-
-        <!-- Integration Flow -->
-        <div class="integration-flow">
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">🔄 Integration Testing Flow</h2>
-            <div id="integration-steps">
-                <div class="flow-step" id="step-1">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <div class="step-title">Storage System Verification</div>
-                        <div class="step-description">Test StorageManager with various data types and error conditions</div>
+    <div class="app-container" id="app">
+        <!-- Navigation will be inserted by NavigationController -->
+        
+        <main class="main-content">
+            <!-- Library View -->
+            <div class="view active" id="library-view">
+                <div class="view-header">
+                    <h2 class="view-title">📚 My Library</h2>
+                    <div class="view-actions">
+                        <button class="btn btn-primary" id="upload-book-btn">
+                            📤 Upload Book
+                        </button>
+                        <button class="btn btn-outline" id="search-online-btn">
+                            🔍 Search Online
+                        </button>
                     </div>
-                    <div class="step-status">⏳</div>
                 </div>
+                
+                <div class="library-stats" id="library-stats">
+                    <!-- Stats will be populated dynamically -->
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" 
+                           id="library-search" 
+                           placeholder="Search your library..." 
+                           class="search-input">
+                </div>
+                
+                <div class="book-filters">
+                    <button class="filter-btn active" data-filter="all">All Books</button>
+                    <button class="filter-btn" data-filter="unread">Unread</button>
+                    <button class="filter-btn" data-filter="reading">Currently Reading</button>
+                    <button class="filter-btn" data-filter="finished">Finished</button>
+                </div>
+                
+                <div class="books-grid" id="books-grid">
+                    <!-- Books will be populated dynamically -->
+                </div>
+            </div>
 
-                <div class="flow-step" id="step-2">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <div class="step-title">Book Model Integration</div>
-                        <div class="step-description">Validate Book class with real data and edge cases</div>
+            <!-- Search View -->
+            <div class="view" id="search-view">
+                <div class="view-header">
+                    <h2 class="view-title">🔍 Search Books</h2>
+                </div>
+                
+                <div class="search-section">
+                    <div class="search-bar">
+                        <input type="text" 
+                               id="online-search" 
+                               placeholder="Search for books online..." 
+                               class="search-input">
                     </div>
-                    <div class="step-status">⏳</div>
-                </div>
-
-                <div class="flow-step" id="step-3">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <div class="step-title">File Upload Processing</div>
-                        <div class="step-description">Test file upload with various file types and sizes</div>
+                    
+                    <div class="search-filters">
+                        <select id="search-source" class="search-input" style="width: auto; margin-right: 1rem;">
+                            <option value="all">All Sources</option>
+                            <option value="google">Google Books</option>
+                            <option value="openlibrary">Open Library</option>
+                        </select>
+                        <button class="btn btn-primary" id="search-btn">Search</button>
                     </div>
-                    <div class="step-status">⏳</div>
-                </div>
-
-                <div class="flow-step" id="step-4">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <div class="step-title">Library Management</div>
-                        <div class="step-description">Test book addition, removal, and library statistics</div>
+                    
+                    <div id="search-results" class="books-grid" style="margin-top: 2rem;">
+                        <!-- Search results will be populated here -->
                     </div>
-                    <div class="step-status">⏳</div>
                 </div>
+            </div>
 
-                <div class="flow-step" id="step-5">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <div class="step-title">Reading Interface</div>
-                        <div class="step-description">Validate reading progress, position tracking, and UI</div>
+            <!-- Reading View -->
+            <div class="view" id="reading-view">
+                <div class="view-header">
+                    <h2 class="view-title">📖 Reading</h2>
+                </div>
+                <div id="reading-content">
+                    <div class="empty-state">
+                        <h3>No book currently open</h3>
+                        <p>Select a book from your library to start reading</p>
                     </div>
-                    <div class="step-status">⏳</div>
-                </div>
-
-                <div class="flow-step" id="step-6">
-                    <div class="step-number">6</div>
-                    <div class="step-content">
-                        <div class="step-title">UI Framework Integration</div>
-                        <div class="step-description">Test navigation, modals, responsive design, and data flow</div>
-                    </div>
-                    <div class="step-status">⏳</div>
-                </div>
-
-                <div class="flow-step" id="step-7">
-                    <div class="step-number">7</div>
-                    <div class="step-content">
-                        <div class="step-title">End-to-End User Journey</div>
-                        <div class="step-description">Complete workflow: Upload → Store → Display → Read</div>
-                    </div>
-                    <div class="step-status">⏳</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Test Sections Grid -->
-        <div class="test-grid">
-            <div class="test-section" id="storage-test">
-                <h3 class="test-title">
-                    💾 StorageManager Tests
-                    <span class="test-status status-pending" id="storage-status">PENDING</span>
-                </h3>
-                <div class="test-details" id="storage-details">
-                    Testing localStorage functionality, error handling, and data persistence...
-                </div>
-                <div class="test-actions">
-                    <button class="btn btn-primary" onclick="runStorageTests()">🧪 Run Tests</button>
-                    <button class="btn btn-outline" onclick="viewStorageData()">📊 View Data</button>
                 </div>
             </div>
 
-            <div class="test-section" id="book-test">
-                <h3 class="test-title">
-                    📖 Book Model Tests
-                    <span class="test-status status-pending" id="book-status">PENDING</span>
-                </h3>
-                <div class="test-details" id="book-details">
-                    Testing Book class instantiation, progress tracking, and data serialization...
+            <!-- Statistics View -->
+            <div class="view" id="statistics-view">
+                <div class="view-header">
+                    <h2 class="view-title">📊 Reading Statistics</h2>
                 </div>
-                <div class="test-actions">
-                    <button class="btn btn-primary" onclick="runBookTests()">🧪 Run Tests</button>
-                    <button class="btn btn-outline" onclick="createSampleBook()">📚 Sample Book</button>
+                <div id="statistics-content">
+                    <!-- Statistics will be populated dynamically -->
                 </div>
             </div>
 
-            <div class="test-section" id="upload-test">
-                <h3 class="test-title">
-                    📤 File Upload Tests
-                    <span class="test-status status-pending" id="upload-status">PENDING</span>
-                </h3>
-                <div class="test-details" id="upload-details">
-                    Testing file validation, processing, and content extraction...
+            <!-- Settings View -->
+            <div class="view" id="settings-view">
+                <div class="view-header">
+                    <h2 class="view-title">⚙️ Settings</h2>
                 </div>
-                <div class="test-actions">
-                    <button class="btn btn-primary" onclick="runUploadTests()">🧪 Run Tests</button>
-                    <button class="btn btn-success" onclick="simulateFileUpload()">📁 Simulate Upload</button>
+                <div id="settings-content">
+                    <!-- Settings will be populated dynamically -->
                 </div>
             </div>
-
-            <div class="test-section" id="library-test">
-                <h3 class="test-title">
-                    📚 Library Manager Tests
-                    <span class="test-status status-pending" id="library-status">PENDING</span>
-                </h3>
-                <div class="test-details" id="library-details">
-                    Testing book management, statistics calculation, and data persistence...
-                </div>
-                <div class="test-actions">
-                    <button class="btn btn-primary" onclick="runLibraryTests()">🧪 Run Tests</button>
-                    <button class="btn btn-outline" onclick="populateLibrary()">📚 Add Sample Books</button>
-                </div>
-            </div>
-
-            <div class="test-section" id="reader-test">
-                <h3 class="test-title">
-                    📖 Reading Interface Tests
-                    <span class="test-status status-pending" id="reader-status">PENDING</span>
-                </h3>
-                <div class="test-details" id="reader-details">
-                    Testing reading progress, position tracking, and interface responsiveness...
-                </div>
-                <div class="test-actions">
-                    <button class="btn btn-primary" onclick="runReaderTests()">🧪 Run Tests</button>
-                    <button class="btn btn-outline" onclick="simulateReading()">📖 Simulate Reading</button>
-                </div>
-            </div>
-
-            <div class="test-section" id="ui-test">
-                <h3 class="test-title">
-                    🎨 UI Framework Tests
-                    <span class="test-status status-pending" id="ui-status">PENDING</span>
-                </h3>
-                <div class="test-details" id="ui-details">
-                    Testing navigation, modals, responsive design, and user interactions...
-                </div>
-                <div class="test-actions">
-                    <button class="btn btn-primary" onclick="runUITests()">🧪 Run Tests</button>
-                    <button class="btn btn-outline" onclick="testResponsive()">📱 Test Responsive</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Test Statistics -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="tests-passed">0</div>
-                <div class="stat-label">Tests Passed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="tests-failed">0</div>
-                <div class="stat-label">Tests Failed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="coverage-percent">0%</div>
-                <div class="stat-label">Coverage</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="integration-score">0/7</div>
-                <div class="stat-label">Integration Score</div>
-            </div>
-        </div>
-
-        <!-- Main Action Buttons -->
-        <div style="text-align: center; margin: 30px 0;">
-            <button class="btn btn-success" onclick="runFullIntegrationTest()" style="font-size: 1.1em; padding: 15px 30px;">
-                🚀 Run Full Integration Test
-            </button>
-            <button class="btn btn-warning" onclick="runEndToEndTest()" style="font-size: 1.1em; padding: 15px 30px;">
-                🔄 End-to-End Journey Test
-            </button>
-            <button class="btn btn-danger" onclick="resetAllTests()" style="padding: 15px 30px;">
-                🧹 Reset All Tests
-            </button>
-        </div>
-
-        <!-- Week 1 Completion Checklist -->
-        <div class="final-checklist">
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">✅ Week 1 Completion Checklist</h2>
-            <div id="completion-checklist">
-                <div class="checklist-item" id="checklist-1">
-                    <div class="checklist-checkbox" id="check-1">⏳</div>
-                    <div>All 6 components tested individually and working correctly</div>
-                </div>
-                <div class="checklist-item" id="checklist-2">
-                    <div class="checklist-checkbox" id="check-2">⏳</div>
-                    <div>Components integrate seamlessly with proper data flow</div>
-                </div>
-                <div class="checklist-item" id="checklist-3">
-                    <div class="checklist-checkbox" id="check-3">⏳</div>
-                    <div>Error handling works across all component boundaries</div>
-                </div>
-                <div class="checklist-item" id="checklist-4">
-                    <div class="checklist-checkbox" id="check-4">⏳</div>
-                    <div>End-to-end user journey completes successfully</div>
-                </div>
-                <div class="checklist-item" id="checklist-5">
-                    <div class="checklist-checkbox" id="check-5">⏳</div>
-                    <div>Performance is acceptable with larger datasets</div>
-                </div>
-                <div class="checklist-item" id="checklist-6">
-                    <div class="checklist-checkbox" id="check-6">⏳</div>
-                    <div>Mobile responsiveness confirmed across devices</div>
-                </div>
-                <div class="checklist-item" id="checklist-7">
-                    <div class="checklist-checkbox" id="check-7">⏳</div>
-                    <div>Ready for Week 2 modular refactoring</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Console Output -->
-        <div class="console-output" id="console-output">
-            [SYSTEM] Component 7 Integration Testing Suite Initialized
-            [READY] All test suites loaded and ready to execute
-            [INFO] Click "Run Full Integration Test" to begin comprehensive testing
-        </div>
+        </main>
     </div>
 
-    <script>
-        // === COMPONENT CLASSES (Simplified for Integration Testing) ===
+    <!-- Load the modular JavaScript application -->
+    <script type="module">
+        // Enhanced Book Buddy - Modular Architecture Implementation
         
-        class StorageManager {
-            constructor(appPrefix = 'book-buddy') {
-                this.prefix = appPrefix;
-                this.isAvailable = this._testStorageAvailability();
-            }
+        // Import all required modules
+        import StorageManager from './js/modules/storage/StorageManager.js';
+        import Book from './js/modules/models/Book.js';
+        import Library from './js/modules/models/Library.js';
+        import FileProcessor from './js/modules/utils/FileProcessor.js';
+        import NavigationController from './js/modules/ui/NavigationController.js';
+        import ModalManager from './js/modules/ui/ModalManager.js';
+        import BookListRenderer from './js/modules/ui/BookListRenderer.js';
+        import ReadingInterface from './js/modules/ui/ReadingInterface.js';
+        import { eventBus, EVENTS } from './js/modules/utils/EventBus.js';
+        import { DOMUtils, DateUtils, StringUtils } from './js/modules/utils/Helpers.js';
 
-            save(key, data) {
-                try {
-                    if (!this.isAvailable) return this._createResult(false, 'localStorage not available');
-                    const prefixedKey = this._getPrefixedKey(key);
-                    const jsonData = JSON.stringify(data);
-                    localStorage.setItem(prefixedKey, jsonData);
-                    return this._createResult(true, 'Data saved successfully', data);
-                } catch (error) {
-                    return this._createResult(false, `Save failed: ${error.message}`);
-                }
-            }
-
-            load(key, defaultValue = null) {
-                try {
-                    if (!this.isAvailable) return this._createResult(true, 'localStorage not available', defaultValue);
-                    const prefixedKey = this._getPrefixedKey(key);
-                    const rawData = localStorage.getItem(prefixedKey);
-                    if (rawData === null) return this._createResult(true, 'Key not found', defaultValue);
-                    const parsedData = JSON.parse(rawData);
-                    return this._createResult(true, 'Data loaded successfully', parsedData);
-                } catch (error) {
-                    return this._createResult(false, `Load failed: ${error.message}`, defaultValue);
-                }
-            }
-
-            clear() {
-                try {
-                    if (!this.isAvailable) return this._createResult(false, 'localStorage not available');
-                    const keysToRemove = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key && key.startsWith(this.prefix + '_')) {
-                            keysToRemove.push(key);
-                        }
-                    }
-                    keysToRemove.forEach(key => localStorage.removeItem(key));
-                    return this._createResult(true, `Cleared ${keysToRemove.length} keys`);
-                } catch (error) {
-                    return this._createResult(false, `Failed to clear storage: ${error.message}`);
-                }
-            }
-
-            _getPrefixedKey(key) { return `${this.prefix}_${key}`; }
-            _createResult(success, message, data = null) { return { success, message, data }; }
-            _testStorageAvailability() {
-                try {
-                    const testKey = '__storage_test__';
-                    localStorage.setItem(testKey, 'test');
-                    localStorage.removeItem(testKey);
-                    return true;
-                } catch (error) {
-                    return false;
-                }
-            }
-        }
-
-        class Book {
-            constructor(data) {
-                this.id = data.id || this.generateId();
-                this.title = data.title || 'Untitled';
-                this.filename = data.filename || '';
-                this.content = data.content || '';
-                this.wordCount = data.wordCount || this.calculateWordCount();
-                this.uploadDate = data.uploadDate || new Date().toISOString();
-                this.lastRead = data.lastRead || null;
-                this.currentPosition = data.currentPosition || 0;
-                this.readingTime = data.readingTime || 0;
-            }
-
-            generateId() {
-                return `book_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-            }
-
-            calculateWordCount() {
-                if (!this.content) return 0;
-                return this.content.trim().split(/\s+/).filter(word => word.length > 0).length;
-            }
-
-            getProgress() {
-                if (!this.content || this.content.length === 0) return 0;
-                return Math.max(0, Math.min(1, this.currentPosition / this.content.length));
-            }
-
-            updatePosition(position) {
-                this.currentPosition = Math.max(0, Math.min(this.content.length, position));
-                this.lastRead = new Date().toISOString();
-            }
-
-            toJSON() {
-                return {
-                    id: this.id, title: this.title, filename: this.filename, content: this.content,
-                    wordCount: this.wordCount, uploadDate: this.uploadDate, lastRead: this.lastRead,
-                    currentPosition: this.currentPosition, readingTime: this.readingTime
-                };
-            }
-        }
-
-        class BookManager {
-            constructor(storageManager) {
-                this.storage = storageManager;
-                this.books = new Map();
-                this.loadBooks();
-            }
-
-            addBook(bookData) {
-                try {
-                    const book = new Book(bookData);
-                    const saveResult = this.storage.save(`book_${book.id}`, book.toJSON());
-                    if (!saveResult.success) return { success: false, message: saveResult.message };
-                    this.books.set(book.id, book);
-                    return { success: true, book: book };
-                } catch (error) {
-                    return { success: false, message: error.message };
-                }
-            }
-
-            getAllBooks() {
-                return Array.from(this.books.values());
-            }
-
-            getBook(bookId) {
-                return this.books.get(bookId);
-            }
-
-            loadBooks() {
-                try {
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key && key.startsWith('book-buddy_book_')) {
-                            const bookKey = key.replace('book-buddy_', '');
-                            const result = this.storage.load(bookKey);
-                            if (result.success && result.data) {
-                                const book = new Book(result.data);
-                                this.books.set(book.id, book);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error loading books:', error);
-                }
-            }
-
-            getLibraryStats() {
-                const books = this.getAllBooks();
-                const totalBooks = books.length;
-                const totalWords = books.reduce((sum, book) => sum + book.wordCount, 0);
-                const avgProgress = totalBooks > 0 
-                    ? books.reduce((sum, book) => sum + book.getProgress(), 0) / totalBooks
-                    : 0;
-                const booksRead = books.filter(book => book.getProgress() >= 1).length;
-                
-                return { totalBooks, totalWords, avgProgress, booksRead };
-            }
-        }
-
-        // === INTEGRATION TESTING FRAMEWORK ===
-        
-        class IntegrationTester {
+        // Main Application Class - Coordinates all modules
+        class BookBuddyApp {
             constructor() {
-                this.testResults = {};
-                this.totalTests = 0;
-                this.passedTests = 0;
-                this.failedTests = 0;
-                this.currentStep = 0;
-                this.storage = new StorageManager('book-buddy-test');
-                this.bookManager = new BookManager(this.storage);
-            }
-
-            log(message, type = 'info') {
-                const timestamp = new Date().toLocaleTimeString();
-                const prefix = type === 'success' ? '[PASS]' : type === 'error' ? '[FAIL]' : type === 'warning' ? '[WARN]' : '[INFO]';
-                const output = `${timestamp} ${prefix} ${message}\n`;
+                this.storage = new StorageManager('book-buddy');
+                this.library = new Library(this.storage);
+                this.fileProcessor = new FileProcessor();
+                this.navigationController = new NavigationController();
+                this.modalManager = new ModalManager();
+                this.bookListRenderer = new BookListRenderer();
+                this.readingInterface = new ReadingInterface();
                 
-                const console = document.getElementById('console-output');
-                console.textContent += output;
-                console.scrollTop = console.scrollHeight;
-            }
-
-            updateStep(stepNumber, status) {
-                const step = document.getElementById(`step-${stepNumber}`);
-                const statusElement = step.querySelector('.step-status');
-                
-                step.classList.remove('active', 'complete', 'error');
-                
-                if (status === 'active') {
-                    step.classList.add('active');
-                    statusElement.textContent = '🔄';
-                } else if (status === 'complete') {
-                    step.classList.add('complete');
-                    statusElement.textContent = '✅';
-                } else if (status === 'error') {
-                    step.classList.add('error');
-                    statusElement.textContent = '❌';
-                }
-            }
-
-            updateTestSection(sectionId, status, details) {
-                const section = document.getElementById(`${sectionId}-test`);
-                const statusSpan = document.getElementById(`${sectionId}-status`);
-                const detailsDiv = document.getElementById(`${sectionId}-details`);
-                
-                section.classList.remove('success', 'error', 'warning');
-                statusSpan.classList.remove('status-pass', 'status-fail', 'status-pending');
-                
-                if (status === 'pass') {
-                    section.classList.add('success');
-                    statusSpan.classList.add('status-pass');
-                    statusSpan.textContent = 'PASS';
-                } else if (status === 'fail') {
-                    section.classList.add('error');
-                    statusSpan.classList.add('status-fail');
-                    statusSpan.textContent = 'FAIL';
-                } else {
-                    section.classList.add('warning');
-                    statusSpan.classList.add('status-pending');
-                    statusSpan.textContent = 'PENDING';
-                }
-                
-                detailsDiv.textContent = details;
-            }
-
-            updateStats() {
-                document.getElementById('tests-passed').textContent = this.passedTests;
-                document.getElementById('tests-failed').textContent = this.failedTests;
-                document.getElementById('coverage-percent').textContent = 
-                    Math.round((this.passedTests / Math.max(this.totalTests, 1)) * 100) + '%';
-                document.getElementById('integration-score').textContent = `${this.currentStep}/7`;
-                
-                const progress = (this.currentStep / 7) * 100;
-                document.getElementById('overall-progress').style.width = progress + '%';
-            }
-
-            updateChecklist(itemNumber, status) {
-                const checkbox = document.getElementById(`check-${itemNumber}`);
-                if (status === 'complete') {
-                    checkbox.textContent = '✅';
-                    checkbox.style.background = '#d4edda';
-                } else if (status === 'error') {
-                    checkbox.textContent = '❌';
-                    checkbox.style.background = '#f8d7da';
-                } else {
-                    checkbox.textContent = '⏳';
-                }
-            }
-
-            async runTest(testName, testFunction) {
-                this.totalTests++;
-                try {
-                    this.log(`Running ${testName}...`, 'info');
-                    const result = await testFunction();
-                    if (result.success) {
-                        this.passedTests++;
-                        this.log(`${testName} - PASSED: ${result.message}`, 'success');
-                        return true;
-                    } else {
-                        this.failedTests++;
-                        this.log(`${testName} - FAILED: ${result.message}`, 'error');
-                        return false;
+                this.currentBook = null;
+                this.appState = {
+                    initialized: false,
+                    currentView: 'library',
+                    theme: 'light',
+                    settings: {
+                        readingSpeed: 250,
+                        autoSave: true,
+                        notifications: true
                     }
-                } catch (error) {
-                    this.failedTests++;
-                    this.log(`${testName} - ERROR: ${error.message}`, 'error');
-                    return false;
-                }
-            }
-
-            // === INDIVIDUAL COMPONENT TESTS ===
-
-            async testStorageManager() {
-                this.updateStep(1, 'active');
-                this.log('Starting StorageManager integration tests...', 'info');
-
-                const tests = [
-                    () => this.testStorageSaveLoad(),
-                    () => this.testStorageErrorHandling(),
-                    () => this.testStorageComplexData(),
-                    () => this.testStorageQuota()
-                ];
-
-                let allPassed = true;
-                for (const test of tests) {
-                    const passed = await this.runTest('StorageManager', test);
-                    if (!passed) allPassed = false;
-                }
-
-                this.updateStep(1, allPassed ? 'complete' : 'error');
-                this.updateTestSection('storage', allPassed ? 'pass' : 'fail', 
-                    allPassed ? 'All storage tests passed successfully' : 'Some storage tests failed');
-                
-                if (allPassed) this.currentStep = Math.max(this.currentStep, 1);
-                return allPassed;
-            }
-
-            testStorageSaveLoad() {
-                const testData = { test: 'integration', timestamp: Date.now() };
-                const saveResult = this.storage.save('integration_test', testData);
-                if (!saveResult.success) return { success: false, message: 'Save failed' };
-                
-                const loadResult = this.storage.load('integration_test');
-                if (!loadResult.success || loadResult.data.test !== 'integration') {
-                    return { success: false, message: 'Load failed or data corrupted' };
-                }
-                
-                return { success: true, message: 'Save/Load working correctly' };
-            }
-
-            testStorageErrorHandling() {
-                // Test loading non-existent key
-                const result = this.storage.load('non_existent_key', 'default');
-                if (!result.success || result.data !== 'default') {
-                    return { success: false, message: 'Default value handling failed' };
-                }
-                
-                return { success: true, message: 'Error handling working correctly' };
-            }
-
-            testStorageComplexData() {
-                const complexData = {
-                    books: [
-                        { id: 1, title: 'Test Book 1', chapters: ['Ch1', 'Ch2'] },
-                        { id: 2, title: 'Test Book 2', chapters: ['Ch1', 'Ch2', 'Ch3'] }
-                    ],
-                    settings: { theme: 'dark', fontSize: 16 },
-                    metadata: { version: '1.0', lastUpdate: new Date().toISOString() }
                 };
                 
-                const saveResult = this.storage.save('complex_data', complexData);
-                if (!saveResult.success) return { success: false, message: 'Complex data save failed' };
-                
-                const loadResult = this.storage.load('complex_data');
-                if (!loadResult.success || loadResult.data.books.length !== 2) {
-                    return { success: false, message: 'Complex data load failed' };
-                }
-                
-                return { success: true, message: 'Complex data handling working correctly' };
+                this.initialize();
             }
 
-            testStorageQuota() {
-                // Test storage availability
-                if (!this.storage.isAvailable) {
-                    return { success: false, message: 'Storage not available' };
-                }
-                
-                return { success: true, message: 'Storage quota and availability checks working' };
-            }
-
-            async testBookModel() {
-                this.updateStep(2, 'active');
-                this.log('Starting Book Model integration tests...', 'info');
-
-                const tests = [
-                    () => this.testBookCreation(),
-                    () => this.testBookProgress(),
-                    () => this.testBookSerialization(),
-                    () => this.testBookEdgeCases()
-                ];
-
-                let allPassed = true;
-                for (const test of tests) {
-                    const passed = await this.runTest('Book Model', test);
-                    if (!passed) allPassed = false;
-                }
-
-                this.updateStep(2, allPassed ? 'complete' : 'error');
-                this.updateTestSection('book', allPassed ? 'pass' : 'fail',
-                    allPassed ? 'All book model tests passed' : 'Some book model tests failed');
-                
-                if (allPassed) this.currentStep = Math.max(this.currentStep, 2);
-                return allPassed;
-            }
-
-            testBookCreation() {
-                const bookData = {
-                    title: 'Integration Test Book',
-                    filename: 'test.txt',
-                    content: 'This is a test book content for integration testing. It has multiple sentences and paragraphs.'
-                };
-                
-                const book = new Book(bookData);
-                
-                if (book.title !== bookData.title) {
-                    return { success: false, message: 'Book title not set correctly' };
-                }
-                
-                if (book.wordCount <= 0) {
-                    return { success: false, message: 'Word count calculation failed' };
-                }
-                
-                if (!book.id || !book.uploadDate) {
-                    return { success: false, message: 'Book ID or upload date not generated' };
-                }
-                
-                return { success: true, message: 'Book creation working correctly' };
-            }
-
-            testBookProgress() {
-                const book = new Book({
-                    title: 'Progress Test Book',
-                    content: 'This is test content for progress tracking.'
-                });
-                
-                // Test initial progress
-                if (book.getProgress() !== 0) {
-                    return { success: false, message: 'Initial progress should be 0' };
-                }
-                
-                // Test progress update
-                book.updatePosition(book.content.length / 2);
-                const progress = book.getProgress();
-                if (progress < 0.4 || progress > 0.6) {
-                    return { success: false, message: 'Progress calculation incorrect' };
-                }
-                
-                // Test completion
-                book.updatePosition(book.content.length);
-                if (book.getProgress() !== 1) {
-                    return { success: false, message: 'Completion progress should be 1' };
-                }
-                
-                return { success: true, message: 'Progress tracking working correctly' };
-            }
-
-            testBookSerialization() {
-                const original = new Book({
-                    title: 'Serialization Test',
-                    content: 'Test content for serialization.'
-                });
-                
-                const serialized = original.toJSON();
-                const restored = new Book(serialized);
-                
-                if (restored.title !== original.title || restored.content !== original.content) {
-                    return { success: false, message: 'Serialization/deserialization failed' };
-                }
-                
-                return { success: true, message: 'Book serialization working correctly' };
-            }
-
-            testBookEdgeCases() {
-                // Test empty content
-                const emptyBook = new Book({ title: 'Empty Book', content: '' });
-                if (emptyBook.wordCount !== 0 || emptyBook.getProgress() !== 0) {
-                    return { success: false, message: 'Empty book handling failed' };
-                }
-                
-                // Test undefined values
-                const undefinedBook = new Book({});
-                if (!undefinedBook.title || !undefinedBook.id) {
-                    return { success: false, message: 'Default value handling failed' };
-                }
-                
-                return { success: true, message: 'Edge cases handled correctly' };
-            }
-
-            async testFileUpload() {
-                this.updateStep(3, 'active');
-                this.log('Starting File Upload integration tests...', 'info');
-
-                // Simulate file upload functionality
-                const tests = [
-                    () => this.testFileValidation(),
-                    () => this.testFileProcessing(),
-                    () => this.testFileContent(),
-                    () => this.testFileErrorHandling()
-                ];
-
-                let allPassed = true;
-                for (const test of tests) {
-                    const passed = await this.runTest('File Upload', test);
-                    if (!passed) allPassed = false;
-                }
-
-                this.updateStep(3, allPassed ? 'complete' : 'error');
-                this.updateTestSection('upload', allPassed ? 'pass' : 'fail',
-                    allPassed ? 'File upload simulation tests passed' : 'Some file upload tests failed');
-                
-                if (allPassed) this.currentStep = Math.max(this.currentStep, 3);
-                return allPassed;
-            }
-
-            testFileValidation() {
-                // Simulate valid file
-                const validFile = { name: 'test.txt', size: 1024, type: 'text/plain' };
-                if (!this.validateFile(validFile)) {
-                    return { success: false, message: 'Valid file rejected' };
-                }
-                
-                // Simulate invalid file
-                const invalidFile = { name: 'test.pdf', size: 1024, type: 'application/pdf' };
-                if (this.validateFile(invalidFile)) {
-                    return { success: false, message: 'Invalid file accepted' };
-                }
-                
-                return { success: true, message: 'File validation working correctly' };
-            }
-
-            validateFile(file) {
-                const allowedTypes = ['text/plain'];
-                const maxSize = 2 * 1024 * 1024; // 2MB
-                return allowedTypes.includes(file.type) && file.size <= maxSize;
-            }
-
-            testFileProcessing() {
-                const sampleContent = "Chapter 1\n\nThis is the first chapter of our test book.\n\nChapter 2\n\nThis is the second chapter.";
-                const processed = this.processFileContent(sampleContent, 'sample.txt');
-                
-                if (!processed.title || !processed.content || processed.wordCount <= 0) {
-                    return { success: false, message: 'File processing failed' };
-                }
-                
-                return { success: true, message: 'File processing working correctly' };
-            }
-
-            processFileContent(content, filename) {
-                const title = filename.replace(/\.[^/.]+$/, "") || 'Untitled';
-                const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
-                
-                return {
-                    title: title,
-                    filename: filename,
-                    content: content,
-                    wordCount: wordCount
-                };
-            }
-
-            testFileContent() {
-                const testContent = "The Great Gatsby\n\nIn my younger and more vulnerable years...";
-                const book = new Book({
-                    title: 'The Great Gatsby',
-                    content: testContent,
-                    filename: 'gatsby.txt'
-                });
-                
-                if (book.wordCount <= 0 || !book.content.includes('vulnerable')) {
-                    return { success: false, message: 'Content extraction failed' };
-                }
-                
-                return { success: true, message: 'File content extraction working correctly' };
-            }
-
-            testFileErrorHandling() {
-                // Test empty content
+            async initialize() {
                 try {
-                    const emptyBook = new Book({ title: 'Empty', content: '', filename: 'empty.txt' });
-                    if (emptyBook.wordCount !== 0) {
-                        return { success: false, message: 'Empty file handling failed' };
-                    }
+                    console.log('🚀 Initializing Book Buddy (Modular Architecture)...');
+                    
+                    // Load app settings
+                    await this.loadAppSettings();
+                    
+                    // Setup UI components
+                    this.setupUI();
+                    
+                    // Setup event listeners
+                    this.setupEventListeners();
+                    
+                    // Initialize all view controllers
+                    this.initializeViews();
+                    
+                    // Setup file upload capabilities
+                    this.setupFileUpload();
+                    
+                    this.appState.initialized = true;
+                    console.log('✅ Book Buddy initialized successfully!');
+                    
+                    // Show welcome message if first time user
+                    this.checkForFirstTimeUser();
+                    
                 } catch (error) {
-                    return { success: false, message: 'Empty file caused error: ' + error.message };
+                    console.error('❌ Failed to initialize Book Buddy:', error);
+                    this.modalManager.showAlert(
+                        'Initialization Error',
+                        'Failed to initialize the application. Please refresh the page and try again.'
+                    );
                 }
-                
-                return { success: true, message: 'File error handling working correctly' };
             }
 
-            async testLibraryManager() {
-                this.updateStep(4, 'active');
-                this.log('Starting Library Manager integration tests...', 'info');
-
-                const tests = [
-                    () => this.testBookAddition(),
-                    () => this.testBookRetrieval(),
-                    () => this.testLibraryStats(),
-                    () => this.testBookPersistence()
-                ];
-
-                let allPassed = true;
-                for (const test of tests) {
-                    const passed = await this.runTest('Library Manager', test);
-                    if (!passed) allPassed = false;
-                }
-
-                this.updateStep(4, allPassed ? 'complete' : 'error');
-                this.updateTestSection('library', allPassed ? 'pass' : 'fail',
-                    allPassed ? 'Library management tests passed' : 'Some library tests failed');
+            async loadAppSettings() {
+                const settingsResult = this.storage.load('app_settings', this.appState.settings);
                 
-                if (allPassed) this.currentStep = Math.max(this.currentStep, 4);
-                return allPassed;
+                if (settingsResult.success) {
+                    this.appState.settings = { ...this.appState.settings, ...settingsResult.data };
+                    
+                    // Apply theme
+                    if (settingsResult.data.theme) {
+                        document.body.classList.add(`theme-${settingsResult.data.theme}`);
+                    }
+                }
             }
 
-            testBookAddition() {
-                const bookData = {
-                    title: 'Library Test Book',
-                    content: 'This is a test book for library management testing.',
-                    filename: 'library-test.txt'
+            setupUI() {
+                // Register views with navigation controller
+                this.navigationController.registerView('library', DOMUtils.query('#library-view'));
+                this.navigationController.registerView('search', DOMUtils.query('#search-view'));
+                this.navigationController.registerView('reading', DOMUtils.query('#reading-view'));
+                this.navigationController.registerView('statistics', DOMUtils.query('#statistics-view'));
+                this.navigationController.registerView('settings', DOMUtils.query('#settings-view'));
+
+                // Initialize the navigation UI
+                this.navigationController.initialize();
+            }
+
+            setupEventListeners() {
+                // Upload book button
+                const uploadBtn = DOMUtils.query('#upload-book-btn');
+                if (uploadBtn) {
+                    uploadBtn.addEventListener('click', () => this.showUploadModal());
+                }
+
+                // Search online button
+                const searchOnlineBtn = DOMUtils.query('#search-online-btn');
+                if (searchOnlineBtn) {
+                    searchOnlineBtn.addEventListener('click', () => {
+                        this.navigationController.navigateToView('search');
+                    });
+                }
+
+                // Library search
+                const searchInput = DOMUtils.query('#library-search');
+                if (searchInput) {
+                    let searchTimeout;
+                    searchInput.addEventListener('input', (e) => {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                            this.searchLibrary(e.target.value);
+                        }, 300);
+                    });
+                }
+
+                // Book filters
+                const filterButtons = DOMUtils.queryAll('.filter-btn');
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        // Update active filter
+                        filterButtons.forEach(btn => DOMUtils.removeClass(btn, 'active'));
+                        DOMUtils.addClass(e.target, 'active');
+                        
+                        // Filter books
+                        this.filterBooks(e.target.dataset.filter);
+                    });
+                });
+
+                // Book events from EventBus
+                eventBus.on(EVENTS.BOOK_ADDED, (data) => {
+                    this.refreshLibraryView();
+                    this.modalManager.showAlert(
+                        'Book Added',
+                        `"${data.book.title}" has been added to your library!`
+                    );
+                });
+
+                eventBus.on(EVENTS.BOOK_UPDATED, () => {
+                    this.refreshLibraryView();
+                });
+
+                eventBus.on(EVENTS.BOOK_DELETED, (data) => {
+                    this.refreshLibraryView();
+                    this.modalManager.showAlert(
+                        'Book Removed',
+                        `"${data.book.title}" has been removed from your library.`
+                    );
+                });
+
+                // View change events
+                eventBus.on(EVENTS.UI_VIEW_CHANGED, (data) => {
+                    this.handleViewChange(data.to);
+                });
+
+                // Reading events
+                eventBus.on(EVENTS.BOOK_OPENED, (data) => {
+                    this.currentBook = data.book;
+                    this.readingInterface.loadBook(data.book);
+                    this.navigationController.navigateToView('reading');
+                });
+            }
+
+            initializeViews() {
+                // Initialize library view
+                this.refreshLibraryView();
+                
+                // Initialize statistics view
+                this.initializeStatisticsView();
+                
+                // Initialize settings view
+                this.initializeSettingsView();
+            }
+
+            setupFileUpload() {
+                // Setup drag and drop for the entire library view
+                const libraryView = DOMUtils.query('#library-view');
+                if (libraryView) {
+                    this.fileProcessor.setupDragAndDrop(libraryView, (result) => {
+                        if (result.success) {
+                            this.library.addBook(result.bookData);
+                        } else {
+                            this.modalManager.showAlert('Upload Error', result.message);
+                        }
+                    });
+                }
+            }
+
+            showUploadModal() {
+                this.modalManager.showBookUpload(async (file) => {
+                    try {
+                        // Show processing message
+                        const processingModal = this.modalManager.showModal({
+                            title: 'Processing File',
+                            content: '<p>📚 Processing your book file...</p><div class="loading-spinner"></div>',
+                            closable: false
+                        });
+
+                        // Process file
+                        const result = await this.fileProcessor.processFile(file);
+                        
+                        // Close processing modal
+                        processingModal.close();
+
+                        if (result.success) {
+                            // Add book to library
+                            const addResult = await this.library.addBook(result.bookData);
+                            
+                            if (!addResult.success) {
+                                this.modalManager.showAlert('Error', addResult.message);
+                            }
+                        } else {
+                            this.modalManager.showAlert('Upload Error', result.message);
+                        }
+                    } catch (error) {
+                        this.modalManager.showAlert('Error', 'Failed to process file: ' + error.message);
+                    }
+                });
+            }
+
+            refreshLibraryView() {
+                this.updateLibraryStats();
+                this.renderBooks();
+            }
+
+            updateLibraryStats() {
+                const stats = this.library.getLibraryStats();
+                const statsElement = DOMUtils.query('#library-stats');
+                
+                if (statsElement) {
+                    statsElement.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.totalBooks}</div>
+                            <div class="stat-label">Total Books</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.booksRead}</div>
+                            <div class="stat-label">Books Read</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.booksReading}</div>
+                            <div class="stat-label">Currently Reading</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.totalWords.toLocaleString()}</div>
+                            <div class="stat-label">Total Words</div>
+                        </div>
+                    `;
+                }
+            }
+
+            renderBooks(books = null) {
+                const booksToRender = books || this.library.getAllBooks();
+                const gridElement = DOMUtils.query('#books-grid');
+                
+                if (!gridElement) return;
+
+                if (booksToRender.length === 0) {
+                    gridElement.innerHTML = `
+                        <div class="empty-state">
+                            <h3>📚 No books in your library yet</h3>
+                            <p>Upload your first book to get started!</p>
+                            <button class="btn btn-primary" onclick="document.getElementById('upload-book-btn').click()">
+                                📤 Upload Book
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                gridElement.innerHTML = this.bookListRenderer.renderBookCards(booksToRender);
+                
+                // Setup book card event listeners
+                this.setupBookCardListeners();
+            }
+
+            setupBookCardListeners() {
+                const bookCards = DOMUtils.queryAll('.book-card');
+                bookCards.forEach(card => {
+                    const bookId = card.dataset.bookId;
+                    
+                    // Open book for reading
+                    const readBtn = card.querySelector('.btn-read');
+                    if (readBtn) {
+                        readBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const book = this.library.getBook(bookId);
+                            if (book) {
+                                eventBus.emit(EVENTS.BOOK_OPENED, { book });
+                            }
+                        });
+                    }
+                    
+                    // Delete book
+                    const deleteBtn = card.querySelector('.btn-delete');
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const book = this.library.getBook(bookId);
+                            if (book) {
+                                const confirmed = await this.modalManager.showConfirm(
+                                    'Delete Book',
+                                    `Are you sure you want to delete "${book.title}"? This action cannot be undone.`,
+                                    'Delete',
+                                    'Cancel'
+                                );
+                                
+                                if (confirmed) {
+                                    this.library.removeBook(bookId);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            searchLibrary(query) {
+                if (!query.trim()) {
+                    this.renderBooks();
+                    return;
+                }
+                
+                const results = this.library.searchBooks(query);
+                this.renderBooks(results);
+            }
+
+            filterBooks(filter) {
+                let books;
+                
+                switch (filter) {
+                    case 'unread':
+                        books = this.library.getBooksByStatus('unread');
+                        break;
+                    case 'reading':
+                        books = this.library.getBooksByStatus('reading');
+                        break;
+                    case 'finished':
+                        books = this.library.getBooksByStatus('finished');
+                        break;
+                    default:
+                        books = this.library.getAllBooks();
+                }
+                
+                this.renderBooks(books);
+            }
+
+            handleViewChange(viewName) {
+                switch (viewName) {
+                    case 'library':
+                        this.refreshLibraryView();
+                        break;
+                    case 'statistics':
+                        this.updateStatisticsView();
+                        break;
+                    case 'settings':
+                        this.updateSettingsView();
+                        break;
+                }
+            }
+
+            initializeStatisticsView() {
+                // Will be enhanced in later phases
+                const content = DOMUtils.query('#statistics-content');
+                if (content) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <h3>📊 Reading Statistics</h3>
+                            <p>Detailed statistics will be available soon!</p>
+                        </div>
+                    `;
+                }
+            }
+
+            updateStatisticsView() {
+                const stats = this.library.getLibraryStats();
+                const content = DOMUtils.query('#statistics-content');
+                
+                if (content) {
+                    content.innerHTML = `
+                        <div class="stats-overview">
+                            <div class="library-stats">
+                                <div class="stat-card">
+                                    <div class="stat-value">${stats.totalBooks}</div>
+                                    <div class="stat-label">Total Books</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">${Math.round(stats.avgProgress * 100)}%</div>
+                                    <div class="stat-label">Average Progress</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">${stats.totalWords.toLocaleString()}</div>
+                                    <div class="stat-label">Total Words</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">${stats.totalNotes}</div>
+                                    <div class="stat-label">Notes</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            initializeSettingsView() {
+                const content = DOMUtils.query('#settings-content');
+                if (content) {
+                    content.innerHTML = `
+                        <div class="settings-form">
+                            <div class="setting-group">
+                                <label>Reading Speed (words per minute)</label>
+                                <input type="number" id="reading-speed" value="${this.appState.settings.readingSpeed}" min="100" max="1000">
+                            </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="auto-save" ${this.appState.settings.autoSave ? 'checked' : ''}>
+                                    Auto-save reading progress
+                                </label>
+                            </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="notifications" ${this.appState.settings.notifications ? 'checked' : ''}>
+                                    Enable notifications
+                                </label>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-primary" id="save-settings">Save Settings</button>
+                                <button class="btn btn-outline" id="export-library">Export Library</button>
+                                <button class="btn btn-outline" id="import-library">Import Library</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    this.setupSettingsListeners();
+                }
+            }
+
+            updateSettingsView() {
+                // Refresh settings when view is opened
+                this.initializeSettingsView();
+            }
+
+            setupSettingsListeners() {
+                const saveBtn = DOMUtils.query('#save-settings');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', () => this.saveSettings());
+                }
+
+                const exportBtn = DOMUtils.query('#export-library');
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', () => this.exportLibrary());
+                }
+
+                const importBtn = DOMUtils.query('#import-library');
+                if (importBtn) {
+                    importBtn.addEventListener('click', () => this.importLibrary());
+                }
+            }
+
+            saveSettings() {
+                const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
+                const autoSave = DOMUtils.query('#auto-save')?.checked || false;
+                const notifications = DOMUtils.query('#notifications')?.checked || false;
+
+                this.appState.settings = {
+                    readingSpeed,
+                    autoSave,
+                    notifications
+                };
+
+                const result = this.storage.save('app_settings', this.appState.settings);
+                
+                if (result.success) {
+                    this.modalManager.showAlert('Settings Saved', 'Your settings have been saved successfully!');
+                } else {
+                    this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
+                }
+            }
+
+            exportLibrary() {
+                try {
+                    const exportData = this.library.exportLibrary();
+                    const blob = new Blob([exportData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `book-buddy-library-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    this.modalManager.showAlert('Export Complete', 'Your library has been exported successfully!');
+                } catch (error) {
+                    this.modalManager.showAlert('Export Error', 'Failed to export library: ' + error.message);
+                }
+            }
+
+            async importLibrary() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    try {
+                        const text = await file.text();
+                        const result = await this.library.importLibrary(text);
+                        
+                        if (result.success) {
+                            this.modalManager.showAlert(
+                                'Import Complete', 
+                                `Successfully imported ${result.results.imported} books!`
+                            );
+                            this.refreshLibraryView();
+                        } else {
+                            this.modalManager.showAlert('Import Error', result.message);
+                        }
+                    } catch (error) {
+                        this.modalManager.showAlert('Import Error', 'Failed to import library: ' + error.message);
+                    }
                 };
                 
-                const result = this.bookManager.addBook(bookData);
-                if (!result.success) {
-                    return { success: false, message: 'Book addition failed: ' + result.message };
-                }
-                
-                if (!result.book || !result.book.id) {
-                    return { success: false, message: 'Book not properly created' };
-                }
-                
-                return { success: true, message: 'Book addition working correctly' };
+                input.click();
             }
 
-            testBookRetrieval() {
-                const books = this.bookManager.getAllBooks();
+            checkForFirstTimeUser() {
+                const books = this.library.getAllBooks();
                 if (books.length === 0) {
-                    return { success: false, message: 'No books found in library' };
-                }
-                
-                const firstBook = books[0];
-                const retrievedBook = this.bookManager.getBook(firstBook.id);
-                if (!retrievedBook || retrievedBook.id !== firstBook.id) {
-                    return { success: false, message: 'Book retrieval failed' };
-                }
-                
-                return { success: true, message: 'Book retrieval working correctly' };
-            }
+                    setTimeout(() => {
+                        this.modalManager.showModal({
+                            title: '👋 Welcome to Book Buddy!',
+                            content: `
+                                <div style="text-align: center;">
+                                    <h3>Your Personal Digital Library</h3>
+                                    <p>Get started by uploading your first book or searching for books online.</p>
+                                    <div style="margin: 1.5rem 0;">
+                                        <button class="btn btn-primary" id="welcome-upload">📤 Upload a Book</button>
+                                        <button class="btn btn-outline" id="welcome-search">🔍 Search Online</button>
+                                    </div>
+                                </div>
+                            `,
+                            buttons: [
+                                {
+                                    text: 'Get Started',
+                                    action: 'close',
+                                    className: 'btn-primary'
+                                }
+                            ],
+                            onAction: (action, modalId) => {
+                                if (action === 'close') return true;
+                            }
+                        });
 
-            testLibraryStats() {
-                const stats = this.bookManager.getLibraryStats();
-                if (typeof stats.totalBooks !== 'number' || typeof stats.totalWords !== 'number') {
-                    return { success: false, message: 'Library stats calculation failed' };
+                        // Setup welcome modal buttons
+                        setTimeout(() => {
+                            const uploadBtn = DOMUtils.query('#welcome-upload');
+                            const searchBtn = DOMUtils.query('#welcome-search');
+                            
+                            if (uploadBtn) {
+                                uploadBtn.addEventListener('click', () => {
+                                    this.modalManager.closeAllModals();
+                                    this.showUploadModal();
+                                });
+                            }
+                            
+                            if (searchBtn) {
+                                searchBtn.addEventListener('click', () => {
+                                    this.modalManager.closeAllModals();
+                                    this.navigationController.navigateToView('search');
+                                });
+                            }
+                        }, 100);
+                    }, 1000);
                 }
-                
-                if (stats.totalBooks < 0 || stats.totalWords < 0) {
-                    return { success: false, message: 'Invalid library stats values' };
-                }
-                
-                return { success: true, message: 'Library statistics working correctly' };
-            }
-
-            testBookPersistence() {
-                // Test that books persist after reload
-                const originalCount = this.bookManager.getAllBooks().length;
-                
-                // Create new manager instance to simulate reload
-                const newManager = new BookManager(this.storage);
-                const reloadedCount = newManager.getAllBooks().length;
-                
-                if (reloadedCount !== originalCount) {
-                    return { success: false, message: 'Book persistence failed after reload' };
-                }
-                
-                return { success: true, message: 'Book persistence working correctly' };
-            }
-
-            async testReadingInterface() {
-                this.updateStep(5, 'active');
-                this.log('Starting Reading Interface integration tests...', 'info');
-
-                const tests = [
-                    () => this.testReadingProgress(),
-                    () => this.testPositionTracking(),
-                    () => this.testReadingSession(),
-                    () => this.testReadingPersistence()
-                ];
-
-                let allPassed = true;
-                for (const test of tests) {
-                    const passed = await this.runTest('Reading Interface', test);
-                    if (!passed) allPassed = false;
-                }
-
-                this.updateStep(5, allPassed ? 'complete' : 'error');
-                this.updateTestSection('reader', allPassed ? 'pass' : 'fail',
-                    allPassed ? 'Reading interface tests passed' : 'Some reading interface tests failed');
-                
-                if (allPassed) this.currentStep = Math.max(this.currentStep, 5);
-                return allPassed;
-            }
-
-            testReadingProgress() {
-                const book = new Book({
-                    title: 'Reading Progress Test',
-                    content: 'This is a test book with exactly fifty characters.' // 50 chars
-                });
-                
-                // Test initial state
-                if (book.getProgress() !== 0) {
-                    return { success: false, message: 'Initial reading progress should be 0' };
-                }
-                
-                // Test mid-progress
-                book.updatePosition(25);
-                const midProgress = book.getProgress();
-                if (Math.abs(midProgress - 0.5) > 0.1) {
-                    return { success: false, message: 'Mid-progress calculation incorrect' };
-                }
-                
-                return { success: true, message: 'Reading progress tracking working correctly' };
-            }
-
-            testPositionTracking() {
-                const book = new Book({
-                    title: 'Position Test',
-                    content: 'Test content for position tracking functionality.'
-                });
-                
-                const oldLastRead = book.lastRead;
-                book.updatePosition(10);
-                
-                if (book.currentPosition !== 10) {
-                    return { success: false, message: 'Position not updated correctly' };
-                }
-                
-                if (book.lastRead === oldLastRead) {
-                    return { success: false, message: 'Last read time not updated' };
-                }
-                
-                return { success: true, message: 'Position tracking working correctly' };
-            }
-
-            testReadingSession() {
-                const book = new Book({
-                    title: 'Session Test',
-                    content: 'Content for reading session simulation test.'
-                });
-                
-                // Simulate reading session
-                const startTime = Date.now();
-                book.updatePosition(15);
-                const sessionData = {
-                    startTime: startTime,
-                    endTime: Date.now(),
-                    startPosition: 0,
-                    endPosition: book.currentPosition
-                };
-                
-                if (sessionData.endPosition <= sessionData.startPosition) {
-                    return { success: false, message: 'Reading session progress tracking failed' };
-                }
-                
-                return { success: true, message: 'Reading session tracking working correctly' };
-            }
-
-            testReadingPersistence() {
-                // Create book and update position
-                const book = new Book({
-                    title: 'Persistence Test',
-                    content: 'Content for testing reading position persistence.'
-                });
-                
-                book.updatePosition(20);
-                const originalPosition = book.currentPosition;
-                
-                // Save and reload
-                const saveResult = this.storage.save('persistence_test_book', book.toJSON());
-                if (!saveResult.success) {
-                    return { success: false, message: 'Failed to save book for persistence test' };
-                }
-                
-                const loadResult = this.storage.load('persistence_test_book');
-                if (!loadResult.success) {
-                    return { success: false, message: 'Failed to load book for persistence test' };
-                }
-                
-                const reloadedBook = new Book(loadResult.data);
-                if (reloadedBook.currentPosition !== originalPosition) {
-                    return { success: false, message: 'Reading position not persisted correctly' };
-                }
-                
-                return { success: true, message: 'Reading persistence working correctly' };
-            }
-
-            async testUIFramework() {
-                this.updateStep(6, 'active');
-                this.log('Starting UI Framework integration tests...', 'info');
-
-                const tests = [
-                    () => this.testNavigationSystem(),
-                    () => this.testDataFlow(),
-                    () => this.testResponsiveDesign(),
-                    () => this.testErrorStates()
-                ];
-
-                let allPassed = true;
-                for (const test of tests) {
-                    const passed = await this.runTest('UI Framework', test);
-                    if (!passed) allPassed = false;
-                }
-
-                this.updateStep(6, allPassed ? 'complete' : 'error');
-                this.updateTestSection('ui', allPassed ? 'pass' : 'fail',
-                    allPassed ? 'UI framework integration tests passed' : 'Some UI framework tests failed');
-                
-                if (allPassed) this.currentStep = Math.max(this.currentStep, 6);
-                return allPassed;
-            }
-
-            testNavigationSystem() {
-                // Test that navigation elements exist and are functional
-                const navItems = document.querySelectorAll('.nav-item');
-                if (navItems.length === 0) {
-                    return { success: false, message: 'No navigation items found' };
-                }
-                
-                // Test view switching capability
-                const views = document.querySelectorAll('.view');
-                if (views.length === 0) {
-                    return { success: false, message: 'No views found for navigation' };
-                }
-                
-                return { success: true, message: 'Navigation system structure valid' };
-            }
-
-            testDataFlow() {
-                // Test data flow between components
-                const stats = this.bookManager.getLibraryStats();
-                
-                // Verify stats object structure
-                if (typeof stats !== 'object' || stats === null) {
-                    return { success: false, message: 'Library stats not properly formatted' };
-                }
-                
-                const requiredProps = ['totalBooks', 'totalWords', 'avgProgress', 'booksRead'];
-                for (const prop of requiredProps) {
-                    if (!(prop in stats)) {
-                        return { success: false, message: `Missing property in stats: ${prop}` };
-                    }
-                }
-                
-                return { success: true, message: 'Data flow between components working correctly' };
-            }
-
-            testResponsiveDesign() {
-                // Test responsive elements exist
-                const mobileElements = document.querySelectorAll('.mobile-only');
-                const responsiveElements = document.querySelectorAll('.nav-toggle');
-                
-                if (responsiveElements.length === 0) {
-                    return { success: false, message: 'No responsive navigation elements found' };
-                }
-                
-                // Test CSS classes for responsive design
-                const mainNav = document.querySelector('.main-nav');
-                if (!mainNav) {
-                    return { success: false, message: 'Main navigation element not found' };
-                }
-                
-                return { success: true, message: 'Responsive design elements present' };
-            }
-
-            testErrorStates() {
-                // Test error handling in UI context
-                try {
-                    // Simulate an error condition
-                    const invalidBookData = null;
-                    const result = this.bookManager.addBook(invalidBookData);
-                    
-                    if (result.success) {
-                        return { success: false, message: 'Error state not handled - invalid data accepted' };
-                    }
-                    
-                    return { success: true, message: 'Error states handled correctly' };
-                } catch (error) {
-                    return { success: true, message: 'Error handling working (caught exception)' };
-                }
-            }
-
-            async testEndToEndJourney() {
-                this.updateStep(7, 'active');
-                this.log('Starting End-to-End User Journey test...', 'info');
-
-                const journeySteps = [
-                    () => this.journeyStep1_Upload(),
-                    () => this.journeyStep2_Store(),
-                    () => this.journeyStep3_Display(),
-                    () => this.journeyStep4_Read(),
-                    () => this.journeyStep5_Progress(),
-                    () => this.journeyStep6_Persist()
-                ];
-
-                let allPassed = true;
-                for (let i = 0; i < journeySteps.length; i++) {
-                    const stepName = `E2E Step ${i + 1}`;
-                    const passed = await this.runTest(stepName, journeySteps[i]);
-                    if (!passed) {
-                        allPassed = false;
-                        break; // Stop on first failure in E2E test
-                    }
-                }
-
-                this.updateStep(7, allPassed ? 'complete' : 'error');
-                
-                if (allPassed) {
-                    this.currentStep = Math.max(this.currentStep, 7);
-                    this.log('🎉 End-to-End journey completed successfully!', 'success');
-                } else {
-                    this.log('❌ End-to-End journey failed', 'error');
-                }
-                
-                return allPassed;
-            }
-
-            journeyStep1_Upload() {
-                // Simulate file upload
-                const fileContent = "Pride and Prejudice\n\nIt is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.";
-                const processedFile = this.processFileContent(fileContent, "pride-and-prejudice.txt");
-                
-                if (!processedFile.title || !processedFile.content) {
-                    return { success: false, message: 'File upload simulation failed' };
-                }
-                
-                this.e2eBook = processedFile;
-                return { success: true, message: 'File upload step completed' };
-            }
-
-            journeyStep2_Store() {
-                // Store the book
-                const result = this.bookManager.addBook(this.e2eBook);
-                if (!result.success) {
-                    return { success: false, message: 'Book storage failed: ' + result.message };
-                }
-                
-                this.e2eBookId = result.book.id;
-                return { success: true, message: 'Book storage step completed' };
-            }
-
-            journeyStep3_Display() {
-                // Retrieve and display book
-                const book = this.bookManager.getBook(this.e2eBookId);
-                if (!book) {
-                    return { success: false, message: 'Book retrieval for display failed' };
-                }
-                
-                if (book.title !== this.e2eBook.title) {
-                    return { success: false, message: 'Book data integrity check failed' };
-                }
-                
-                return { success: true, message: 'Book display step completed' };
-            }
-
-            journeyStep4_Read() {
-                // Simulate reading
-                const book = this.bookManager.getBook(this.e2eBookId);
-                if (!book) {
-                    return { success: false, message: 'Book not found for reading' };
-                }
-                
-                // Start reading from beginning
-                const initialProgress = book.getProgress();
-                if (initialProgress !== 0) {
-                    return { success: false, message: 'Initial reading progress not zero' };
-                }
-                
-                return { success: true, message: 'Reading initiation step completed' };
-            }
-
-            journeyStep5_Progress() {
-                // Update reading progress
-                const book = this.bookManager.getBook(this.e2eBookId);
-                const halfwayPoint = Math.floor(book.content.length / 2);
-                
-                book.updatePosition(halfwayPoint);
-                const progress = book.getProgress();
-                
-                if (progress < 0.4 || progress > 0.6) {
-                    return { success: false, message: 'Progress tracking failed' };
-                }
-                
-                return { success: true, message: 'Progress tracking step completed' };
-            }
-
-            journeyStep6_Persist() {
-                // Save progress and verify persistence
-                const book = this.bookManager.getBook(this.e2eBookId);
-                const currentPosition = book.currentPosition;
-                
-                const saveResult = this.storage.save(`book_${book.id}`, book.toJSON());
-                if (!saveResult.success) {
-                    return { success: false, message: 'Progress persistence failed' };
-                }
-                
-                // Verify by loading
-                const loadResult = this.storage.load(`book_${book.id}`);
-                if (!loadResult.success || loadResult.data.currentPosition !== currentPosition) {
-                    return { success: false, message: 'Progress persistence verification failed' };
-                }
-                
-                return { success: true, message: 'Progress persistence step completed' };
-            }
-
-            async runFullIntegrationTest() {
-                this.log('🚀 Starting Full Integration Test Suite...', 'info');
-                this.resetStats();
-                
-                const testSuites = [
-                    () => this.testStorageManager(),
-                    () => this.testBookModel(),
-                    () => this.testFileUpload(),
-                    () => this.testLibraryManager(),
-                    () => this.testReadingInterface(),
-                    () => this.testUIFramework(),
-                    () => this.testEndToEndJourney()
-                ];
-                
-                let overallSuccess = true;
-                
-                for (let i = 0; i < testSuites.length; i++) {
-                    const success = await testSuites[i]();
-                    if (!success) {
-                        overallSuccess = false;
-                    }
-                    
-                    this.updateStats();
-                    this.updateChecklist(i + 1, success ? 'complete' : 'error');
-                    
-                    // Add delay between test suites for better UX
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                this.log(`🏁 Integration testing completed. Overall result: ${overallSuccess ? 'SUCCESS' : 'FAILURE'}`, 
-                    overallSuccess ? 'success' : 'error');
-                
-                if (overallSuccess) {
-                    this.log('✅ Week 1 components are ready for Week 2 modular refactoring!', 'success');
-                } else {
-                    this.log('❌ Some components need attention before proceeding to Week 2', 'error');
-                }
-                
-                return overallSuccess;
-            }
-
-            resetStats() {
-                this.testResults = {};
-                this.totalTests = 0;
-                this.passedTests = 0;
-                this.failedTests = 0;
-                this.currentStep = 0;
-                this.updateStats();
-                
-                // Reset all steps
-                for (let i = 1; i <= 7; i++) {
-                    this.updateStep(i, 'pending');
-                    this.updateChecklist(i, 'pending');
-                }
-                
-                // Reset test sections
-                const sections = ['storage', 'book', 'upload', 'library', 'reader', 'ui'];
-                sections.forEach(section => {
-                    this.updateTestSection(section, 'pending', 'Test pending...');
-                });
             }
         }
 
-        // === GLOBAL INSTANCES ===
-        const integrationTester = new IntegrationTester();
-
-        // === TEST RUNNER FUNCTIONS ===
-        
-        async function runStorageTests() {
-            await integrationTester.testStorageManager();
-            integrationTester.updateStats();
-        }
-
-        async function runBookTests() {
-            await integrationTester.testBookModel();
-            integrationTester.updateStats();
-        }
-
-        async function runUploadTests() {
-            await integrationTester.testFileUpload();
-            integrationTester.updateStats();
-        }
-
-        async function runLibraryTests() {
-            await integrationTester.testLibraryManager();
-            integrationTester.updateStats();
-        }
-
-        async function runReaderTests() {
-            await integrationTester.testReadingInterface();
-            integrationTester.updateStats();
-        }
-
-        async function runUITests() {
-            await integrationTester.testUIFramework();
-            integrationTester.updateStats();
-        }
-
-        async function runFullIntegrationTest() {
-            await integrationTester.runFullIntegrationTest();
-        }
-
-        async function runEndToEndTest() {
-            integrationTester.log('🔄 Running End-to-End User Journey Test...', 'info');
-            await integrationTester.testEndToEndJourney();
-            integrationTester.updateStats();
-        }
-
-        function resetAllTests() {
-            integrationTester.resetStats();
-            integrationTester.log('🧹 All tests reset', 'info');
-            
-            // Clear console
-            document.getElementById('console-output').textContent = '[SYSTEM] Tests reset - ready for new test run\n';
-        }
-
-        // === UTILITY FUNCTIONS ===
-        
-        function viewStorageData() {
-            const storage = integrationTester.storage;
-            const keys = [];
-            
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('book-buddy')) {
-                    keys.push(key);
-                }
-            }
-            
-            integrationTester.log(`📊 Storage contains ${keys.length} Book Buddy keys`, 'info');
-            keys.forEach(key => {
-                integrationTester.log(`  - ${key}`, 'info');
-            });
-        }
-
-        function createSampleBook() {
-            const sampleData = {
-                title: 'Sample Integration Book',
-                filename: 'sample.txt',
-                content: 'This is a sample book created for integration testing. It contains multiple paragraphs and should demonstrate all the functionality of the Book class. The content is long enough to test progress tracking and word count calculations effectively.',
-            };
-            
-            const result = integrationTester.bookManager.addBook(sampleData);
-            if (result.success) {
-                integrationTester.log(`📚 Sample book created: ${result.book.title} (${result.book.wordCount} words)`, 'success');
-            } else {
-                integrationTester.log(`❌ Failed to create sample book: ${result.message}`, 'error');
-            }
-        }
-
-        function simulateFileUpload() {
-            integrationTester.log('📁 Simulating file upload process...', 'info');
-            
-            const files = [
-                {
-                    name: 'alice-in-wonderland.txt',
-                    content: `Alice's Adventures in Wonderland
-
-Chapter 1: Down the Rabbit Hole
-
-Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do. Once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it.`
-                },
-                {
-                    name: 'short-story.txt',
-                    content: `The Gift of the Magi
-
-One dollar and eighty-seven cents. That was all. And sixty cents of it was in pennies. Pennies saved one and two at a time by bulldozing the grocer and the vegetable man and the butcher until one's cheek burned with the silent imputation of parsimony that such close dealing implied.`
-                }
-            ];
-            
-            files.forEach(file => {
-                const processedFile = integrationTester.processFileContent(file.content, file.name);
-                const result = integrationTester.bookManager.addBook(processedFile);
-                
-                if (result.success) {
-                    integrationTester.log(`✅ Uploaded: ${file.name} (${result.book.wordCount} words)`, 'success');
-                } else {
-                    integrationTester.log(`❌ Upload failed: ${file.name} - ${result.message}`, 'error');
-                }
-            });
-            
-            integrationTester.updateStats();
-        }
-
-        function populateLibrary() {
-            integrationTester.log('📚 Populating library with sample books...', 'info');
-            
-            const sampleBooks = [
-                {
-                    title: 'The Great Gatsby',
-                    filename: 'gatsby.txt',
-                    content: `In my younger and more vulnerable years my father gave me some advice that I've carried with me ever since. "Whenever you feel like criticizing anyone," he told me, "just remember that all the people in this world haven't had the advantages that you've had." He didn't say any more, but we've always been unusually communicative in a reserved way, and I understood that he meant a great deal more than that.`
-                },
-                {
-                    title: '1984',
-                    filename: '1984.txt',
-                    content: `It was a bright cold day in April, and the clocks were striking thirteen. Winston Smith, his chin nuzzled into his breast in an effort to escape the vile wind, slipped quickly through the glass doors of Victory Mansions, though not quickly enough to prevent a swirl of gritty dust from entering along with him.`
-                },
-                {
-                    title: 'Pride and Prejudice',
-                    filename: 'pride.txt',
-                    content: `It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife. However little known the feelings or views of such a man may be on his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding families, that he is considered the rightful property of some one or other of their daughters.`
-                }
-            ];
-            
-            sampleBooks.forEach(bookData => {
-                const result = integrationTester.bookManager.addBook(bookData);
-                if (result.success) {
-                    integrationTester.log(`✅ Added: ${bookData.title}`, 'success');
-                } else {
-                    integrationTester.log(`❌ Failed to add: ${bookData.title}`, 'error');
-                }
-            });
-            
-            const stats = integrationTester.bookManager.getLibraryStats();
-            integrationTester.log(`📊 Library now contains ${stats.totalBooks} books with ${stats.totalWords} total words`, 'info');
-        }
-
-        function simulateReading() {
-            integrationTester.log('📖 Simulating reading session...', 'info');
-            
-            const books = integrationTester.bookManager.getAllBooks();
-            if (books.length === 0) {
-                integrationTester.log('❌ No books available for reading simulation', 'error');
-                return;
-            }
-            
-            const book = books[0];
-            const originalProgress = book.getProgress();
-            
-            // Simulate reading progress
-            const readAmount = Math.min(book.content.length * 0.3, book.content.length - book.currentPosition);
-            book.updatePosition(book.currentPosition + readAmount);
-            
-            const newProgress = book.getProgress();
-            const progressIncrease = newProgress - originalProgress;
-            
-            integrationTester.log(`📖 Read "${book.title}" - Progress: ${(originalProgress * 100).toFixed(1)}% → ${(newProgress * 100).toFixed(1)}% (+${(progressIncrease * 100).toFixed(1)}%)`, 'success');
-            
-            // Save progress
-            const saveResult = integrationTester.storage.save(`book_${book.id}`, book.toJSON());
-            if (saveResult.success) {
-                integrationTester.log('💾 Reading progress saved successfully', 'success');
-            } else {
-                integrationTester.log('❌ Failed to save reading progress', 'error');
-            }
-        }
-
-        function testResponsive() {
-            integrationTester.log('📱 Testing responsive design...', 'info');
-            
-            // Test mobile breakpoint simulation
-            const originalWidth = window.innerWidth;
-            
-            // Simulate mobile width
-            integrationTester.log(`Current viewport: ${window.innerWidth}px width`, 'info');
-            
-            // Check for responsive elements
-            const mobileElements = document.querySelectorAll('.mobile-only');
-            const responsiveNavigation = document.querySelector('.main-nav');
-            
-            if (responsiveNavigation) {
-                integrationTester.log('✅ Responsive navigation structure found', 'success');
-            } else {
-                integrationTester.log('❌ Responsive navigation structure missing', 'error');
-            }
-            
-            // Test CSS media queries
-            const testElement = document.createElement('div');
-            testElement.style.cssText = 'width: 100%; height: 1px; position: absolute; top: -9999px;';
-            document.body.appendChild(testElement);
-            
-            const computedStyle = window.getComputedStyle(testElement);
-            integrationTester.log(`✅ CSS responsive test completed`, 'success');
-            
-            document.body.removeChild(testElement);
-        }
-
-        // === INITIALIZATION ===
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            integrationTester.log('🏁 Component 7: Integration Testing Suite Ready!', 'success');
-            integrationTester.log('📋 Available Tests:', 'info');
-            integrationTester.log('  1. StorageManager - localStorage functionality', 'info');
-            integrationTester.log('  2. Book Model - data modeling and serialization', 'info');
-            integrationTester.log('  3. File Upload - file processing simulation', 'info');
-            integrationTester.log('  4. Library Manager - book management and statistics', 'info');
-            integrationTester.log('  5. Reading Interface - progress tracking and persistence', 'info');
-            integrationTester.log('  6. UI Framework - navigation and responsive design', 'info');
-            integrationTester.log('  7. End-to-End Journey - complete user workflow', 'info');
-            integrationTester.log('🚀 Click "Run Full Integration Test" to validate all components!', 'info');
+        // Initialize the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.bookBuddyApp = new BookBuddyApp();
         });
 
-        // === AUTO-RUN BASIC VALIDATION ===
-        
-        setTimeout(() => {
-            integrationTester.log('🔍 Running basic component validation...', 'info');
-            
-            // Quick validation that all components are present
-            const validationResults = {
-                storage: integrationTester.storage.isAvailable,
-                bookManager: integrationTester.bookManager instanceof BookManager,
-                bookModel: typeof Book === 'function',
-                domElements: document.querySelectorAll('.test-section').length === 6
-            };
-            
-            const allValid = Object.values(validationResults).every(result => result === true);
-            
-            if (allValid) {
-                integrationTester.log('✅ All components present and ready for testing', 'success');
-            } else {
-                integrationTester.log('⚠️ Some components may have issues:', 'warning');
-                Object.entries(validationResults).forEach(([component, valid]) => {
-                    if (!valid) {
-                        integrationTester.log(`  - ${component}: MISSING or INVALID`, 'error');
-                    }
-                });
-            }
-        }, 1000);
+        // Export for debugging purposes
+        window.BookBuddyApp = BookBuddyApp;
     </script>
 </body>
 </html>

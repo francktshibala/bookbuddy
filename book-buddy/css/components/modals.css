@@ -1,0 +1,655 @@
+/* Modal Component Styles */
+
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    pointer-events: none;
+    overflow-y: auto;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.3s ease;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-backdrop.show {
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: all;
+}
+
+.modal-backdrop.backdrop-blur.show {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+}
+
+.modal {
+    position: relative;
+    transform: scale(0.9);
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    min-width: 400px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.show {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal.hiding {
+    transform: scale(0.9);
+    opacity: 0;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-color);
+    flex-shrink: 0;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--background-color);
+    flex-shrink: 0;
+}
+
+/* Modal Sizes */
+.modal.modal-sm {
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.modal.modal-lg {
+    min-width: 600px;
+    max-width: 800px;
+}
+
+.modal.modal-xl {
+    min-width: 800px;
+    max-width: 1200px;
+}
+
+.modal.modal-fullscreen {
+    min-width: 100vw;
+    max-width: 100vw;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    transform: scale(1);
+}
+
+/* Upload Modal Specific Styles */
+.upload-modal .modal-body {
+    padding: 2rem;
+}
+
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    background: var(--background-color);
+}
+
+.upload-area:hover,
+.upload-area.drag-over {
+    border-color: var(--primary-color);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+.upload-area h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.upload-area p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.file-info {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    margin-top: 1rem;
+}
+
+.file-info h5 {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.file-info p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Form Elements in Modals */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--card-background);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+/* Alert Modal Styles */
+.alert-modal .modal-body {
+    text-align: center;
+    padding: 2rem 1.5rem;
+}
+
+.alert-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.alert-icon.success {
+    color: var(--success-color);
+}
+
+.alert-icon.error {
+    color: var(--error-color);
+}
+
+.alert-icon.warning {
+    color: var(--warning-color);
+}
+
+.alert-icon.info {
+    color: var(--primary-color);
+}
+
+.alert-message {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+/* Confirm Modal Styles */
+.confirm-modal .modal-body {
+    text-align: center;
+    padding: 2rem 1.5rem;
+}
+
+.confirm-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--warning-color);
+}
+
+.confirm-message {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+/* Prompt Modal Styles */
+.prompt-modal .form-input {
+    margin-top: 1rem;
+    font-size: 1rem;
+}
+
+/* Loading Modal Styles */
+.loading-modal .modal-body {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* Modal Animations */
+.modal-fade-in {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-fade-out {
+    animation: modalFadeOut 0.3s ease-in;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+}
+
+.modal-slide-in {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-slide-out {
+    animation: modalSlideOut 0.3s ease-in;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes modalSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(100px);
+    }
+}
+
+/* Modal Overlay Patterns */
+.modal-backdrop.pattern-dots::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+.modal-backdrop.pattern-grid::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+/* Progress Modal */
+.progress-modal .modal-body {
+    padding: 2rem;
+}
+
+.progress-info {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.progress-bar-modal {
+    width: 100%;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-bar-modal .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Multi-step Modal */
+.modal-steps {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    padding: 0 1.5rem;
+}
+
+.step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.step.active {
+    color: var(--primary-color);
+}
+
+.step.completed {
+    color: var(--success-color);
+}
+
+.step-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.step.active .step-number {
+    background: var(--primary-color);
+    color: white;
+}
+
+.step.completed .step-number {
+    background: var(--success-color);
+    color: white;
+}
+
+.step-separator {
+    width: 40px;
+    height: 2px;
+    background: var(--border-color);
+    margin: 0 1rem;
+}
+
+.step.completed + .step .step-separator {
+    background: var(--success-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal {
+        min-width: 0;
+        max-width: 95vw;
+        margin: 1rem;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+    }
+
+    .modal-steps {
+        padding: 0 1rem;
+        overflow-x: auto;
+    }
+
+    .step-indicator {
+        min-width: max-content;
+    }
+
+    .modal.modal-lg,
+    .modal.modal-xl {
+        min-width: 0;
+        max-width: 95vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-backdrop {
+        padding: 0.5rem;
+    }
+
+    .modal {
+        max-width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .modal-fullscreen {
+        border-radius: 0;
+    }
+
+    .upload-area {
+        padding: 1.5rem 1rem;
+    }
+
+    .alert-modal .modal-body,
+    .confirm-modal .modal-body {
+        padding: 1.5rem 1rem;
+    }
+
+    .loading-modal .modal-body {
+        padding: 2rem 1rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .modal-container,
+    .modal-backdrop,
+    .modal {
+        display: none !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .modal {
+        border: 2px solid var(--text-primary);
+    }
+
+    .upload-area {
+        border-width: 3px;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        border-width: 2px;
+        box-shadow: none;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .modal,
+    .modal-backdrop,
+    .form-input,
+    .form-textarea,
+    .form-select,
+    .upload-area {
+        transition: none;
+    }
+
+    .modal-fade-in,
+    .modal-fade-out,
+    .modal-slide-in,
+    .modal-slide-out {
+        animation: none;
+    }
+
+    .loading-spinner {
+        animation: none;
+        border-top-color: var(--border-color);
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .modal-backdrop.show {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .upload-area:hover,
+    .upload-area.drag-over {
+        background: rgba(37, 99, 235, 0.1);
+    }
+}
