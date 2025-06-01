@@ -1,8 +1,8 @@
 /**
  * Navigation Controller - Handles app navigation and view management
  */
-import { eventBus, EVENTS } from '../utils/EventBus.js';
-import { DOMUtils } from '../utils/Helpers.js';
+import { eventBus, EVENTS } from '../../utils/EventBus.js';
+import { DOMUtils } from '../../utils/Helpers.js';
 
 export default class NavigationController {
     constructor() {

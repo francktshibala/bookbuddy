@@ -1,7 +1,7 @@
 /**
  * Library Manager - Handles collection of books and library operations
  */
-import Book from './Book.js';
+import { eventBus, EVENTS } from '../../utils/EventBus.js';
 import { eventBus, EVENTS } from '../utils/EventBus.js';
 
 export default class Library {

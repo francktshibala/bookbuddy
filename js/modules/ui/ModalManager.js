@@ -1,8 +1,8 @@
 /**
  * Modal Manager - Handles modal dialogs and overlays
  */
-import { eventBus, EVENTS } from '../utils/EventBus.js';
-import { DOMUtils } from '../utils/Helpers.js';
+import { eventBus, EVENTS } from '../../utils/EventBus.js';
+import { DOMUtils } from '../../utils/Helpers.js';
 
 export default class ModalManager {
     constructor() {

@@ -1,9 +1,8 @@
 /**
  * ReadingInterface - Handles the book reading experience
  */
-import { eventBus, EVENTS } from '../utils/EventBus.js';
-import { DOMUtils, DateUtils } from '../utils/Helpers.js';
-
+import { eventBus, EVENTS } from '../../utils/EventBus.js';
+import { DOMUtils, DateUtils } from '../../utils/Helpers.js';
 export default class ReadingInterface {
     constructor() {
         this.currentBook = null;

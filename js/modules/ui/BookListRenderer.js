@@ -1,7 +1,7 @@
 /**
  * BookListRenderer - Handles rendering of book lists and cards
  */
-import { DateUtils, StringUtils } from '../utils/Helpers.js';
+import { DateUtils, StringUtils } from '../../utils/Helpers.js';
 
 export default class BookListRenderer {
     constructor() {
