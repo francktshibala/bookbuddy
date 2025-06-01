@@ -36,6 +36,19 @@ export const DateUtils = {
         if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
         
         return this.formatDate(dateString);
+    },
+
+    isToday(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        return date.toDateString() === today.toDateString();
+    },
+
+    isThisWeek(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return date >= weekAgo && date <= today;
     }
 };
 
@@ -54,25 +67,54 @@ export const StringUtils = {
     },
 
     escapeHtml(str) {
+        if (!str) return '';
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     },
 
     unescapeHtml(str) {
+        if (!str) return '';
         const div = document.createElement('div');
         div.innerHTML = str;
         return div.textContent || div.innerText || '';
     },
 
     capitalizeFirstLetter(str) {
+        if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
+    },
+
+    capitalizeWords(str) {
+        if (!str) return '';
+        return str.replace(/\w\S*/g, (txt) => 
+            txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        );
     },
 
     toCamelCase(str) {
         return str.replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => {
             return index === 0 ? word.toLowerCase() : word.toUpperCase();
         }).replace(/\s+/g, '');
+    },
+
+    toKebabCase(str) {
+        return str
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .replace(/[\s_]+/g, '-')
+            .toLowerCase();
+    },
+
+    stripHtml(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.textContent || div.innerText || '';
+    },
+
+    highlightText(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
     }
 };
 
@@ -85,6 +127,15 @@ export const NumberUtils = {
         return `${(value * 100).toFixed(decimals)}%`;
     },
 
+    formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    },
+
     clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
     },
@@ -95,6 +146,22 @@ export const NumberUtils = {
 
     roundToDecimals(value, decimals) {
         return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+    },
+
+    isEven(num) {
+        return num % 2 === 0;
+    },
+
+    isOdd(num) {
+        return num % 2 !== 0;
+    },
+
+    sum(numbers) {
+        return numbers.reduce((total, num) => total + num, 0);
+    },
+
+    average(numbers) {
+        return numbers.length ? this.sum(numbers) / numbers.length : 0;
     }
 };
 
@@ -136,6 +203,30 @@ export const ArrayUtils = {
             groups[group].push(item);
             return groups;
         }, {});
+    },
+
+    sortBy(array, key, direction = 'asc') {
+        return [...array].sort((a, b) => {
+            const aVal = typeof key === 'function' ? key(a) : a[key];
+            const bVal = typeof key === 'function' ? key(b) : b[key];
+            
+            if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    },
+
+    flatten(array) {
+        return array.reduce((flat, item) => 
+            flat.concat(Array.isArray(item) ? this.flatten(item) : item), []);
+    },
+
+    last(array) {
+        return array[array.length - 1];
+    },
+
+    first(array) {
+        return array[0];
     }
 };
 
@@ -153,6 +244,8 @@ export const DOMUtils = {
                 element.textContent = value;
             } else if (key.startsWith('data-')) {
                 element.setAttribute(key, value);
+            } else if (key.startsWith('on') && typeof value === 'function') {
+                element.addEventListener(key.slice(2).toLowerCase(), value);
             } else {
                 element[key] = value;
             }
@@ -198,6 +291,36 @@ export const DOMUtils = {
 
     hasClass(element, className) {
         return element && className && element.classList.contains(className);
+    },
+
+    getOffset(element) {
+        const rect = element.getBoundingClientRect();
+        return {
+            top: rect.top + window.pageYOffset,
+            left: rect.left + window.pageXOffset,
+            width: rect.width,
+            height: rect.height
+        };
+    },
+
+    isVisible(element) {
+        return element && element.offsetParent !== null;
+    },
+
+    scrollTo(element, options = {}) {
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', ...options });
+        }
+    },
+
+    removeElement(element) {
+        if (element && element.parentNode) {
+            element.parentNode.removeChild(element);
+        }
+    },
+
+    insertAfter(newElement, targetElement) {
+        targetElement.parentNode.insertBefore(newElement, targetElement.nextSibling);
     }
 };
 
@@ -228,22 +351,57 @@ export const StorageUtils = {
         } catch {
             return null;
         }
+    },
+
+    isAvailable() {
+        try {
+            const test = '__storage_test__';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    getUsage() {
+        if (!this.isAvailable()) return null;
+        
+        let totalSize = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                totalSize += localStorage[key].length + key.length;
+            }
+        }
+        
+        return {
+            used: totalSize,
+            usedFormatted: NumberUtils.formatBytes(totalSize * 2) // Rough estimate
+        };
     }
 };
 
 export const DebugUtils = {
     log(message, data = null, level = 'info') {
-        if (process?.env?.NODE_ENV === 'production') return;
+        // Only log in development mode
+        if (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'production') return;
         
         const timestamp = new Date().toISOString();
         const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
         
+        const styles = {
+            info: 'color: #2563eb',
+            warn: 'color: #f59e0b',
+            error: 'color: #ef4444',
+            success: 'color: #10b981'
+        };
+        
         if (data) {
-            console.group(`${prefix} ${message}`);
+            console.group(`%c${prefix} ${message}`, styles[level] || styles.info);
             console.log(data);
             console.groupEnd();
         } else {
-            console.log(`${prefix} ${message}`);
+            console.log(`%c${prefix} ${message}`, styles[level] || styles.info);
         }
     },
 
@@ -261,221 +419,122 @@ export const DebugUtils = {
         const end = performance.now();
         this.log(`Performance: ${name}`, `${(end - start).toFixed(2)}ms`);
         return result;
+    },
+
+    table(data, columns = null) {
+        if (Array.isArray(data) && data.length > 0) {
+            console.table(data, columns);
+        } else {
+            console.log('No data to display in table');
+        }
     }
 };
 
----
+export const ValidationUtils = {
+    isEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    },
 
-## 📋 **Day 9 Morning: UI Components Extraction**
-
-### **Step 7: Extract Navigation Controller (45 minutes)**
-
-**File: `js/modules/ui/NavigationController.js`**
-```javascript
-/**
- * Navigation Controller - Handles app navigation and view management
- */
-import { eventBus, EVENTS } from '../utils/EventBus.js';
-import { DOMUtils } from '../utils/Helpers.js';
-
-export default class NavigationController {
-    constructor() {
-        this.currentView = 'library';
-        this.views = new Map();
-        this.navigationElement = null;
-        
-        this.setupNavigation();
-        this.setupEventListeners();
-    }
-
-    setupNavigation() {
-        this.createNavigationHTML();
-        this.setupMobileMenu();
-    }
-
-    createNavigationHTML() {
-        const navHTML = `
-            <nav class="main-nav">
-                <div class="nav-brand">
-                    <h2>📚 Book Buddy</h2>
-                    <button class="nav-toggle" aria-label="Toggle navigation">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                </div>
-                <ul class="nav-menu">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link active" data-view="library">
-                            📚 Library
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-view="search">
-                            🔍 Search Books
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-view="reading">
-                            📖 Reading
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-view="statistics">
-                            📊 Statistics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-view="settings">
-                            ⚙️ Settings
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        `;
-
-        // Insert navigation at the beginning of body
-        document.body.insertAdjacentHTML('afterbegin', navHTML);
-        this.navigationElement = DOMUtils.query('.main-nav');
-    }
-
-    setupMobileMenu() {
-        const toggleButton = DOMUtils.query('.nav-toggle');
-        const navMenu = DOMUtils.query('.nav-menu');
-
-        if (toggleButton && navMenu) {
-            toggleButton.addEventListener('click', () => {
-                DOMUtils.toggleClass(navMenu, 'active');
-                DOMUtils.toggleClass(toggleButton, 'active');
-            });
+    isUrl(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
         }
-    }
+    },
 
-    setupEventListeners() {
-        // Navigation click handlers
-        document.addEventListener('click', (e) => {
-            if (e.target.matches('.nav-link')) {
-                e.preventDefault();
-                const view = e.target.dataset.view;
-                if (view) {
-                    this.navigateToView(view);
+    isEmpty(value) {
+        if (value === null || value === undefined) return true;
+        if (typeof value === 'string') return value.trim().length === 0;
+        if (Array.isArray(value)) return value.length === 0;
+        if (typeof value === 'object') return Object.keys(value).length === 0;
+        return false;
+    },
+
+    isValidBookFile(file) {
+        const validTypes = ['text/plain'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        return {
+            valid: validTypes.includes(file.type) && file.size <= maxSize,
+            errors: [
+                ...(validTypes.includes(file.type) ? [] : ['Invalid file type. Only .txt files are supported.']),
+                ...(file.size <= maxSize ? [] : ['File too large. Maximum size is 10MB.'])
+            ]
+        };
+    },
+
+    sanitizeInput(input) {
+        if (typeof input !== 'string') return input;
+        return input
+            .replace(/[<>]/g, '') // Remove potential HTML tags
+            .trim();
+    }
+};
+
+export const AsyncUtils = {
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    timeout(promise, ms) {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Operation timed out')), ms)
+            )
+        ]);
+    },
+
+    retry(fn, attempts = 3, delay = 1000) {
+        return new Promise((resolve, reject) => {
+            fn().then(resolve).catch(error => {
+                if (attempts > 1) {
+                    setTimeout(() => {
+                        this.retry(fn, attempts - 1, delay).then(resolve).catch(reject);
+                    }, delay);
+                } else {
+                    reject(error);
                 }
-            }
-        });
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', (e) => {
-            const navMenu = DOMUtils.query('.nav-menu');
-            const navToggle = DOMUtils.query('.nav-toggle');
-            
-            if (navMenu && navToggle && 
-                !navMenu.contains(e.target) && 
-                !navToggle.contains(e.target)) {
-                DOMUtils.removeClass(navMenu, 'active');
-                DOMUtils.removeClass(navToggle, 'active');
-            }
-        });
-
-        // Handle browser back/forward
-        window.addEventListener('popstate', (e) => {
-            const view = e.state?.view || 'library';
-            this.navigateToView(view, false);
-        });
-    }
-
-    navigateToView(viewName, updateHistory = true) {
-        if (this.currentView === viewName) return;
-
-        // Hide current view
-        this.hideView(this.currentView);
-        
-        // Show new view
-        this.showView(viewName);
-        
-        // Update navigation state
-        this.updateNavigationState(viewName);
-        
-        // Update browser history
-        if (updateHistory) {
-            history.pushState({ view: viewName }, '', `#${viewName}`);
-        }
-        
-        // Update current view
-        this.currentView = viewName;
-        
-        // Emit navigation event
-        eventBus.emit(EVENTS.UI_VIEW_CHANGED, { 
-            from: this.currentView, 
-            to: viewName 
-        });
-    }
-
-    registerView(viewName, viewElement) {
-        this.views.set(viewName, viewElement);
-        
-        // Hide view by default
-        if (viewElement) {
-            viewElement.style.display = 'none';
-        }
-    }
-
-    showView(viewName) {
-        const viewElement = this.views.get(viewName);
-        if (viewElement) {
-            viewElement.style.display = 'block';
-            
-            // Trigger view-specific initialization if needed
-            const initEvent = new CustomEvent('viewShown', { 
-                detail: { viewName } 
             });
-            viewElement.dispatchEvent(initEvent);
-        }
-    }
+        });
+    },
 
-    hideView(viewName) {
-        const viewElement = this.views.get(viewName);
-        if (viewElement) {
-            viewElement.style.display = 'none';
-        }
-    }
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
 
-    updateNavigationState(activeView) {
-        // Remove active class from all nav links
-        const navLinks = DOMUtils.queryAll('.nav-link');
-        navLinks.forEach(link => DOMUtils.removeClass(link, 'active'));
-        
-        // Add active class to current view link
-        const activeLink = DOMUtils.query(`.nav-link[data-view="${activeView}"]`);
-        if (activeLink) {
-            DOMUtils.addClass(activeLink, 'active');
-        }
-    }
-
-    getCurrentView() {
-        return this.currentView;
-    }
-
-    setViewTitle(viewName, title) {
-        const viewElement = this.views.get(viewName);
-        if (viewElement) {
-            const titleElement = DOMUtils.query('.view-title', viewElement);
-            if (titleElement) {
-                titleElement.textContent = title;
+    throttle(func, limit) {
+        let inThrottle;
+        return function executedFunction(...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
             }
-        }
+        };
     }
+};
 
-    showLoadingState(viewName) {
-        const viewElement = this.views.get(viewName);
-        if (viewElement) {
-            DOMUtils.addClass(viewElement, 'loading');
-        }
-    }
-
-    hideLoadingState(viewName) {
-        const viewElement = this.views.get(viewName);
-        if (viewElement) {
-            DOMUtils.removeClass(viewElement, 'loading');
-        }
-    }
-}
+// Export all utilities as a single object for convenience
+export default {
+    DateUtils,
+    StringUtils,
+    NumberUtils,
+    ArrayUtils,
+    DOMUtils,
+    StorageUtils,
+    DebugUtils,
+    ValidationUtils,
+    AsyncUtils
+};

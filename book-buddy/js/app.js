@@ -10,6 +10,8 @@ import Library from './modules/models/Library.js';
 import FileProcessor from './modules/utils/FileProcessor.js';
 import NavigationController from './modules/ui/NavigationController.js';
 import ModalManager from './modules/ui/ModalManager.js';
+import BookListRenderer from './modules/ui/BookListRenderer.js';
+import ReadingInterface from './modules/ui/ReadingInterface.js';
 import { eventBus, EVENTS } from './modules/utils/EventBus.js';
 import { DOMUtils, DateUtils, StringUtils } from './modules/utils/Helpers.js';
 
@@ -20,13 +22,19 @@ class BookBuddyApp {
         this.fileProcessor = new FileProcessor();
         this.navigationController = new NavigationController();
         this.modalManager = new ModalManager();
+        this.bookListRenderer = new BookListRenderer();
+        this.readingInterface = new ReadingInterface();
         
         this.currentBook = null;
         this.appState = {
             initialized: false,
             currentView: 'library',
             theme: 'light',
-            settings: {}
+            settings: {
+                readingSpeed: 250,
+                autoSave: true,
+                notifications: true
+            }
         };
         
         this.initialize();
@@ -67,15 +75,10 @@ class BookBuddyApp {
     }
 
     async loadAppSettings() {
-        const settingsResult = this.storage.load('app_settings', {
-            theme: 'light',
-            readingSpeed: 250, // words per minute
-            autoSave: true,
-            notifications: true
-        });
+        const settingsResult = this.storage.load('app_settings', this.appState.settings);
         
         if (settingsResult.success) {
-            this.appState.settings = settingsResult.data;
+            this.appState.settings = { ...this.appState.settings, ...settingsResult.data };
             
             // Apply theme
             if (settingsResult.data.theme) {
@@ -85,89 +88,6 @@ class BookBuddyApp {
     }
 
     setupUI() {
-        // Create main app structure
-        const appHTML = `
-            <div class="app-container">
-                <!-- Navigation is inserted by NavigationController -->
-                
-                <main class="main-content">
-                    <!-- Library View -->
-                    <div class="view" id="library-view">
-                        <div class="view-header">
-                            <h2 class="view-title">📚 My Library</h2>
-                            <div class="view-actions">
-                                <button class="btn btn-primary" id="upload-book-btn">
-                                    📤 Upload Book
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="library-stats" id="library-stats">
-                            <!-- Stats will be populated dynamically -->
-                        </div>
-                        
-                        <div class="search-bar">
-                            <input type="text" 
-                                   id="library-search" 
-                                   placeholder="Search your library..." 
-                                   class="search-input">
-                        </div>
-                        
-                        <div class="book-filters">
-                            <button class="filter-btn active" data-filter="all">All Books</button>
-                            <button class="filter-btn" data-filter="unread">Unread</button>
-                            <button class="filter-btn" data-filter="reading">Currently Reading</button>
-                            <button class="filter-btn" data-filter="finished">Finished</button>
-                        </div>
-                        
-                        <div class="books-grid" id="books-grid">
-                            <!-- Books will be populated dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Search View -->
-                    <div class="view" id="search-view" style="display: none;">
-                        <div class="view-header">
-                            <h2 class="view-title">🔍 Search Books</h2>
-                        </div>
-                        <p>API book search will be implemented in Week 2 Phase 2</p>
-                    </div>
-
-                    <!-- Reading View -->
-                    <div class="view" id="reading-view" style="display: none;">
-                        <div class="view-header">
-                            <h2 class="view-title">📖 Reading</h2>
-                        </div>
-                        <div id="reading-content">
-                            <!-- Reading interface will be populated dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Statistics View -->
-                    <div class="view" id="statistics-view" style="display: none;">
-                        <div class="view-header">
-                            <h2 class="view-title">📊 Reading Statistics</h2>
-                        </div>
-                        <div id="statistics-content">
-                            <!-- Statistics will be populated dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Settings View -->
-                    <div class="view" id="settings-view" style="display: none;">
-                        <div class="view-header">
-                            <h2 class="view-title">⚙️ Settings</h2>
-                        </div>
-                        <div id="settings-content">
-                            <!-- Settings will be populated dynamically -->
-                        </div>
-                    </div>
-                </main>
-            </div>
-        `;
-
-        document.body.insertAdjacentHTML('beforeend', appHTML);
-        
         // Register views with navigation controller
         this.navigationController.registerView('library', DOMUtils.query('#library-view'));
         this.navigationController.registerView('search', DOMUtils.query('#search-view'));
@@ -181,6 +101,14 @@ class BookBuddyApp {
         const uploadBtn = DOMUtils.query('#upload-book-btn');
         if (uploadBtn) {
             uploadBtn.addEventListener('click', () => this.showUploadModal());
+        }
+
+        // Search online button
+        const searchOnlineBtn = DOMUtils.query('#search-online-btn');
+        if (searchOnlineBtn) {
+            searchOnlineBtn.addEventListener('click', () => {
+                this.navigationController.navigateToView('search');
+            });
         }
 
         // Library search
@@ -233,6 +161,13 @@ class BookBuddyApp {
         eventBus.on(EVENTS.UI_VIEW_CHANGED, (data) => {
             this.handleViewChange(data.to);
         });
+
+        // Reading events
+        eventBus.on(EVENTS.BOOK_OPENED, (data) => {
+            this.currentBook = data.book;
+            this.readingInterface.loadBook(data.book);
+            this.navigationController.navigateToView('reading');
+        });
     }
 
     initializeViews() {
@@ -264,7 +199,7 @@ class BookBuddyApp {
                 // Show processing message
                 const processingModal = this.modalManager.showModal({
                     title: 'Processing File',
-                    content: '<p>Processing your book file...</p>',
+                    content: '<div class="loading-modal"><div class="loading-spinner"></div><p class="loading-text">Processing your book file...</p></div>',
                     closable: false
                 });
 
@@ -301,6 +236,437 @@ class BookBuddyApp {
         
         if (statsElement) {
             statsElement.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalBooks}</div>
+                    <div class="stat-label">Total Books</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.booksRead}</div>
+                    <div class="stat-label">Books Read</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.booksReading}</div>
+                    <div class="stat-label">Currently Reading</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalWords.toLocaleString()}</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+            `;
+        }
+    }
+
+    renderBooks(books = null) {
+        const booksToRender = books || this.library.getAllBooks();
+        const gridElement = DOMUtils.query('#books-grid');
+        
+        if (!gridElement) return;
+
+        if (booksToRender.length === 0) {
+            gridElement.innerHTML = this.bookListRenderer.renderEmptyState();
+            return;
+        }
+
+        gridElement.innerHTML = this.bookListRenderer.renderBookCards(booksToRender);
+        
+        // Setup book card event listeners
+        this.setupBookCardListeners();
+    }
+
+    setupBookCardListeners() {
+        const bookCards = DOMUtils.queryAll('.book-card');
+        bookCards.forEach(card => {
+            const bookId = card.dataset.bookId;
+            
+            // Open book for reading
+            const readBtn = card.querySelector('.btn-read');
+            if (readBtn) {
+                readBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const book = this.library.getBook(bookId);
+                    if (book) {
+                        eventBus.emit(EVENTS.BOOK_OPENED, { book });
+                    }
+                });
+            }
+            
+            // Delete book
+            const deleteBtn = card.querySelector('.btn-delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const book = this.library.getBook(bookId);
+                    if (book) {
+                        const confirmed = await this.modalManager.showConfirm(
+                            'Delete Book',
+                            `Are you sure you want to delete "${book.title}"? This action cannot be undone.`,
+                            'Delete',
+                            'Cancel'
+                        );
+                        
+                        if (confirmed) {
+                            this.library.removeBook(bookId);
+                        }
+                    }
+                });
+            }
+
+            // Show details
+            const detailsBtn = card.querySelector('.btn-details');
+            if (detailsBtn) {
+                detailsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const book = this.library.getBook(bookId);
+                    if (book) {
+                        this.showBookDetails(book);
+                    }
+                });
+            }
+        });
+    }
+
+    showBookDetails(book) {
+        const stats = book.getReadingStats();
+        
+        this.modalManager.showModal({
+            title: `📖 ${book.title}`,
+            content: `
+                <div class="book-details">
+                    <div class="detail-row">
+                        <strong>Filename:</strong> ${book.filename}
+                    </div>
+                    <div class="detail-row">
+                        <strong>Word Count:</strong> ${book.wordCount.toLocaleString()} words
+                    </div>
+                    <div class="detail-row">
+                        <strong>Progress:</strong> ${stats.progressPercent}% complete
+                    </div>
+                    <div class="detail-row">
+                        <strong>Added:</strong> ${DateUtils.formatDateTime(book.uploadDate)}
+                    </div>
+                    ${book.lastRead ? `
+                        <div class="detail-row">
+                            <strong>Last Read:</strong> ${DateUtils.formatDateTime(book.lastRead)}
+                        </div>
+                    ` : ''}
+                    <div class="detail-row">
+                        <strong>Notes:</strong> ${book.notes.length}
+                    </div>
+                    <div class="detail-row">
+                        <strong>Highlights:</strong> ${book.highlights.length}
+                    </div>
+                    ${stats.estimatedTimeRemaining > 0 ? `
+                        <div class="detail-row">
+                            <strong>Time Remaining:</strong> ~${stats.estimatedTimeRemaining} minutes
+                        </div>
+                    ` : ''}
+                </div>
+            `,
+            buttons: [
+                {
+                    text: 'Start Reading',
+                    action: 'read',
+                    className: 'btn-primary'
+                },
+                {
+                    text: 'Close',
+                    action: 'close',
+                    className: 'btn-outline'
+                }
+            ],
+            onAction: (action) => {
+                if (action === 'read') {
+                    eventBus.emit(EVENTS.BOOK_OPENED, { book });
+                }
+                return true;
+            }
+        });
+    }
+
+    searchLibrary(query) {
+        if (!query.trim()) {
+            this.renderBooks();
+            return;
+        }
+        
+        const results = this.library.searchBooks(query);
+        this.renderBooks(results);
+    }
+
+    filterBooks(filter) {
+        let books;
+        
+        switch (filter) {
+            case 'unread':
+                books = this.library.getBooksByStatus('unread');
+                break;
+            case 'reading':
+                books = this.library.getBooksByStatus('reading');
+                break;
+            case 'finished':
+                books = this.library.getBooksByStatus('finished');
+                break;
+            default:
+                books = this.library.getAllBooks();
+        }
+        
+        this.renderBooks(books);
+    }
+
+    handleViewChange(viewName) {
+        switch (viewName) {
+            case 'library':
+                this.refreshLibraryView();
+                break;
+            case 'statistics':
+                this.updateStatisticsView();
+                break;
+            case 'settings':
+                this.updateSettingsView();
+                break;
+        }
+    }
+
+    initializeStatisticsView() {
+        const content = DOMUtils.query('#statistics-content');
+        if (content) {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <h3>📊 Reading Statistics</h3>
+                    <p>Detailed statistics will be available in Week 2 Phase 3!</p>
+                </div>
+            `;
+        }
+    }
+
+    updateStatisticsView() {
+        const stats = this.library.getLibraryStats();
+        const content = DOMUtils.query('#statistics-content');
+        
+        if (content) {
+            content.innerHTML = `
+                <div class="stats-overview">
+                    <div class="library-stats">
+                        ${this.bookListRenderer.renderBookStats(this.library.getAllBooks())}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    initializeSettingsView() {
+        const content = DOMUtils.query('#settings-content');
+        if (content) {
+            content.innerHTML = `
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="reading-speed">Reading Speed (words per minute)</label>
+                        <input type="number" 
+                               id="reading-speed" 
+                               class="form-input"
+                               value="${this.appState.settings.readingSpeed}" 
+                               min="100" 
+                               max="1000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-checkbox">
+                            <input type="checkbox" 
+                                   id="auto-save" 
+                                   ${this.appState.settings.autoSave ? 'checked' : ''}>
+                            <label for="auto-save">Auto-save reading progress</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-checkbox">
+                            <input type="checkbox" 
+                                   id="notifications" 
+                                   ${this.appState.settings.notifications ? 'checked' : ''}>
+                            <label for="notifications">Enable notifications</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn btn-primary" id="save-settings">Save Settings</button>
+                        <button class="btn btn-outline" id="export-library">Export Library</button>
+                        <button class="btn btn-outline" id="import-library">Import Library</button>
+                        <button class="btn btn-outline" id="clear-library">Clear Library</button>
+                    </div>
+                </div>
+            `;
+            
+            this.setupSettingsListeners();
+        }
+    }
+
+    updateSettingsView() {
+        this.initializeSettingsView();
+    }
+
+    setupSettingsListeners() {
+        const saveBtn = DOMUtils.query('#save-settings');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveSettings());
+        }
+
+        const exportBtn = DOMUtils.query('#export-library');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportLibrary());
+        }
+
+        const importBtn = DOMUtils.query('#import-library');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => this.importLibrary());
+        }
+
+        const clearBtn = DOMUtils.query('#clear-library');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearLibrary());
+        }
+    }
+
+    saveSettings() {
+        const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
+        const autoSave = DOMUtils.query('#auto-save')?.checked || false;
+        const notifications = DOMUtils.query('#notifications')?.checked || false;
+
+        this.appState.settings = {
+            readingSpeed,
+            autoSave,
+            notifications
+        };
+
+        const result = this.storage.save('app_settings', this.appState.settings);
+        
+        if (result.success) {
+            this.modalManager.showAlert('Settings Saved', 'Your settings have been saved successfully!');
+        } else {
+            this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
+        }
+    }
+
+    exportLibrary() {
+        try {
+            const exportData = this.library.exportLibrary();
+            const blob = new Blob([exportData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `book-buddy-library-${DateUtils.formatDate(new Date().toISOString()).replace(/\s/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.modalManager.showAlert('Export Complete', 'Your library has been exported successfully!');
+        } catch (error) {
+            this.modalManager.showAlert('Export Error', 'Failed to export library: ' + error.message);
+        }
+    }
+
+    async importLibrary() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const result = await this.library.importLibrary(text);
+                
+                if (result.success) {
+                    this.modalManager.showAlert(
+                        'Import Complete', 
+                        `Successfully imported ${result.results.imported} books!`
+                    );
+                    this.refreshLibraryView();
+                } else {
+                    this.modalManager.showAlert('Import Error', result.message);
+                }
+            } catch (error) {
+                this.modalManager.showAlert('Import Error', 'Failed to import library: ' + error.message);
+            }
+        };
+        
+        input.click();
+    }
+
+    async clearLibrary() {
+        const confirmed = await this.modalManager.showConfirm(
+            'Clear Library',
+            'Are you sure you want to clear your entire library? This action cannot be undone.',
+            'Clear All',
+            'Cancel'
+        );
+        
+        if (confirmed) {
+            const result = this.library.clear();
+            if (result.success) {
+                this.modalManager.showAlert('Library Cleared', 'Your library has been cleared successfully!');
+                this.refreshLibraryView();
+            } else {
+                this.modalManager.showAlert('Error', 'Failed to clear library: ' + result.message);
+            }
+        }
+    }
+
+    checkForFirstTimeUser() {
+        const books = this.library.getAllBooks();
+        if (books.length === 0) {
+            setTimeout(() => {
+                this.modalManager.showModal({
+                    title: '👋 Welcome to Book Buddy!',
+                    content: `
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                            <h3>Your Personal Digital Library</h3>
+                            <p style="margin: 1rem 0;">Get started by uploading your first book or searching for books online.</p>
+                            <div style="margin: 1.5rem 0; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                                <button class="btn btn-primary" id="welcome-upload">📤 Upload a Book</button>
+                                <button class="btn btn-outline" id="welcome-search">🔍 Search Online</button>
+                            </div>
+                        </div>
+                    `,
+                    buttons: [
+                        {
+                            text: 'Get Started',
+                            action: 'close',
+                            className: 'btn-primary'
+                        }
+                    ],
+                    onAction: (action) => {
+                        return true; // Close modal
+                    }
+                });
+
+                // Setup welcome modal buttons
+                setTimeout(() => {
+                    const uploadBtn = DOMUtils.query('#welcome-upload');
+                    const searchBtn = DOMUtils.query('#welcome-search');
+                    
+                    if (uploadBtn) {
+                        uploadBtn.addEventListener('click', () => {
+                            this.modalManager.closeAllModals();
+                            this.showUploadModal();
+                        });
+                    }
+                    
+                    if (searchBtn) {
+                        searchBtn.addEventListener('click', () => {
+                            this.modalManager.closeAllModals();
+                            this.navigationController.navigateToView('search');
+                        });
+                    }
+                }, 100);
+            }, 1000);
+        }
+    }
+}
+
+// Export the main app class for use in index.html
+export default BookBuddyApp;
