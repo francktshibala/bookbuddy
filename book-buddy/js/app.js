@@ -1,26 +1,24 @@
 /**
- * Book Buddy - Main Application Controller (Modular Version)
+ * Book Buddy - Main Application Controller (Fixed Import Paths)
  * Coordinates all modules and manages application state
  */
 
-// Import all modules
-import StorageManager from './modules/storage/StorageManager.js';
+// Import all modules with CORRECTED PATHS
+import StorageManager from './utils/StorageManager.js';  // ← FIXED PATH
 import Book from './modules/models/Book.js';
 import Library from './modules/models/Library.js';
-import FileProcessor from './modules/utils/FileProcessor.js';
+import FileProcessor from './utils/FileProcessor.js';    // ← FIXED PATH
 import APIService from './modules/services/APIService.js';
 import GoogleBooksAPI from './modules/services/GoogleBooksAPI.js';
 import NavigationController from './modules/ui/NavigationController.js';
 import ModalManager from './modules/ui/ModalManager.js';
 import BookListRenderer from './modules/ui/BookListRenderer.js';
 import ReadingInterface from './modules/ui/ReadingInterface.js';
-import { eventBus, EVENTS } from './modules/utils/EventBus.js';
-import { DOMUtils, DateUtils, StringUtils } from './modules/utils/Helpers.js';
+import { eventBus, EVENTS } from './utils/EventBus.js';   // ← FIXED PATH
+import { DOMUtils, DateUtils, StringUtils } from './utils/Helpers.js';  // ← FIXED PATH
 
 class BookBuddyApp {
     constructor() {
-        this.readingInterface = new ReadingInterface();
-        this.googleBooksAPI = new GoogleBooksAPI();
         this.storage = new StorageManager('book-buddy');
         this.library = new Library(this.storage);
         this.fileProcessor = new FileProcessor();
@@ -42,16 +40,11 @@ class BookBuddyApp {
         };
         
         this.initialize();
-        // Setup file upload
-        this.setupFileUpload();
-
-        // Initialize API services (ADD THIS LINE)
-        this.initializeAPIServices();
     }
 
     async initialize() {
         try {
-            console.log('🚀 Initializing Book Buddy (Modular Version)...');
+            console.log('🚀 Initializing Book Buddy (Fixed Imports)...');
             
             // Load app settings
             await this.loadAppSettings();
@@ -201,23 +194,6 @@ class BookBuddyApp {
             });
         }
     }
-
-    initializeAPIServices() {
-    console.log('🔌 Initializing API services...');
-    // Test API connection
-    this.testAPIConnection();
-        }
-
-        async testAPIConnection() {
-            try {
-                const testResult = await this.googleBooksAPI.searchBooks('test', { maxResults: 1 });
-                if (testResult.success) {
-                    console.log('✅ Google Books API connected');
-                }
-            } catch (error) {
-                console.warn('⚠️ API test failed:', error);
-            }
-        }
 
     showUploadModal() {
         this.modalManager.showBookUpload(async (file) => {
