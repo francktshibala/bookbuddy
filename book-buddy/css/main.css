@@ -1,31 +1,50 @@
-/* Basic styles for Book Buddy */
+/* CSS Reset and base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+/* Base typography and body styles */
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f5f5f5;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f5f5f5;
+  padding: 20px;
 }
 
+/* Headings and text elements */
 h1 {
-    color: #333;
-    text-align: center;
+  font-size: 2em;
+  text-align: center;
+  margin-bottom: 0.5em;
 }
 
+p {
+  font-size: 1.1em;
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+/* Example button styling (if buttons are added later) */
 button {
-    padding: 10px 20px;
-    margin: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  padding: 10px 20px;
+  margin: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: #0056b3;
-}
-
-#status-message {
-    text-align: center;
-    font-size: 1.1em;
-    margin: 20px 0;
+  background-color: #0056b3;
 }

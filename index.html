@@ -3,31 +3,543 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Buddy - StorageManager Test</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>Book Buddy - Working Version</title>
+    <style>
+        /* Basic styles for Book Buddy */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .test-controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            margin: 10px;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+
+        button.btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #495057);
+        }
+
+        button.btn-danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        #status-message {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>📚 Book Buddy - StorageManager Test</h1>
-    </header>
-    
-    <main>
-        <section class="test-controls">
-            <button onclick="testStorageManager()" class="btn btn-primary">Run Tests</button>
-            <button onclick="demonstrateUsage()" class="btn btn-secondary">Show Usage Examples</button>
-            <button onclick="cleanupTestData()" class="btn btn-danger">Cleanup Test Data</button>
-        </section>
+    <div class="container">
+        <header>
+            <h1>📚 Book Buddy - Storage System</h1>
+        </header>
         
-        <section class="status">
-            <p id="status-message">Hello Book Buddy! 👋</p>
-        </section>
-    </main>
-    
-    <script type="module" src="js/app.js"></script>
-    <script type="module">
-        import StorageManager from './js/utils/StorageManager.js';
-        window.StorageManager = StorageManager;
+        <main>
+            <section class="test-controls">
+                <button onclick="runAllTests()" class="btn btn-primary">🧪 Run All Tests</button>
+                <button onclick="demonstrateUsage()" class="btn btn-secondary">📖 Show Examples</button>
+                <button onclick="cleanupTestData()" class="btn btn-danger">🧹 Clean Up</button>
+            </section>
+            
+            <section class="status">
+                <p id="status-message">Ready to test! Click a button to start.</p>
+            </section>
+
+            <div id="console-output" class="console-output" style="display: none;"></div>
+        </main>
+    </div>
+
+    <script>
+        /**
+         * StorageManager - All-in-one version for Book Buddy
+         * No modules needed - everything in one file!
+         */
+        class StorageManager {
+            constructor(appPrefix = 'book-buddy') {
+                this.prefix = appPrefix;
+                this.maxStorageSize = 5 * 1024 * 1024; // 5MB limit
+                this.warningThreshold = 0.8; // Warn at 80% capacity
+                
+                // Test localStorage availability on initialization
+                this.isAvailable = this._testStorageAvailability();
+                
+                if (!this.isAvailable) {
+                    console.warn('localStorage is not available. Data will not persist.');
+                }
+            }
+
+            /**
+             * Save data to localStorage with error handling
+             */
+            save(key, data) {
+                try {
+                    if (!this.isAvailable) {
+                        return this._createResult(false, 'localStorage not available');
+                    }
+
+                    const prefixedKey = this._getPrefixedKey(key);
+                    const jsonData = JSON.stringify(data);
+                    
+                    // Check storage size before saving
+                    const sizeCheck = this._checkStorageSize(jsonData);
+                    if (!sizeCheck.success) {
+                        return sizeCheck;
+                    }
+
+                    localStorage.setItem(prefixedKey, jsonData);
+                    
+                    // Check if we're approaching storage limit after save
+                    this._checkStorageWarning();
+                    
+                    return this._createResult(true, 'Data saved successfully', data);
+
+                } catch (error) {
+                    return this._handleSaveError(error, key, data);
+                }
+            }
+
+            /**
+             * Load data from localStorage with error handling
+             */
+            load(key, defaultValue = null) {
+                try {
+                    if (!this.isAvailable) {
+                        return this._createResult(true, 'localStorage not available', defaultValue);
+                    }
+
+                    const prefixedKey = this._getPrefixedKey(key);
+                    const rawData = localStorage.getItem(prefixedKey);
+                    
+                    // Handle missing key
+                    if (rawData === null) {
+                        return this._createResult(true, 'Key not found', defaultValue);
+                    }
+
+                    // Parse JSON data
+                    const parsedData = JSON.parse(rawData);
+                    return this._createResult(true, 'Data loaded successfully', parsedData);
+
+                } catch (error) {
+                    return this._handleLoadError(error, key, defaultValue);
+                }
+            }
+
+            /**
+             * Remove specific key from localStorage
+             */
+            remove(key) {
+                try {
+                    if (!this.isAvailable) {
+                        return this._createResult(false, 'localStorage not available');
+                    }
+
+                    const prefixedKey = this._getPrefixedKey(key);
+                    const exists = localStorage.getItem(prefixedKey) !== null;
+                    
+                    localStorage.removeItem(prefixedKey);
+                    
+                    const message = exists ? 'Key removed successfully' : 'Key did not exist';
+                    return this._createResult(true, message);
+
+                } catch (error) {
+                    console.error('StorageManager remove error:', error);
+                    return this._createResult(false, `Failed to remove key: ${error.message}`);
+                }
+            }
+
+            /**
+             * Clear all app data from localStorage
+             */
+            clear() {
+                try {
+                    if (!this.isAvailable) {
+                        return this._createResult(false, 'localStorage not available');
+                    }
+
+                    const keysToRemove = [];
+                    
+                    // Find all keys with our prefix
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith(this.prefix + '_')) {
+                            keysToRemove.push(key);
+                        }
+                    }
+
+                    // Remove all app keys
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+                    
+                    return this._createResult(true, `Cleared ${keysToRemove.length} keys`);
+
+                } catch (error) {
+                    console.error('StorageManager clear error:', error);
+                    return this._createResult(false, `Failed to clear storage: ${error.message}`);
+                }
+            }
+
+            /**
+             * Get storage usage information
+             */
+            getStorageInfo() {
+                if (!this.isAvailable) {
+                    return { available: false, message: 'localStorage not available' };
+                }
+
+                try {
+                    let totalSize = 0;
+                    let appSize = 0;
+                    let appKeys = 0;
+
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        const value = localStorage.getItem(key);
+                        const itemSize = (key.length + value.length) * 2; // Rough byte estimate
+                        
+                        totalSize += itemSize;
+                        
+                        if (key.startsWith(this.prefix + '_')) {
+                            appSize += itemSize;
+                            appKeys++;
+                        }
+                    }
+
+                    return {
+                        available: true,
+                        totalSize: totalSize,
+                        appSize: appSize,
+                        appKeys: appKeys,
+                        maxSize: this.maxStorageSize,
+                        percentUsed: Math.round((totalSize / this.maxStorageSize) * 100),
+                        appPercentUsed: Math.round((appSize / this.maxStorageSize) * 100)
+                    };
+
+                } catch (error) {
+                    console.error('StorageManager getStorageInfo error:', error);
+                    return { available: false, error: error.message };
+                }
+            }
+
+            // Private helper methods
+            _getPrefixedKey(key) {
+                return `${this.prefix}_${key}`;
+            }
+
+            _createResult(success, message, data = null) {
+                return { success, message, data };
+            }
+
+            _testStorageAvailability() {
+                try {
+                    const testKey = '__storage_test__';
+                    localStorage.setItem(testKey, 'test');
+                    localStorage.removeItem(testKey);
+                    return true;
+                } catch (error) {
+                    return false;
+                }
+            }
+
+            _checkStorageSize(newData) {
+                try {
+                    const currentSize = JSON.stringify(localStorage).length * 2;
+                    const newDataSize = newData.length * 2;
+                    const projectedSize = currentSize + newDataSize;
+
+                    if (projectedSize > this.maxStorageSize) {
+                        return this._createResult(false, 'Storage quota would be exceeded');
+                    }
+
+                    return this._createResult(true, 'Storage size OK');
+                } catch (error) {
+                    return this._createResult(true, 'Could not verify storage size');
+                }
+            }
+
+            _checkStorageWarning() {
+                const info = this.getStorageInfo();
+                if (info.available && info.percentUsed > (this.warningThreshold * 100)) {
+                    console.warn(`Storage usage high: ${info.percentUsed}% used`);
+                }
+            }
+
+            _handleSaveError(error, key, data) {
+                console.error('StorageManager save error:', error);
+
+                if (error.name === 'QuotaExceededError' || error.code === 22) {
+                    return this._createResult(false, 'Storage quota exceeded. Please free up space.');
+                }
+
+                if (error.name === 'SecurityError') {
+                    return this._createResult(false, 'Storage access denied. Check privacy settings.');
+                }
+
+                return this._createResult(false, `Save failed: ${error.message}`);
+            }
+
+            _handleLoadError(error, key, defaultValue) {
+                console.error('StorageManager load error:', error);
+
+                if (error instanceof SyntaxError) {
+                    this.remove(key);
+                    return this._createResult(true, 'Corrupted data removed, using default', defaultValue);
+                }
+
+                return this._createResult(false, `Load failed: ${error.message}`, defaultValue);
+            }
+        }
+
+        // Initialize the app
+        const storage = new StorageManager('book-buddy');
+        let consoleOutput = '';
+
+        // Custom console for showing output on page
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            const output = `[${timestamp}] ${prefix} ${message}\n`;
+            consoleOutput += output;
+            
+            const outputDiv = document.getElementById('console-output');
+            outputDiv.textContent = consoleOutput;
+            outputDiv.style.display = 'block';
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+            
+            console.log(message);
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status-message').textContent = message;
+        }
+
+        // Test functions
+        function runAllTests() {
+            consoleOutput = '';
+            log('🧪 Starting StorageManager Tests...', 'info');
+            updateStatus('Running tests...');
+            
+            testBasicOperations();
+            testComplexData();
+            testErrorHandling();
+            testStorageManagement();
+            
+            log('✅ All tests completed!', 'success');
+            updateStatus('Tests completed! Check console output below.');
+        }
+
+        function testBasicOperations() {
+            log('📝 Testing basic save/load operations...', 'info');
+            
+            // Test string
+            let result = storage.save('test_string', 'Hello World');
+            log(`Save string: ${result.success ? 'PASS' : 'FAIL'} - ${result.message}`, 
+                result.success ? 'success' : 'error');
+            
+            result = storage.load('test_string');
+            log(`Load string: ${result.success && result.data === 'Hello World' ? 'PASS' : 'FAIL'} - Got: ${result.data}`, 
+                result.success && result.data === 'Hello World' ? 'success' : 'error');
+            
+            // Test number
+            storage.save('test_number', 42);
+            result = storage.load('test_number');
+            log(`Number data: ${result.success && result.data === 42 ? 'PASS' : 'FAIL'} - Got: ${result.data}`, 
+                result.success && result.data === 42 ? 'success' : 'error');
+            
+            // Test default value
+            result = storage.load('nonexistent', 'default');
+            log(`Default value: ${result.data === 'default' ? 'PASS' : 'FAIL'} - Got: ${result.data}`, 
+                result.data === 'default' ? 'success' : 'error');
+        }
+
+        function testComplexData() {
+            log('📊 Testing complex data structures...', 'info');
+            
+            const bookData = {
+                id: 'book_1',
+                title: 'Test Book',
+                author: 'Test Author',
+                chapters: ['Chapter 1', 'Chapter 2'],
+                metadata: {
+                    pages: 100,
+                    genre: 'Fiction'
+                }
+            };
+            
+            let result = storage.save('complex_book', bookData);
+            log(`Save complex object: ${result.success ? 'PASS' : 'FAIL'} - ${result.message}`, 
+                result.success ? 'success' : 'error');
+            
+            result = storage.load('complex_book');
+            const isValid = result.success && 
+                           result.data.title === 'Test Book' &&
+                           result.data.chapters.length === 2 &&
+                           result.data.metadata.pages === 100;
+            log(`Load complex object: ${isValid ? 'PASS' : 'FAIL'}`, 
+                isValid ? 'success' : 'error');
+        }
+
+        function testErrorHandling() {
+            log('🚫 Testing error handling...', 'info');
+            
+            // Simulate corrupted data
+            localStorage.setItem('book-buddy_corrupted', '{invalid json');
+            const result = storage.load('corrupted', 'fallback');
+            log(`Corrupted data handling: ${result.data === 'fallback' ? 'PASS' : 'FAIL'} - ${result.message}`, 
+                result.data === 'fallback' ? 'success' : 'error');
+        }
+
+        function testStorageManagement() {
+            log('🗂️ Testing storage management...', 'info');
+            
+            const info = storage.getStorageInfo();
+            log(`Storage info available: ${info.available ? 'PASS' : 'FAIL'}`, 
+                info.available ? 'success' : 'error');
+            
+            if (info.available) {
+                log(`Storage usage: ${info.appSize} bytes (${info.appPercentUsed}%)`, 'info');
+            }
+            
+            // Test remove
+            storage.save('temp_item', 'temporary');
+            let result = storage.remove('temp_item');
+            log(`Remove item: ${result.success ? 'PASS' : 'FAIL'} - ${result.message}`, 
+                result.success ? 'success' : 'error');
+        }
+
+        function demonstrateUsage() {
+            consoleOutput = '';
+            log('📖 Book Buddy Usage Examples', 'info');
+            updateStatus('Running usage examples...');
+            
+            // Example book data
+            const sampleBook = {
+                id: 'gatsby_001',
+                title: 'The Great Gatsby',
+                author: 'F. Scott Fitzgerald',
+                content: 'In my younger and more vulnerable years my father gave me some advice...',
+                currentPage: 45,
+                totalPages: 180,
+                notes: ['Classic American literature', 'Symbolism of the green light'],
+                lastRead: new Date().toISOString()
+            };
+            
+            log('💾 Saving sample book...', 'info');
+            let result = storage.save('current_book', sampleBook);
+            log(`Book saved: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.message}`, 
+                result.success ? 'success' : 'error');
+            
+            log('📖 Loading book...', 'info');
+            result = storage.load('current_book');
+            if (result.success) {
+                const book = result.data;
+                log(`Loaded: "${book.title}" by ${book.author}`, 'success');
+                log(`Progress: ${Math.round((book.currentPage / book.totalPages) * 100)}% complete`, 'info');
+                log(`Notes: ${book.notes.join(', ')}`, 'info');
+            }
+            
+            // User preferences example
+            const preferences = {
+                theme: 'dark',
+                fontSize: 16,
+                readingGoal: 12, // books per year
+                notifications: true,
+                favoriteGenres: ['Fiction', 'Mystery', 'Science Fiction']
+            };
+            
+            log('⚙️ Saving user preferences...', 'info');
+            storage.save('user_preferences', preferences);
+            
+            const prefResult = storage.load('user_preferences');
+            if (prefResult.success) {
+                log(`Theme: ${prefResult.data.theme}, Font: ${prefResult.data.fontSize}px`, 'success');
+                log(`Reading goal: ${prefResult.data.readingGoal} books/year`, 'info');
+            }
+            
+            updateStatus('Usage examples completed! Check console output below.');
+        }
+
+        function cleanupTestData() {
+            log('🧹 Cleaning up test data...', 'info');
+            const result = storage.clear();
+            log(`Cleanup result: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.message}`, 
+                result.success ? 'success' : 'error');
+            updateStatus('Test data cleaned up!');
+        }
+
+        // Initialize the app
+        updateStatus(`📚 Book Buddy Storage System Ready! Storage available: ${storage.isAvailable ? '✅' : '❌'}`);
+        log('🚀 Book Buddy initialized successfully!', 'success');
+        log(`Storage available: ${storage.isAvailable}`, 'info');
+        
+        // Test with some initial data
+        const initialTest = storage.save('app_initialized', { 
+            timestamp: new Date().toISOString(),
+            version: '1.0.0' 
+        });
+        
+        if (initialTest.success) {
+            log('✅ Initial storage test passed!', 'success');
+        } else {
+            log('❌ Initial storage test failed!', 'error');
+        }
     </script>
-    <script src="js/utils/StorageManager.test.js"></script>
 </body>
 </html>
