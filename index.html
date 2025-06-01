@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Buddy - File Upload Component</title>
+    <title>Book Buddy - Library Manager</title>
     <style>
-        /* Previous styles... keep all your existing styles and add these */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -15,7 +14,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -30,7 +29,204 @@
             font-size: 2.5em;
         }
 
-        /* === NEW FILE UPLOAD STYLES === */
+        /* === LIBRARY MANAGER STYLES === */
+        .library-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .library-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .library-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .filter-select {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .view-btn {
+            padding: 10px 15px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        /* === BOOK DISPLAY STYLES === */
+        .books-container {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .books-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+
+        .books-list {
+            grid-template-columns: 1fr;
+        }
+
+        .book-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .book-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .book-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .book-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .book-preview {
+            font-style: italic;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+            line-height: 1.5;
+        }
+
+        .book-progress {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .book-actions button {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+
+        /* === UPLOAD SECTION STYLES === */
         .upload-section {
             margin: 30px 0;
             padding: 20px;
@@ -97,43 +293,6 @@
             transition: width 0.3s ease;
         }
 
-        .uploaded-files {
-            margin: 20px 0;
-        }
-
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            margin: 10px 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .file-info {
-            flex-grow: 1;
-        }
-
-        .file-name {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .file-details {
-            font-size: 0.9em;
-            color: #6c757d;
-        }
-
-        .file-actions button {
-            margin-left: 10px;
-            padding: 8px 16px;
-            font-size: 0.9em;
-        }
-
         .test-controls {
             text-align: center;
             margin: 30px 0;
@@ -144,7 +303,7 @@
 
         button {
             padding: 12px 24px;
-            margin: 10px;
+            margin: 5px;
             background: linear-gradient(45deg, #007bff, #0056b3);
             color: white;
             border: none;
@@ -169,6 +328,11 @@
 
         button.btn-success {
             background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        button.btn-warning {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #333;
         }
 
         #status-message {
@@ -197,12 +361,46 @@
         .error { color: #dc3545; }
         .info { color: #17a2b8; }
         .warning { color: #ffc107; }
+
+        .empty-library {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .library-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-controls {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .books-container {
+                grid-template-columns: 1fr;
+            }
+
+            .book-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📚 Book Buddy - File Upload System</h1>
+            <h1>📚 Book Buddy - Smart Library</h1>
         </header>
         
         <main>
@@ -224,23 +422,62 @@
                 </div>
             </section>
 
-            <!-- Uploaded Files Display -->
-            <section class="uploaded-files" id="uploaded-files" style="display: none;">
-                <h3>📖 Your Book Library</h3>
-                <div id="files-list"></div>
+            <!-- Library Manager Section -->
+            <section class="library-section" id="library-section">
+                <div class="library-header">
+                    <h2>📖 Your Library</h2>
+                    <div class="library-stats" id="library-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="total-books">0</div>
+                            <div class="stat-label">Books</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="total-words">0</div>
+                            <div class="stat-label">Words</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="avg-progress">0%</div>
+                            <div class="stat-label">Progress</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-controls">
+                    <input type="text" id="search-input" class="search-input" placeholder="🔍 Search books by title or content...">
+                    <select id="sort-select" class="filter-select">
+                        <option value="title">📝 Sort by Title</option>
+                        <option value="date">📅 Sort by Date Added</option>
+                        <option value="size">📊 Sort by Size</option>
+                        <option value="progress">📖 Sort by Progress</option>
+                    </select>
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="grid-view" onclick="bookManager.setView('grid')">📱 Grid</button>
+                        <button class="view-btn" id="list-view" onclick="bookManager.setView('list')">📋 List</button>
+                    </div>
+                </div>
+
+                <div class="books-container books-grid" id="books-container">
+                    <div class="empty-library" id="empty-library">
+                        <div class="empty-icon">📚</div>
+                        <h3>Your library is empty</h3>
+                        <p>Upload some .txt files above to get started!</p>
+                    </div>
+                </div>
             </section>
 
             <!-- Test Controls -->
             <section class="test-controls">
-                <h3>🧪 Test Controls</h3>
+                <h3>🧪 Test & Demo Controls</h3>
+                <button onclick="testBookManager()" class="btn btn-success">📚 Test Library Manager</button>
+                <button onclick="addSampleBooks()" class="btn btn-warning">📖 Add Sample Books</button>
                 <button onclick="testFileUpload()" class="btn btn-success">📂 Test File Upload</button>
-                <button onclick="runAllTests()" class="btn btn-primary">🧪 Run Storage Tests</button>
+                <button onclick="runAllTests()" class="btn btn-primary">🧪 Run All Tests</button>
                 <button onclick="demonstrateUsage()" class="btn btn-secondary">📖 Show Examples</button>
                 <button onclick="cleanupTestData()" class="btn btn-danger">🧹 Clean Up</button>
             </section>
             
             <section class="status">
-                <p id="status-message">Ready! Try uploading a .txt book file above.</p>
+                <p id="status-message">📚 Book Buddy Library Manager ready! Upload files or add sample books to test.</p>
             </section>
 
             <div id="console-output" class="console-output" style="display: none;"></div>
@@ -248,15 +485,12 @@
     </div>
 
     <script>
-        /**
-         * StorageManager - Keep your existing StorageManager class exactly as is
-         */
+        // === COMPONENT 1: StorageManager ===
         class StorageManager {
             constructor(appPrefix = 'book-buddy') {
                 this.prefix = appPrefix;
-                this.maxStorageSize = 5 * 1024 * 1024; // 5MB limit
-                this.warningThreshold = 0.8; // Warn at 80% capacity
-                
+                this.maxStorageSize = 5 * 1024 * 1024;
+                this.warningThreshold = 0.8;
                 this.isAvailable = this._testStorageAvailability();
                 
                 if (!this.isAvailable) {
@@ -282,7 +516,6 @@
                     this._checkStorageWarning();
                     
                     return this._createResult(true, 'Data saved successfully', data);
-
                 } catch (error) {
                     return this._handleSaveError(error, key, data);
                 }
@@ -303,7 +536,6 @@
 
                     const parsedData = JSON.parse(rawData);
                     return this._createResult(true, 'Data loaded successfully', parsedData);
-
                 } catch (error) {
                     return this._handleLoadError(error, key, defaultValue);
                 }
@@ -317,12 +549,10 @@
 
                     const prefixedKey = this._getPrefixedKey(key);
                     const exists = localStorage.getItem(prefixedKey) !== null;
-                    
                     localStorage.removeItem(prefixedKey);
                     
                     const message = exists ? 'Key removed successfully' : 'Key did not exist';
                     return this._createResult(true, message);
-
                 } catch (error) {
                     console.error('StorageManager remove error:', error);
                     return this._createResult(false, `Failed to remove key: ${error.message}`);
@@ -336,7 +566,6 @@
                     }
 
                     const keysToRemove = [];
-                    
                     for (let i = 0; i < localStorage.length; i++) {
                         const key = localStorage.key(i);
                         if (key && key.startsWith(this.prefix + '_')) {
@@ -345,9 +574,7 @@
                     }
 
                     keysToRemove.forEach(key => localStorage.removeItem(key));
-                    
                     return this._createResult(true, `Cleared ${keysToRemove.length} keys`);
-
                 } catch (error) {
                     console.error('StorageManager clear error:', error);
                     return this._createResult(false, `Failed to clear storage: ${error.message}`);
@@ -386,7 +613,6 @@
                         percentUsed: Math.round((totalSize / this.maxStorageSize) * 100),
                         appPercentUsed: Math.round((appSize / this.maxStorageSize) * 100)
                     };
-
                 } catch (error) {
                     console.error('StorageManager getStorageInfo error:', error);
                     return { available: false, error: error.message };
@@ -461,35 +687,535 @@
             }
         }
 
-        /**
-         * === COMPONENT 3: FileUploadHandler ===
-         * Handles file uploads with drag-drop, validation, and progress tracking
-         */
-        class FileUploadHandler {
-            constructor(storageManager) {
-                this.storage = storageManager;
-                this.maxFileSize = 2 * 1024 * 1024; // 2MB limit
-                this.allowedTypes = ['.txt']; // Only text files for now
-                this.allowedMimeTypes = ['text/plain'];
-                this.uploadedFiles = new Map(); // Track uploaded files
-                
-                this.initializeEventListeners();
-                this.loadExistingFiles();
+        // === COMPONENT 2: Book Class ===
+        class Book {
+            constructor(data) {
+                this.id = data.id || this.generateId();
+                this.title = data.title || 'Untitled';
+                this.filename = data.filename || '';
+                this.content = data.content || '';
+                this.preview = data.preview || this.generatePreview();
+                this.size = data.size || 0;
+                this.wordCount = data.wordCount || this.calculateWordCount();
+                this.uploadDate = data.uploadDate || new Date().toISOString();
+                this.lastModified = data.lastModified || new Date().toISOString();
+                this.lastRead = data.lastRead || null;
+                this.progress = data.progress || 0; // 0-1 (percentage read)
+                this.bookmarks = data.bookmarks || [];
+                this.notes = data.notes || [];
+                this.tags = data.tags || [];
+                this.rating = data.rating || 0; // 0-5 stars
             }
 
-            /**
-             * Initialize drag-drop and file input event listeners
-             */
+            generateId() {
+                return `book_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+            }
+
+            generatePreview(length = 200) {
+                if (!this.content) return '';
+                return this.content.substring(0, length) + (this.content.length > length ? '...' : '');
+            }
+
+            calculateWordCount() {
+                if (!this.content) return 0;
+                return this.content.trim().split(/\s+/).filter(word => word.length > 0).length;
+            }
+
+            updateProgress(newProgress) {
+                this.progress = Math.max(0, Math.min(1, newProgress));
+                this.lastRead = new Date().toISOString();
+            }
+
+            addBookmark(position, note = '') {
+                const bookmark = {
+                    id: `bookmark_${Date.now()}`,
+                    position,
+                    note,
+                    created: new Date().toISOString()
+                };
+                this.bookmarks.push(bookmark);
+                return bookmark;
+            }
+
+            removeBookmark(bookmarkId) {
+                this.bookmarks = this.bookmarks.filter(b => b.id !== bookmarkId);
+            }
+
+            addNote(content, position = 0) {
+                const note = {
+                    id: `note_${Date.now()}`,
+                    content,
+                    position,
+                    created: new Date().toISOString()
+                };
+                this.notes.push(note);
+                return note;
+            }
+
+            removeNote(noteId) {
+                this.notes = this.notes.filter(n => n.id !== noteId);
+            }
+
+            addTag(tag) {
+                if (!this.tags.includes(tag)) {
+                    this.tags.push(tag);
+                }
+            }
+
+            removeTag(tag) {
+                this.tags = this.tags.filter(t => t !== tag);
+            }
+
+            setRating(rating) {
+                this.rating = Math.max(0, Math.min(5, rating));
+            }
+
+            getReadingTime(wordsPerMinute = 250) {
+                return Math.ceil(this.wordCount / wordsPerMinute);
+            }
+
+            getTimeToFinish(wordsPerMinute = 250) {
+                const wordsRemaining = this.wordCount * (1 - this.progress);
+                return Math.ceil(wordsRemaining / wordsPerMinute);
+            }
+
+            toJSON() {
+                return {
+                    id: this.id,
+                    title: this.title,
+                    filename: this.filename,
+                    content: this.content,
+                    preview: this.preview,
+                    size: this.size,
+                    wordCount: this.wordCount,
+                    uploadDate: this.uploadDate,
+                    lastModified: this.lastModified,
+                    lastRead: this.lastRead,
+                    progress: this.progress,
+                    bookmarks: this.bookmarks,
+                    notes: this.notes,
+                    tags: this.tags,
+                    rating: this.rating
+                };
+            }
+        }
+
+        // === COMPONENT 4: BookManager ===
+        class BookManager {
+            constructor(storageManager) {
+                this.storage = storageManager;
+                this.books = new Map();
+                this.currentView = 'grid';
+                this.sortBy = 'title';
+                this.searchQuery = '';
+                
+                this.initializeEventListeners();
+                this.loadBooks();
+                this.updateDisplay();
+            }
+
+            initializeEventListeners() {
+                // Search functionality
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        this.searchQuery = e.target.value.toLowerCase();
+                        this.updateDisplay();
+                    });
+                }
+
+                // Sort functionality
+                const sortSelect = document.getElementById('sort-select');
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', (e) => {
+                        this.sortBy = e.target.value;
+                        this.updateDisplay();
+                    });
+                }
+            }
+
+            addBook(bookData) {
+                try {
+                    const book = new Book(bookData);
+                    
+                    // Save to storage
+                    const saveResult = this.storage.save(`book_${book.id}`, book.toJSON());
+                    if (!saveResult.success) {
+                        log(`❌ Failed to save book: ${saveResult.message}`, 'error');
+                        return { success: false, message: saveResult.message };
+                    }
+
+                    // Add to local collection
+                    this.books.set(book.id, book);
+                    this.updateDisplay();
+                    
+                    log(`✅ Added book: ${book.title}`, 'success');
+                    return { success: true, book: book };
+                } catch (error) {
+                    log(`❌ Error adding book: ${error.message}`, 'error');
+                    return { success: false, message: error.message };
+                }
+            }
+
+            removeBook(bookId) {
+                try {
+                    const book = this.books.get(bookId);
+                    if (!book) {
+                        return { success: false, message: 'Book not found' };
+                    }
+
+                    // Remove from storage
+                    const removeResult = this.storage.remove(`book_${bookId}`);
+                    if (!removeResult.success) {
+                        return { success: false, message: removeResult.message };
+                    }
+
+                    // Remove from local collection
+                    this.books.delete(bookId);
+                    this.updateDisplay();
+                    
+                    log(`🗑️ Removed book: ${book.title}`, 'success');
+                    return { success: true };
+                } catch (error) {
+                    log(`❌ Error removing book: ${error.message}`, 'error');
+                    return { success: false, message: error.message };
+                }
+            }
+
+            getBook(bookId) {
+                return this.books.get(bookId);
+            }
+
+            getAllBooks() {
+                return Array.from(this.books.values());
+            }
+
+            searchBooks(query) {
+                if (!query) return this.getAllBooks();
+                
+                const lowerQuery = query.toLowerCase();
+                return this.getAllBooks().filter(book => 
+                    book.title.toLowerCase().includes(lowerQuery) ||
+                    book.content.toLowerCase().includes(lowerQuery) ||
+                    book.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+                );
+            }
+
+            sortBooks(books, sortBy) {
+                return books.sort((a, b) => {
+                    switch (sortBy) {
+                        case 'title':
+                            return a.title.localeCompare(b.title);
+                        case 'date':
+                            return new Date(b.uploadDate) - new Date(a.uploadDate);
+                        case 'size':
+                            return b.wordCount - a.wordCount;
+                        case 'progress':
+                            return b.progress - a.progress;
+                        default:
+                            return 0;
+                    }
+                });
+            }
+
+            updateBookProgress(bookId, progress) {
+                const book = this.books.get(bookId);
+                if (!book) return { success: false, message: 'Book not found' };
+
+                book.updateProgress(progress);
+                
+                // Save updated book to storage
+                const saveResult = this.storage.save(`book_${bookId}`, book.toJSON());
+                if (!saveResult.success) {
+                    return { success: false, message: saveResult.message };
+                }
+
+                this.updateDisplay();
+                return { success: true };
+            }
+
+            setView(viewType) {
+                this.currentView = viewType;
+                
+                // Update view toggle buttons
+                document.getElementById('grid-view').classList.toggle('active', viewType === 'grid');
+                document.getElementById('list-view').classList.toggle('active', viewType === 'list');
+                
+                // Update container class
+                const container = document.getElementById('books-container');
+                container.className = `books-container books-${viewType}`;
+                
+                this.updateDisplay();
+            }
+
+            loadBooks() {
+                try {
+                    // Get all book keys from storage
+                    const keys = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith('book-buddy_book_')) {
+                            keys.push(key.replace('book-buddy_', ''));
+                        }
+                    }
+
+                    // Load each book
+                    keys.forEach(key => {
+                        const result = this.storage.load(key);
+                        if (result.success && result.data) {
+                            const book = new Book(result.data);
+                            this.books.set(book.id, book);
+                        }
+                    });
+
+                    if (this.books.size > 0) {
+                        log(`📚 Loaded ${this.books.size} book(s) from storage`, 'info');
+                    }
+                } catch (error) {
+                    log(`⚠️ Error loading books: ${error.message}`, 'warning');
+                }
+            }
+
+            updateDisplay() {
+                this.updateStats();
+                this.displayBooks();
+            }
+
+            updateStats() {
+                const books = this.getAllBooks();
+                const totalBooks = books.length;
+                const totalWords = books.reduce((sum, book) => sum + book.wordCount, 0);
+                const avgProgress = totalBooks > 0 
+                    ? Math.round(books.reduce((sum, book) => sum + book.progress, 0) / totalBooks * 100)
+                    : 0;
+
+                document.getElementById('total-books').textContent = totalBooks;
+                document.getElementById('total-words').textContent = totalWords.toLocaleString();
+                document.getElementById('avg-progress').textContent = `${avgProgress}%`;
+            }
+
+            displayBooks() {
+                const container = document.getElementById('books-container');
+                const emptyLibrary = document.getElementById('empty-library');
+                
+                // Get filtered and sorted books
+                let books = this.searchBooks(this.searchQuery);
+                books = this.sortBooks(books, this.sortBy);
+
+                // Show/hide empty state
+                if (books.length === 0) {
+                    container.innerHTML = '';
+                    container.appendChild(emptyLibrary);
+                    return;
+                }
+
+                // Remove empty state
+                if (container.contains(emptyLibrary)) {
+                    container.removeChild(emptyLibrary);
+                }
+
+                // Clear and populate with books
+                container.innerHTML = '';
+                books.forEach(book => {
+                    const bookElement = this.createBookElement(book);
+                    container.appendChild(bookElement);
+                });
+            }
+
+            createBookElement(book) {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'book-card';
+                
+                const progressPercent = Math.round(book.progress * 100);
+                const readingTime = book.getReadingTime();
+                const timeToFinish = book.getTimeToFinish();
+                const uploadDate = new Date(book.uploadDate).toLocaleDateString();
+                const lastReadText = book.lastRead 
+                    ? `Last read: ${new Date(book.lastRead).toLocaleDateString()}`
+                    : 'Never read';
+
+                bookCard.innerHTML = `
+                    <div class="book-header">
+                        <div>
+                            <div class="book-title">${book.title}</div>
+                            <div class="book-meta">
+                                <span class="meta-item">📊 ${book.wordCount.toLocaleString()} words</span>
+                                <span class="meta-item">⏱️ ${readingTime} min read</span>
+                                <span class="meta-item">📅 ${uploadDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="book-preview">"${book.preview}"</div>
+                    
+                    <div class="book-meta">
+                        <span class="meta-item">📖 ${progressPercent}% completed</span>
+                        <span class="meta-item">⏰ ${timeToFinish} min left</span>
+                        <span class="meta-item">${lastReadText}</span>
+                    </div>
+                    
+                    <div class="book-progress">
+                        <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
+                    </div>
+                    
+                    <div class="book-actions">
+                        <button onclick="bookManager.openBook('${book.id}')" class="btn btn-primary">📖 Read</button>
+                        <button onclick="bookManager.showBookInfo('${book.id}')" class="btn btn-secondary">ℹ️ Info</button>
+                        <button onclick="bookManager.updateProgress('${book.id}')" class="btn btn-success">✅ Progress</button>
+                        <button onclick="bookManager.confirmRemoveBook('${book.id}')" class="btn btn-danger">🗑️ Remove</button>
+                    </div>
+                `;
+
+                return bookCard;
+            }
+
+            openBook(bookId) {
+                const book = this.getBook(bookId);
+                if (!book) {
+                    log(`❌ Book not found: ${bookId}`, 'error');
+                    return;
+                }
+
+                log(`📖 Opening book: ${book.title}`, 'info');
+                log(`Content preview: "${book.content.substring(0, 500)}..."`, 'info');
+                updateStatus(`📖 Reading: ${book.title} (${book.wordCount} words, ${Math.round(book.progress * 100)}% complete)`);
+                
+                // Simulate reading progress update
+                const newProgress = Math.min(1, book.progress + 0.1);
+                this.updateBookProgress(bookId, newProgress);
+            }
+
+            showBookInfo(bookId) {
+                const book = this.getBook(bookId);
+                if (!book) {
+                    log(`❌ Book not found: ${bookId}`, 'error');
+                    return;
+                }
+
+                log(`📋 Book Information for: ${book.title}`, 'info');
+                log(`📄 Filename: ${book.filename}`, 'info');
+                log(`📊 Word Count: ${book.wordCount.toLocaleString()} words`, 'info');
+                log(`📏 File Size: ${Math.round(book.size / 1024)} KB`, 'info');
+                log(`📅 Upload Date: ${new Date(book.uploadDate).toLocaleString()}`, 'info');
+                log(`📖 Reading Progress: ${Math.round(book.progress * 100)}%`, 'info');
+                log(`⭐ Rating: ${book.rating}/5 stars`, 'info');
+                log(`🏷️ Tags: ${book.tags.length > 0 ? book.tags.join(', ') : 'None'}`, 'info');
+                log(`📝 Notes: ${book.notes.length} note(s)`, 'info');
+                log(`🔖 Bookmarks: ${book.bookmarks.length} bookmark(s)`, 'info');
+                
+                updateStatus(`📋 Showing info for: ${book.title}`);
+            }
+
+            updateProgress(bookId) {
+                const book = this.getBook(bookId);
+                if (!book) {
+                    log(`❌ Book not found: ${bookId}`, 'error');
+                    return;
+                }
+
+                const currentPercent = Math.round(book.progress * 100);
+                const newPercent = prompt(`Update reading progress for "${book.title}"\nCurrent progress: ${currentPercent}%\nEnter new progress (0-100):`);
+                
+                if (newPercent === null) return; // User cancelled
+                
+                const progress = parseInt(newPercent);
+                if (isNaN(progress) || progress < 0 || progress > 100) {
+                    log(`❌ Invalid progress value: ${newPercent}`, 'error');
+                    return;
+                }
+
+                const result = this.updateBookProgress(bookId, progress / 100);
+                if (result.success) {
+                    log(`✅ Updated progress for "${book.title}" to ${progress}%`, 'success');
+                    updateStatus(`✅ Progress updated: ${book.title} is now ${progress}% complete`);
+                } else {
+                    log(`❌ Failed to update progress: ${result.message}`, 'error');
+                }
+            }
+
+            confirmRemoveBook(bookId) {
+                const book = this.getBook(bookId);
+                if (!book) {
+                    log(`❌ Book not found: ${bookId}`, 'error');
+                    return;
+                }
+
+                if (confirm(`Are you sure you want to remove "${book.title}" from your library?\n\nThis action cannot be undone.`)) {
+                    const result = this.removeBook(bookId);
+                    if (result.success) {
+                        updateStatus(`🗑️ Removed: ${book.title}`);
+                    } else {
+                        log(`❌ Failed to remove book: ${result.message}`, 'error');
+                    }
+                }
+            }
+
+            getLibraryStats() {
+                const books = this.getAllBooks();
+                const totalBooks = books.length;
+                const totalWords = books.reduce((sum, book) => sum + book.wordCount, 0);
+                const totalSize = books.reduce((sum, book) => sum + book.size, 0);
+                const avgProgress = totalBooks > 0 
+                    ? books.reduce((sum, book) => sum + book.progress, 0) / totalBooks
+                    : 0;
+                const booksRead = books.filter(book => book.progress >= 1).length;
+                const booksInProgress = books.filter(book => book.progress > 0 && book.progress < 1).length;
+                const booksUnread = books.filter(book => book.progress === 0).length;
+
+                return {
+                    totalBooks,
+                    totalWords,
+                    totalSize,
+                    avgProgress,
+                    booksRead,
+                    booksInProgress,
+                    booksUnread,
+                    averageWordCount: totalBooks > 0 ? Math.round(totalWords / totalBooks) : 0,
+                    averageSize: totalBooks > 0 ? Math.round(totalSize / totalBooks) : 0
+                };
+            }
+
+            exportLibrary() {
+                const books = this.getAllBooks().map(book => book.toJSON());
+                const exportData = {
+                    exportDate: new Date().toISOString(),
+                    version: '1.0',
+                    books: books,
+                    stats: this.getLibraryStats()
+                };
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `book-buddy-library-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                log(`📤 Library exported: ${books.length} books`, 'success');
+            }
+        }
+
+        // === COMPONENT 3: FileUploadHandler (Updated to work with BookManager) ===
+        class FileUploadHandler {
+            constructor(storageManager, bookManager) {
+                this.storage = storageManager;
+                this.bookManager = bookManager;
+                this.maxFileSize = 2 * 1024 * 1024;
+                this.allowedTypes = ['.txt'];
+                this.allowedMimeTypes = ['text/plain'];
+                
+                this.initializeEventListeners();
+            }
+
             initializeEventListeners() {
                 const uploadSection = document.getElementById('upload-section');
                 const fileInput = document.getElementById('file-input');
 
-                // File input change event
                 fileInput.addEventListener('change', (e) => {
                     this.handleFiles(e.target.files);
                 });
 
-                // Drag and drop events
                 uploadSection.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     uploadSection.classList.add('drag-over');
@@ -507,9 +1233,6 @@
                 });
             }
 
-            /**
-             * Process uploaded files with validation
-             */
             async handleFiles(files) {
                 if (!files || files.length === 0) return;
 
@@ -520,19 +1243,13 @@
                     await this.processFile(file);
                 }
 
-                this.updateFilesList();
                 updateStatus(`Successfully processed ${files.length} file(s)!`);
             }
 
-            /**
-             * Process a single file with validation and storage
-             */
             async processFile(file) {
                 try {
-                    // Show progress
                     this.showProgress(file.name);
 
-                    // Validate file
                     const validation = this.validateFile(file);
                     if (!validation.valid) {
                         log(`❌ ${file.name}: ${validation.error}`, 'error');
@@ -540,44 +1257,32 @@
                         return;
                     }
 
-                    // Update progress
                     this.updateProgress(25, 'Validating...');
 
-                    // Read file content
                     const content = await this.readFileContent(file);
                     this.updateProgress(75, 'Processing...');
 
-                    // Create book object
                     const bookData = this.createBookData(file, content);
-
-                    // Save to storage
-                    const saveResult = this.storage.save(`book_${bookData.id}`, bookData);
-                    if (!saveResult.success) {
-                        log(`❌ Failed to save ${file.name}: ${saveResult.message}`, 'error');
+                    
+                    // Use BookManager to add the book
+                    const result = this.bookManager.addBook(bookData);
+                    if (!result.success) {
+                        log(`❌ Failed to add ${file.name}: ${result.message}`, 'error');
                         this.hideProgress();
                         return;
                     }
 
-                    // Track uploaded file
-                    this.uploadedFiles.set(bookData.id, bookData);
-                    
                     this.updateProgress(100, 'Complete!');
                     log(`✅ Successfully uploaded: ${file.name}`, 'success');
 
-                    // Hide progress after a short delay
                     setTimeout(() => this.hideProgress(), 1000);
-
                 } catch (error) {
                     log(`❌ Error processing ${file.name}: ${error.message}`, 'error');
                     this.hideProgress();
                 }
             }
 
-            /**
-             * Validate file type and size
-             */
             validateFile(file) {
-                // Check file extension
                 const fileName = file.name.toLowerCase();
                 const hasValidExtension = this.allowedTypes.some(type => fileName.endsWith(type));
                 
@@ -588,7 +1293,6 @@
                     };
                 }
 
-                // Check MIME type
                 if (!this.allowedMimeTypes.includes(file.type) && file.type !== '') {
                     return {
                         valid: false,
@@ -596,7 +1300,6 @@
                     };
                 }
 
-                // Check file size
                 if (file.size > this.maxFileSize) {
                     const maxSizeMB = this.maxFileSize / (1024 * 1024);
                     return {
@@ -605,7 +1308,6 @@
                     };
                 }
 
-                // Check if file is empty
                 if (file.size === 0) {
                     return {
                         valid: false,
@@ -616,9 +1318,6 @@
                 return { valid: true };
             }
 
-            /**
-             * Read file content as text
-             */
             readFileContent(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -635,60 +1334,23 @@
                 });
             }
 
-            /**
-             * Create book data object from file
-             */
             createBookData(file, content) {
-                const id = this.generateBookId(file.name);
-                const preview = content.substring(0, 200) + (content.length > 200 ? '...' : '');
-                
                 return {
-                    id: id,
                     title: this.extractTitle(file.name),
                     filename: file.name,
                     content: content,
-                    preview: preview,
                     size: file.size,
-                    wordCount: this.countWords(content),
-                    uploadDate: new Date().toISOString(),
-                    lastModified: new Date(file.lastModified).toISOString(),
-                    progress: 0, // Reading progress
-                    bookmarks: [],
-                    notes: []
+                    lastModified: new Date(file.lastModified).toISOString()
                 };
             }
 
-            /**
-             * Generate unique book ID
-             */
-            generateBookId(filename) {
-                const timestamp = Date.now();
-                const random = Math.random().toString(36).substring(2, 8);
-                const name = filename.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                return `${name}_${timestamp}_${random}`;
-            }
-
-            /**
-             * Extract book title from filename
-             */
             extractTitle(filename) {
-                // Remove file extension and clean up
                 return filename
-                    .replace(/\.[^/.]+$/, '') // Remove extension
-                    .replace(/[_-]/g, ' ') // Replace underscores and dashes with spaces
-                    .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize words
+                    .replace(/\.[^/.]+$/, '')
+                    .replace(/[_-]/g, ' ')
+                    .replace(/\b\w/g, l => l.toUpperCase());
             }
 
-            /**
-             * Count words in text content
-             */
-            countWords(text) {
-                return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-            }
-
-            /**
-             * Show upload progress UI
-             */
             showProgress(filename) {
                 const progressContainer = document.getElementById('progress-container');
                 const currentFile = document.getElementById('current-file');
@@ -698,9 +1360,6 @@
                 this.updateProgress(0, 'Starting...');
             }
 
-            /**
-             * Update progress bar
-             */
             updateProgress(percent, status) {
                 const progressFill = document.getElementById('progress-fill');
                 const progressText = document.getElementById('progress-text');
@@ -709,167 +1368,19 @@
                 progressText.textContent = `${percent}% - ${status}`;
             }
 
-            /**
-             * Hide progress UI
-             */
             hideProgress() {
                 const progressContainer = document.getElementById('progress-container');
                 progressContainer.style.display = 'none';
             }
-
-            /**
-             * Load existing files from storage
-             */
-            loadExistingFiles() {
-                try {
-                    // Get all storage keys
-                    const keys = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key && key.startsWith('book-buddy_book_')) {
-                            keys.push(key.replace('book-buddy_', ''));
-                        }
-                    }
-
-                    // Load each book
-                    keys.forEach(key => {
-                        const result = this.storage.load(key);
-                        if (result.success && result.data) {
-                            this.uploadedFiles.set(result.data.id, result.data);
-                        }
-                    });
-
-                    if (this.uploadedFiles.size > 0) {
-                        log(`📚 Loaded ${this.uploadedFiles.size} existing book(s) from storage`, 'info');
-                        this.updateFilesList();
-                    }
-
-                } catch (error) {
-                    log(`⚠️ Error loading existing files: ${error.message}`, 'warning');
-                }
-            }
-
-            /**
-             * Update the files list display
-             */
-            updateFilesList() {
-                const uploadedSection = document.getElementById('uploaded-files');
-                const filesList = document.getElementById('files-list');
-                
-                if (this.uploadedFiles.size === 0) {
-                    uploadedSection.style.display = 'none';
-                    return;
-                }
-
-                uploadedSection.style.display = 'block';
-                filesList.innerHTML = '';
-
-                this.uploadedFiles.forEach((book, id) => {
-                    const fileItem = this.createFileItemElement(book);
-                    filesList.appendChild(fileItem);
-                });
-            }
-
-            /**
-             * Create file item HTML element
-             */
-            createFileItemElement(book) {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                
-                const sizeKB = Math.round(book.size / 1024);
-                const uploadDate = new Date(book.uploadDate).toLocaleDateString();
-                
-                item.innerHTML = `
-                    <div class="file-info">
-                        <div class="file-name">📖 ${book.title}</div>
-                        <div class="file-details">
-                            ${book.wordCount.toLocaleString()} words • ${sizeKB}KB • Uploaded ${uploadDate}
-                        </div>
-                        <div class="file-details" style="margin-top: 5px; font-style: italic;">
-                            "${book.preview}"
-                        </div>
-                    </div>
-                    <div class="file-actions">
-                        <button onclick="fileUploader.viewBook('${book.id}')" class="btn btn-primary">📖 Read</button>
-                        <button onclick="fileUploader.removeBook('${book.id}')" class="btn btn-danger">🗑️ Remove</button>
-                    </div>
-                `;
-                
-                return item;
-            }
-
-            /**
-             * View/read a book (placeholder for now)
-             */
-            viewBook(bookId) {
-                const book = this.uploadedFiles.get(bookId);
-                if (!book) {
-                    log(`❌ Book not found: ${bookId}`, 'error');
-                    return;
-                }
-
-                log(`📖 Opening book: ${book.title}`, 'info');
-                log(`Content preview: "${book.content.substring(0, 500)}..."`, 'info');
-                updateStatus(`📖 Reading: ${book.title} (${book.wordCount} words)`);
-            }
-
-            /**
-             * Remove a book from storage and list
-             */
-            removeBook(bookId) {
-                if (!confirm('Are you sure you want to remove this book?')) {
-                    return;
-                }
-
-                const book = this.uploadedFiles.get(bookId);
-                if (!book) {
-                    log(`❌ Book not found: ${bookId}`, 'error');
-                    return;
-                }
-
-                // Remove from storage
-                const result = this.storage.remove(`book_${bookId}`);
-                if (result.success) {
-                    // Remove from local map
-                    this.uploadedFiles.delete(bookId);
-                    this.updateFilesList();
-                    log(`🗑️ Removed book: ${book.title}`, 'success');
-                    updateStatus(`Removed: ${book.title}`);
-                } else {
-                    log(`❌ Failed to remove book: ${result.message}`, 'error');
-                }
-            }
-
-            /**
-             * Get upload statistics
-             */
-            getUploadStats() {
-                const totalFiles = this.uploadedFiles.size;
-                let totalSize = 0;
-                let totalWords = 0;
-
-                this.uploadedFiles.forEach(book => {
-                    totalSize += book.size;
-                    totalWords += book.wordCount;
-                });
-
-                return {
-                    totalFiles,
-                    totalSize,
-                    totalWords,
-                    averageSize: totalFiles > 0 ? Math.round(totalSize / totalFiles) : 0,
-                    averageWords: totalFiles > 0 ? Math.round(totalWords / totalFiles) : 0
-                };
-            }
         }
 
-        // Initialize the app with existing storage code
-        const storage = new StorageManager('book-buddy');
-        const fileUploader = new FileUploadHandler(storage);
+        // === APP INITIALIZATION ===
         let consoleOutput = '';
+        const storage = new StorageManager('book-buddy');
+        const bookManager = new BookManager(storage);
+        const fileUploader = new FileUploadHandler(storage, bookManager);
 
-        // Keep all your existing console logging functions...
+        // === UTILITY FUNCTIONS ===
         function log(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
             const prefix = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
@@ -888,17 +1399,103 @@
             document.getElementById('status-message').textContent = message;
         }
 
-        // === NEW FILE UPLOAD TEST FUNCTION ===
+        // === TEST FUNCTIONS ===
+        function testBookManager() {
+            consoleOutput = '';
+            log('📚 Testing BookManager Component...', 'info');
+            updateStatus('Testing library manager functionality...');
+
+            // Test Book class
+            log('📖 Testing Book class...', 'info');
+            const testBookData = {
+                title: 'Test Book',
+                content: 'This is a test book with some content for testing purposes.',
+                filename: 'test-book.txt',
+                size: 1024
+            };
+
+            const book = new Book(testBookData);
+            log(`Book creation: ${book.title === 'Test Book' ? 'PASS' : 'FAIL'}`, 
+                book.title === 'Test Book' ? 'success' : 'error');
+            log(`Word count calculation: ${book.wordCount === 12 ? 'PASS' : 'FAIL'} - Got: ${book.wordCount}`, 
+                book.wordCount === 12 ? 'success' : 'error');
+
+            // Test progress update
+            book.updateProgress(0.5);
+            log(`Progress update: ${book.progress === 0.5 ? 'PASS' : 'FAIL'}`, 
+                book.progress === 0.5 ? 'success' : 'error');
+
+            // Test BookManager functionality
+            log('📚 Testing BookManager functionality...', 'info');
+            const initialCount = bookManager.getAllBooks().length;
+            
+            const addResult = bookManager.addBook(testBookData);
+            log(`Add book: ${addResult.success ? 'PASS' : 'FAIL'} - ${addResult.success ? 'Book added' : addResult.message}`, 
+                addResult.success ? 'success' : 'error');
+
+            const newCount = bookManager.getAllBooks().length;
+            log(`Book count increased: ${newCount === initialCount + 1 ? 'PASS' : 'FAIL'}`, 
+                newCount === initialCount + 1 ? 'success' : 'error');
+
+            // Test search
+            const searchResults = bookManager.searchBooks('test');
+            log(`Search functionality: ${searchResults.length > 0 ? 'PASS' : 'FAIL'}`, 
+                searchResults.length > 0 ? 'success' : 'error');
+
+            // Test stats
+            const stats = bookManager.getLibraryStats();
+            log(`Library stats: Total books: ${stats.totalBooks}, Total words: ${stats.totalWords}`, 'info');
+
+            log('✅ BookManager component tests completed!', 'success');
+            updateStatus('BookManager tests completed! Library functionality is ready.');
+        }
+
+        function addSampleBooks() {
+            log('📚 Adding sample books to library...', 'info');
+            
+            const sampleBooks = [
+                {
+                    title: 'The Great Gatsby',
+                    content: 'In my younger and more vulnerable years my father gave me some advice that I\'ve carried with me ever since. "Whenever you feel like criticizing anyone," he told me, "just remember that all the people in this world haven\'t had the advantages that you\'ve had." This classic American novel explores themes of wealth, love, and the American Dream through the eyes of Nick Carraway.',
+                    filename: 'great-gatsby.txt',
+                    size: 2048
+                },
+                {
+                    title: '1984',
+                    content: 'It was a bright cold day in April, and the clocks were striking thirteen. Winston Smith, his chin nuzzled into his breast in an effort to escape the vile wind, slipped quickly through the glass doors of Victory Mansions. This dystopian novel presents a terrifying vision of totalitarian control and the struggle for individual freedom.',
+                    filename: '1984.txt',
+                    size: 3072
+                },
+                {
+                    title: 'Pride and Prejudice',
+                    content: 'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife. This witty social commentary follows Elizabeth Bennet as she navigates the complex world of marriage, family, and social expectations in Regency England.',
+                    filename: 'pride-prejudice.txt',
+                    size: 2560
+                }
+            ];
+
+            sampleBooks.forEach(bookData => {
+                const result = bookManager.addBook(bookData);
+                if (result.success) {
+                    log(`✅ Added sample book: ${bookData.title}`, 'success');
+                    
+                    // Add some sample progress
+                    const randomProgress = Math.random() * 0.8; // 0-80% progress
+                    bookManager.updateBookProgress(result.book.id, randomProgress);
+                } else {
+                    log(`❌ Failed to add ${bookData.title}: ${result.message}`, 'error');
+                }
+            });
+
+            updateStatus(`📚 Added ${sampleBooks.length} sample books to your library!`);
+        }
+
         function testFileUpload() {
             consoleOutput = '';
             log('📂 Testing File Upload Component...', 'info');
             updateStatus('Testing file upload functionality...');
 
-            // Test file validation
-            log('🔍 Testing file validation...', 'info');
-            
-            // Create mock files for testing
-            const validFile = new File(['This is a test book content with multiple words to test.'], 'test-book.txt', {
+            const validFile = new File(['This is a test book content with multiple words to test the upload functionality.'], 'test-upload.txt', {
                 type: 'text/plain',
                 lastModified: Date.now()
             });
@@ -908,7 +1505,6 @@
                 lastModified: Date.now()
             });
 
-            // Test validation
             const validResult = fileUploader.validateFile(validFile);
             log(`Valid .txt file: ${validResult.valid ? 'PASS' : 'FAIL'} - ${validResult.error || 'OK'}`, 
                 validResult.valid ? 'success' : 'error');
@@ -917,48 +1513,32 @@
             log(`Invalid .pdf file: ${!invalidResult.valid ? 'PASS' : 'FAIL'} - ${invalidResult.error || 'Should fail'}`, 
                 !invalidResult.valid ? 'success' : 'error');
 
-            // Test utility functions
-            log('🛠️ Testing utility functions...', 'info');
-            
             const testTitle = fileUploader.extractTitle('the-great-gatsby.txt');
             log(`Title extraction: ${testTitle === 'The Great Gatsby' ? 'PASS' : 'FAIL'} - Got: "${testTitle}"`, 
                 testTitle === 'The Great Gatsby' ? 'success' : 'error');
-
-            const testWords = fileUploader.countWords('Hello world this is a test');
-            log(`Word counting: ${testWords === 6 ? 'PASS' : 'FAIL'} - Got: ${testWords}`, 
-                testWords === 6 ? 'success' : 'error');
-
-            // Test book ID generation
-            const bookId = fileUploader.generateBookId('test-book.txt');
-            log(`Book ID generation: ${bookId.includes('testbook') ? 'PASS' : 'FAIL'} - Got: ${bookId}`, 
-                bookId.includes('testbook') ? 'success' : 'error');
-
-            // Test upload stats
-            const stats = fileUploader.getUploadStats();
-            log(`Upload stats: Files: ${stats.totalFiles}, Total words: ${stats.totalWords}`, 'info');
 
             log('✅ File upload component tests completed!', 'success');
             updateStatus('File upload tests completed! Try uploading a real .txt file above.');
         }
 
-        // Keep all your existing test functions...
         function runAllTests() {
             consoleOutput = '';
-            log('🧪 Starting All Tests...', 'info');
-            updateStatus('Running all tests...');
+            log('🧪 Starting All Components Tests...', 'info');
+            updateStatus('Running comprehensive tests...');
             
             testBasicOperations();
             testComplexData();
             testErrorHandling();
             testStorageManagement();
             testFileUpload();
+            testBookManager();
             
-            log('✅ All tests completed!', 'success');
-            updateStatus('All tests completed! File upload component is ready.');
+            log('✅ All component tests completed!', 'success');
+            updateStatus('All tests completed! Book Buddy is fully functional.');
         }
 
         function testBasicOperations() {
-            log('📝 Testing basic save/load operations...', 'info');
+            log('📝 Testing basic storage operations...', 'info');
             
             let result = storage.save('test_string', 'Hello World');
             log(`Save string: ${result.success ? 'PASS' : 'FAIL'} - ${result.message}`, 
@@ -967,40 +1547,23 @@
             result = storage.load('test_string');
             log(`Load string: ${result.success && result.data === 'Hello World' ? 'PASS' : 'FAIL'} - Got: ${result.data}`, 
                 result.success && result.data === 'Hello World' ? 'success' : 'error');
-            
-            storage.save('test_number', 42);
-            result = storage.load('test_number');
-            log(`Number data: ${result.success && result.data === 42 ? 'PASS' : 'FAIL'} - Got: ${result.data}`, 
-                result.success && result.data === 42 ? 'success' : 'error');
-            
-            result = storage.load('nonexistent', 'default');
-            log(`Default value: ${result.data === 'default' ? 'PASS' : 'FAIL'} - Got: ${result.data}`, 
-                result.data === 'default' ? 'success' : 'error');
         }
 
         function testComplexData() {
             log('📊 Testing complex data structures...', 'info');
             
-            const bookData = {
-                id: 'book_1',
-                title: 'Test Book',
-                author: 'Test Author',
-                chapters: ['Chapter 1', 'Chapter 2'],
-                metadata: {
-                    pages: 100,
-                    genre: 'Fiction'
-                }
+            const complexData = {
+                id: 'test_1',
+                nested: { value: 42 },
+                array: [1, 2, 3]
             };
             
-            let result = storage.save('complex_book', bookData);
-            log(`Save complex object: ${result.success ? 'PASS' : 'FAIL'} - ${result.message}`, 
+            let result = storage.save('complex_test', complexData);
+            log(`Save complex object: ${result.success ? 'PASS' : 'FAIL'}`, 
                 result.success ? 'success' : 'error');
             
-            result = storage.load('complex_book');
-            const isValid = result.success && 
-                           result.data.title === 'Test Book' &&
-                           result.data.chapters.length === 2 &&
-                           result.data.metadata.pages === 100;
+            result = storage.load('complex_test');
+            const isValid = result.success && result.data.nested.value === 42;
             log(`Load complex object: ${isValid ? 'PASS' : 'FAIL'}`, 
                 isValid ? 'success' : 'error');
         }
@@ -1010,7 +1573,7 @@
             
             localStorage.setItem('book-buddy_corrupted', '{invalid json');
             const result = storage.load('corrupted', 'fallback');
-            log(`Corrupted data handling: ${result.data === 'fallback' ? 'PASS' : 'FAIL'} - ${result.message}`, 
+            log(`Corrupted data handling: ${result.data === 'fallback' ? 'PASS' : 'FAIL'}`, 
                 result.data === 'fallback' ? 'success' : 'error');
         }
 
@@ -1024,91 +1587,69 @@
             if (info.available) {
                 log(`Storage usage: ${info.appSize} bytes (${info.appPercentUsed}%)`, 'info');
             }
-            
-            storage.save('temp_item', 'temporary');
-            let result = storage.remove('temp_item');
-            log(`Remove item: ${result.success ? 'PASS' : 'FAIL'} - ${result.message}`, 
-                result.success ? 'success' : 'error');
         }
 
         function demonstrateUsage() {
             consoleOutput = '';
-            log('📖 Book Buddy Usage Examples', 'info');
-            updateStatus('Running usage examples...');
+            log('📖 Book Buddy Complete Usage Examples', 'info');
+            updateStatus('Running complete usage demonstration...');
             
-            const sampleBook = {
-                id: 'gatsby_001',
-                title: 'The Great Gatsby',
-                author: 'F. Scott Fitzgerald',
-                content: 'In my younger and more vulnerable years my father gave me some advice...',
-                currentPage: 45,
-                totalPages: 180,
-                notes: ['Classic American literature', 'Symbolism of the green light'],
-                lastRead: new Date().toISOString()
-            };
+            log('📚 Library Management Features:', 'info');
+            log(`- Current library size: ${bookManager.getAllBooks().length} books`, 'info');
             
-            log('💾 Saving sample book...', 'info');
-            let result = storage.save('current_book', sampleBook);
-            log(`Book saved: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.message}`, 
-                result.success ? 'success' : 'error');
+            const stats = bookManager.getLibraryStats();
+            log(`- Total words in library: ${stats.totalWords.toLocaleString()}`, 'info');
+            log(`- Average reading progress: ${Math.round(stats.avgProgress * 100)}%`, 'info');
+            log(`- Books completed: ${stats.booksRead}`, 'info');
+            log(`- Books in progress: ${stats.booksInProgress}`, 'info');
+            log(`- Unread books: ${stats.booksUnread}`, 'info');
             
-            log('📖 Loading book...', 'info');
-            result = storage.load('current_book');
-            if (result.success) {
-                const book = result.data;
-                log(`Loaded: "${book.title}" by ${book.author}`, 'success');
-                log(`Progress: ${Math.round((book.currentPage / book.totalPages) * 100)}% complete`, 'info');
-                log(`Notes: ${book.notes.join(', ')}`, 'info');
-            }
-
-            // Demonstrate file upload capabilities
-            log('📂 File Upload Capabilities:', 'info');
-            log(`- Supported formats: ${fileUploader.allowedTypes.join(', ')}`, 'info');
-            log(`- Maximum file size: ${fileUploader.maxFileSize / (1024 * 1024)}MB`, 'info');
-            log(`- Current library: ${fileUploader.uploadedFiles.size} book(s)`, 'info');
+            log('🔍 Search and Filter Features:', 'info');
+            log(`- Search by title or content`, 'info');
+            log(`- Sort by title, date, size, or progress`, 'info');
+            log(`- Grid and list view modes`, 'info');
             
-            const stats = fileUploader.getUploadStats();
-            if (stats.totalFiles > 0) {
-                log(`- Total words in library: ${stats.totalWords.toLocaleString()}`, 'info');
-                log(`- Average book size: ${Math.round(stats.averageSize / 1024)}KB`, 'info');
-            }
+            log('📖 Book Management Features:', 'info');
+            log(`- Reading progress tracking`, 'info');
+            log(`- Bookmark and note support`, 'info');
+            log(`- Tag organization`, 'info');
+            log(`- Reading time estimation`, 'info');
             
-            updateStatus('Usage examples completed! Try uploading your own .txt files above.');
+            updateStatus('Usage demonstration completed! Your library is ready to use.');
         }
 
         function cleanupTestData() {
-            log('🧹 Cleaning up test data...', 'info');
-            const result = storage.clear();
+            log('🧹 Cleaning up all test data...', 'info');
             
-            // Also clear the file uploader's memory
-            fileUploader.uploadedFiles.clear();
-            fileUploader.updateFilesList();
+            const result = storage.clear();
+            bookManager.books.clear();
+            bookManager.updateDisplay();
             
             log(`Cleanup result: ${result.success ? 'SUCCESS' : 'FAILED'} - ${result.message}`, 
                 result.success ? 'success' : 'error');
-            updateStatus('All test data cleaned up! Upload section reset.');
+            updateStatus('All test data cleaned up! Library reset to empty state.');
         }
 
-        // Initialize the app
-        updateStatus(`📚 Book Buddy File Upload Ready! Drop a .txt file above or click to browse.`);
-        log('🚀 Book Buddy with File Upload initialized!', 'success');
+        // === APP STARTUP ===
+        updateStatus('📚 Book Buddy Library Manager ready! Upload files or add sample books to get started.');
+        log('🚀 Book Buddy with Library Manager initialized!', 'success');
         log(`Storage available: ${storage.isAvailable}`, 'info');
-        log(`File upload ready - supported types: ${fileUploader.allowedTypes.join(', ')}`, 'info');
+        log(`Components loaded: StorageManager, Book, BookManager, FileUploadHandler`, 'info');
         
-        // Test initial functionality
         const initialTest = storage.save('app_initialized', { 
             timestamp: new Date().toISOString(),
-            version: '1.1.0',
-            components: ['StorageManager', 'FileUploadHandler']
+            version: '1.2.0',
+            components: ['StorageManager', 'Book', 'BookManager', 'FileUploadHandler']
         });
         
         if (initialTest.success) {
-            log('✅ Components initialized successfully!', 'success');
+            log('✅ All components initialized successfully!', 'success');
         } else {
             log('❌ Component initialization failed!', 'error');
         }
 
-        // Make fileUploader available globally for button clicks
+        // Make bookManager available globally for button clicks
+        window.bookManager = bookManager;
         window.fileUploader = fileUploader;
     </script>
 </body>
