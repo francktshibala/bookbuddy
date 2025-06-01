@@ -649,7 +649,7 @@
             
             this.initialize();
         }
-
+        
         async initialize() {
             try {
                 console.log('🚀 Initializing Book Buddy (Fixed Imports)...');
@@ -1186,11 +1186,10 @@
         }
     }
 
-    // Initialize the application when DOM is ready
+    // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
         window.bookBuddyApp = new BookBuddyApp();
     });
 
-    // Export for debugging purposes
     window.BookBuddyApp = BookBuddyApp;
 </script>
