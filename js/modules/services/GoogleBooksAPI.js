@@ -1,5 +1,5 @@
 /**
- * Enhanced GoogleBooksAPI - Component 10.1
+ * Enhanced GoogleBooksAPI - Component 10.1 - FIXED VERSION
  * Advanced Google Books API integration with caching, batch search, and enhanced features
  */
 import APIService from './APIService.js';
@@ -447,6 +447,16 @@ export default class GoogleBooksAPI extends APIService {
         };
 
         return book;
+    }
+
+    /**
+     * Extract ISBN from industry identifiers
+     */
+    extractISBN(identifiers, type) {
+        if (!identifiers || !Array.isArray(identifiers)) return '';
+        
+        const identifier = identifiers.find(id => id.type === type);
+        return identifier ? identifier.identifier : '';
     }
 
     /**
