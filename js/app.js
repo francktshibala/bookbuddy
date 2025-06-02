@@ -4,6 +4,7 @@
  */
 
 // Import all modules with CORRECTED PATHS
+import SearchResultsRenderer from './modules/ui/SearchResultsRenderer.js';
 import BookCoverManager from './modules/ui/BookCoverManager.js';
 import StorageManager from './utils/StorageManager.js';
 import Book from './modules/models/Book.js';
@@ -36,6 +37,7 @@ class BookBuddyApp {
         this.modalManager = new ModalManager();
         this.bookListRenderer = new BookListRenderer();
         this.readingInterface = new ReadingInterface();
+        this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
         
     try {
         this.bookCoverManager = new BookCoverManager();
@@ -337,20 +339,14 @@ class BookBuddyApp {
     }
 
     // ✅ NEW: Display search results in the UI
+    // Update the displaySearchResults method
     displaySearchResults(books) {
-        const searchResultsContainer = DOMUtils.query('#search-results');
-        if (!searchResultsContainer) return;
-
-        if (books.length === 0) {
-            searchResultsContainer.innerHTML = this.bookListRenderer.renderEmptyState();
-            return;
-        }
-
-        const resultsHTML = this.bookListRenderer.renderSearchResults(books);
-        searchResultsContainer.innerHTML = resultsHTML;
-
-        // Setup event listeners for "Add to Library" buttons
-        this.setupSearchResultListeners();
+        this.searchResultsRenderer.renderSearchResults(books, {
+            targetContainer: '#search-results',
+            showFilters: true,
+            showSorting: true,
+            showPagination: true
+        });
     }
 
     // ✅ NEW: Setup event listeners for search results
@@ -522,6 +518,9 @@ class BookBuddyApp {
             });
         });
 
+        eventBus.on('search:viewModeChanged', () => {
+            this.searchResultsRenderer.refreshResults();
+        });
         // Book events
         eventBus.on(EVENTS.BOOK_ADDED, (data) => {
             this.refreshLibraryView();
@@ -554,7 +553,12 @@ class BookBuddyApp {
             this.readingInterface.loadBook(data.book);
             this.navigationController.navigateToView('reading');
         });
-    }
+
+        // Add event listener for "Add to Library"
+        eventBus.on('search:addToLibrary', async (data) => {
+            await this.addBookFromSearch(data.book, data.button);
+        });
+            }
 
     // Rest of your existing methods remain the same...
     async loadAppSettings() {
