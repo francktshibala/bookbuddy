@@ -1,5 +1,5 @@
 /**
- * AdvancedSearchInterface - Component 10.4
+ * AdvancedSearchInterface - Component 10.4 - COMPLETE IMPLEMENTATION
  * Provides advanced search form with multiple criteria, filters, history, and auto-complete
  */
 import { DOMUtils, StringUtils, DateUtils, AsyncUtils } from '../../utils/Helpers.js';
@@ -58,6 +58,38 @@ export default class AdvancedSearchInterface {
         this.loadAutoCompleteSuggestions();
         
         console.log('🎛️ AdvancedSearchInterface initialized in', containerSelector);
+    }
+
+    /**
+     * Get default search criteria
+     */
+    getDefaultCriteria() {
+        return {
+            query: '',
+            title: '',
+            author: '',
+            subject: '',
+            isbn: '',
+            publisher: '',
+            keywords: '',
+            expertQuery: ''
+        };
+    }
+
+    /**
+     * Get default filters
+     */
+    getDefaultFilters() {
+        return {
+            language: 'all',
+            yearFrom: null,
+            yearTo: null,
+            printType: '',
+            orderBy: 'relevance',
+            maxResults: 20,
+            previewAvailable: false,
+            freeEbooks: false
+        };
     }
 
     /**
@@ -526,7 +558,7 @@ intitle:&quot;JavaScript&quot; inauthor:&quot;Douglas Crockford&quot; subject:pr
                     <h4 class="section-title">
                         <span class="section-icon">🕒</span>
                         Recent Searches
-                        <span class="history-count">(${this.searchHistory.length})</span>
+                        <span class="history-count">${this.searchHistory.length}</span>
                     </h4>
                     <div class="section-actions">
                         <button type="button" class="btn btn-xs btn-outline" id="clear-history">
@@ -590,7 +622,7 @@ intitle:&quot;JavaScript&quot; inauthor:&quot;Douglas Crockford&quot; subject:pr
                     <h4 class="section-title">
                         <span class="section-icon">💾</span>
                         Saved Searches
-                        <span class="saved-count">(${this.savedSearches.length})</span>
+                        <span class="saved-count">${this.savedSearches.length}</span>
                     </h4>
                     <button type="button" class="section-toggle" data-section="saved">
                         <span class="toggle-icon">${this.expandedSections.has('saved') ? '−' : '+'}</span>
@@ -712,17 +744,6 @@ intitle:&quot;JavaScript&quot; inauthor:&quot;Douglas Crockford&quot; subject:pr
         searchInputs.forEach(input => {
             let debounceTimer;
             
-            input.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    this.handleAutoComplete(e.target);
-                }, this.searchConfig.debounceDelay);
-            });
-
-            input.addEventListener('focus', (e) => {
-                this.showSuggestions(e.target);
-            });
-
             input.addEventListener('blur', (e) => {
                 // Delay hiding to allow clicking on suggestions
                 setTimeout(() => this.hideSuggestions(e.target), 200);
@@ -747,3 +768,1304 @@ intitle:&quot;JavaScript&quot; inauthor:&quot;Douglas Crockford&quot; subject:pr
         }
 
         try {
+            const suggestions = await this.getSuggestions(query, field);
+            this.showSuggestionDropdown(input, suggestions);
+        } catch (error) {
+            console.error('Auto-complete error:', error);
+        }
+    }
+
+    /**
+     * Get suggestions for a query and field
+     */
+    async getSuggestions(query, field) {
+        const cacheKey = `${field}:${query}`;
+        
+        // Check cache first
+        if (this.suggestionCache.has(cacheKey)) {
+            return this.suggestionCache.get(cacheKey);
+        }
+
+        const suggestions = [];
+
+        // Add suggestions from search history
+        const historySuggestions = this.getHistorySuggestions(query, field);
+        suggestions.push(...historySuggestions);
+
+        // Add popular suggestions
+        const popularSuggestions = this.getPopularSuggestions(query, field);
+        suggestions.push(...popularSuggestions);
+
+        // Limit and cache results
+        const limitedSuggestions = suggestions.slice(0, this.searchConfig.maxSuggestions);
+        this.suggestionCache.set(cacheKey, limitedSuggestions);
+
+        return limitedSuggestions;
+    }
+
+    /**
+     * Show suggestion dropdown
+     */
+    showSuggestionDropdown(input, suggestions) {
+        const dropdown = this.getSuggestionDropdown(input);
+        if (!dropdown) return;
+
+        if (suggestions.length === 0) {
+            dropdown.classList.remove('show');
+            return;
+        }
+
+        dropdown.innerHTML = suggestions.map(suggestion => `
+            <div class="suggestion-item" data-suggestion="${StringUtils.escapeHtml(suggestion.text)}">
+                <span class="suggestion-text">${StringUtils.escapeHtml(suggestion.text)}</span>
+                <span class="suggestion-source">${suggestion.source}</span>
+            </div>
+        `).join('');
+
+        // Setup click handlers
+        const items = DOMUtils.queryAll('.suggestion-item', dropdown);
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                input.value = item.dataset.suggestion;
+                this.hideSuggestions(input);
+            });
+        });
+
+        dropdown.classList.add('show');
+    }
+
+    /**
+     * Get suggestion dropdown for input
+     */
+    getSuggestionDropdown(input) {
+        const container = input.closest('.input-with-suggestions');
+        return container ? DOMUtils.query('.suggestions-dropdown', container) : null;
+    }
+
+    /**
+     * Hide suggestions for input
+     */
+    hideSuggestions(input) {
+        const dropdown = this.getSuggestionDropdown(input);
+        if (dropdown) {
+            dropdown.classList.remove('show');
+        }
+    }
+
+    /**
+     * Show existing suggestions
+     */
+    showSuggestions(input) {
+        if (input.value.length >= this.searchConfig.autoCompleteMinLength) {
+            this.handleAutoComplete(input);
+        }
+    }
+
+    /**
+     * Handle keyboard navigation in inputs
+     */
+    handleInputKeydown(e) {
+        const dropdown = this.getSuggestionDropdown(e.target);
+        if (!dropdown || !dropdown.classList.contains('show')) return;
+
+        const items = DOMUtils.queryAll('.suggestion-item', dropdown);
+        const activeItem = DOMUtils.query('.suggestion-item.active', dropdown);
+        let activeIndex = activeItem ? Array.from(items).indexOf(activeItem) : -1;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                this.setActiveSuggestion(items, activeIndex);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+                this.setActiveSuggestion(items, activeIndex);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (activeItem) {
+                    e.target.value = activeItem.dataset.suggestion;
+                    this.hideSuggestions(e.target);
+                }
+                break;
+            case 'Escape':
+                this.hideSuggestions(e.target);
+                break;
+        }
+    }
+
+    /**
+     * Set active suggestion item
+     */
+    setActiveSuggestion(items, activeIndex) {
+        items.forEach((item, index) => {
+            if (index === activeIndex) {
+                DOMUtils.addClass(item, 'active');
+            } else {
+                DOMUtils.removeClass(item, 'active');
+            }
+        });
+    }
+
+    /**
+     * Setup header action buttons
+     */
+    setupHeaderActions() {
+        const clearBtn = DOMUtils.query('#clear-search', this.containerElement);
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearSearch());
+        }
+
+        const saveBtn = DOMUtils.query('#save-search', this.containerElement);
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveCurrentSearch());
+        }
+
+        const exportBtn = DOMUtils.query('#export-results', this.containerElement);
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportResults());
+        }
+    }
+
+    /**
+     * Setup search action buttons
+     */
+    setupSearchActions() {
+        const searchBtn = DOMUtils.query('#perform-search', this.containerElement);
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => this.performSearch());
+        }
+
+        const previewBtn = DOMUtils.query('#search-preview', this.containerElement);
+        if (previewBtn) {
+            previewBtn.addEventListener('click', () => this.previewQuery());
+        }
+
+        const loadBtn = DOMUtils.query('#load-search', this.containerElement);
+        if (loadBtn) {
+            loadBtn.addEventListener('click', () => this.showLoadSearchDialog());
+        }
+
+        const tipsBtn = DOMUtils.query('#search-tips', this.containerElement);
+        if (tipsBtn) {
+            tipsBtn.addEventListener('click', () => this.showSearchTips());
+        }
+    }
+
+    /**
+     * Setup history and saved search actions
+     */
+    setupHistoryActions() {
+        // History actions
+        const historyLoadBtns = DOMUtils.queryAll('.history-load', this.containerElement);
+        historyLoadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const searchId = e.target.closest('.history-item').dataset.searchId;
+                this.loadHistorySearch(searchId);
+            });
+        });
+
+        const historyDeleteBtns = DOMUtils.queryAll('.history-delete', this.containerElement);
+        historyDeleteBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const searchId = e.target.closest('.history-item').dataset.searchId;
+                this.deleteHistorySearch(searchId);
+            });
+        });
+
+        // Saved search actions
+        const savedLoadBtns = DOMUtils.queryAll('.saved-load', this.containerElement);
+        savedLoadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const searchId = e.target.closest('.saved-item').dataset.searchId;
+                this.loadSavedSearch(searchId);
+            });
+        });
+
+        const savedDeleteBtns = DOMUtils.queryAll('.saved-delete', this.containerElement);
+        savedDeleteBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const searchId = e.target.closest('.saved-item').dataset.searchId;
+                this.deleteSavedSearch(searchId);
+            });
+        });
+
+        // Clear history
+        const clearHistoryBtn = DOMUtils.query('#clear-history', this.containerElement);
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', () => this.clearSearchHistory());
+        }
+    }
+
+    /**
+     * Setup filter change handlers
+     */
+    setupFilterHandlers() {
+        const filterInputs = DOMUtils.queryAll('#language-filter, #year-from, #year-to, #print-type, #sort-order, #max-results, #preview-available, #free-ebooks', this.containerElement);
+        
+        filterInputs.forEach(input => {
+            const eventType = input.type === 'checkbox' ? 'change' : 'input';
+            input.addEventListener(eventType, () => {
+                this.updateFiltersFromForm();
+            });
+        });
+    }
+
+    /**
+     * Setup query builder
+     */
+    setupQueryBuilder() {
+        const buildBtn = DOMUtils.query('#build-query', this.containerElement);
+        if (buildBtn) {
+            buildBtn.addEventListener('click', () => this.buildQueryFromFields());
+        }
+    }
+
+    /**
+     * Setup suggestion tags
+     */
+    setupSuggestionTags() {
+        const suggestionTags = DOMUtils.queryAll('.suggestion-tag', this.containerElement);
+        suggestionTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                const suggestion = tag.dataset.suggestion;
+                const basicQueryInput = DOMUtils.query('#basic-query', this.containerElement);
+                if (basicQueryInput) {
+                    basicQueryInput.value = suggestion;
+                }
+            });
+        });
+    }
+
+    /**
+     * Switch active tab
+     */
+    switchTab(tabId) {
+        if (this.activeTab === tabId) return;
+
+        this.activeTab = tabId;
+
+        // Update tab buttons
+        const tabButtons = DOMUtils.queryAll('.tab-btn', this.containerElement);
+        tabButtons.forEach(btn => {
+            if (btn.dataset.tab === tabId) {
+                DOMUtils.addClass(btn, 'active');
+            } else {
+                DOMUtils.removeClass(btn, 'active');
+            }
+        });
+
+        // Update tab panels
+        const tabPanels = DOMUtils.queryAll('.tab-panel', this.containerElement);
+        tabPanels.forEach(panel => {
+            if (panel.dataset.tab === tabId) {
+                DOMUtils.addClass(panel, 'active');
+            } else {
+                DOMUtils.removeClass(panel, 'active');
+            }
+        });
+    }
+
+    /**
+     * Toggle section expansion
+     */
+    toggleSection(sectionId) {
+        const section = DOMUtils.query(`[data-section="${sectionId}"]`, this.containerElement);
+        if (!section) return;
+
+        const content = DOMUtils.query('.section-content', section);
+        const toggle = DOMUtils.query('.section-toggle', section);
+        const icon = DOMUtils.query('.toggle-icon', toggle);
+
+        if (this.expandedSections.has(sectionId)) {
+            this.expandedSections.delete(sectionId);
+            DOMUtils.removeClass(content, 'expanded');
+            icon.textContent = '+';
+        } else {
+            this.expandedSections.add(sectionId);
+            DOMUtils.addClass(content, 'expanded');
+            icon.textContent = '−';
+        }
+    }
+
+    /**
+     * Perform search with current criteria
+     */
+    async performSearch() {
+        if (this.currentSearch.isSearching) return;
+
+        this.updateCriteriaFromForm();
+        this.updateFiltersFromForm();
+
+        // Validate search criteria
+        const validation = this.validateSearchCriteria();
+        if (!validation.valid) {
+            this.showError(validation.message);
+            return;
+        }
+
+        this.currentSearch.isSearching = true;
+        this.updateSearchState();
+
+        try {
+            const query = this.buildSearchQuery();
+            const options = this.buildSearchOptions();
+
+            console.log('🔍 Performing advanced search:', query, options);
+
+            let results;
+            if (this.activeTab === 'expert' && this.currentSearch.criteria.expertQuery) {
+                // Use expert query directly
+                results = await this.googleBooksAPI.searchBooks(this.currentSearch.criteria.expertQuery, options);
+            } else {
+                // Use built query
+                results = await this.googleBooksAPI.searchBooks(query, options);
+            }
+
+            this.currentSearch.results = results.books || [];
+            this.currentSearch.lastSearchTime = new Date().toISOString();
+
+            // Add to search history
+            this.addToSearchHistory(query, results);
+
+            // Emit search performed event
+            eventBus.emit('search:performed', {
+                query,
+                options,
+                results,
+                source: 'advanced-search'
+            });
+
+            console.log(`✅ Advanced search completed: ${this.currentSearch.results.length} results`);
+
+        } catch (error) {
+            console.error('❌ Advanced search failed:', error);
+            this.showError(`Search failed: ${error.message}`);
+        } finally {
+            this.currentSearch.isSearching = false;
+            this.updateSearchState();
+        }
+    }
+
+    /**
+     * Build search query from current criteria
+     */
+    buildSearchQuery() {
+        const criteria = this.currentSearch.criteria;
+        const queryParts = [];
+
+        if (this.activeTab === 'basic' && criteria.query) {
+            return criteria.query;
+        }
+
+        if (criteria.title) {
+            queryParts.push(`intitle:"${criteria.title}"`);
+        }
+
+        if (criteria.author) {
+            queryParts.push(`inauthor:"${criteria.author}"`);
+        }
+
+        if (criteria.subject) {
+            queryParts.push(`subject:"${criteria.subject}"`);
+        }
+
+        if (criteria.isbn) {
+            queryParts.push(`isbn:${criteria.isbn.replace(/[-\s]/g, '')}`);
+        }
+
+        if (criteria.publisher) {
+            queryParts.push(`inpublisher:"${criteria.publisher}"`);
+        }
+
+        if (criteria.keywords) {
+            queryParts.push(criteria.keywords);
+        }
+
+        return queryParts.length > 0 ? queryParts.join(' ') : criteria.query || '';
+    }
+
+    /**
+     * Build search options from current filters
+     */
+    buildSearchOptions() {
+        const filters = this.currentSearch.filters;
+        const options = {};
+
+        if (filters.maxResults) {
+            options.maxResults = parseInt(filters.maxResults);
+        }
+
+        if (filters.orderBy) {
+            options.orderBy = filters.orderBy;
+        }
+
+        if (filters.printType) {
+            options.printType = filters.printType;
+        }
+
+        if (filters.language && filters.language !== 'all') {
+            options.langRestrict = filters.language;
+        }
+
+        return options;
+    }
+
+    /**
+     * Validate search criteria
+     */
+    validateSearchCriteria() {
+        const criteria = this.currentSearch.criteria;
+        
+        if (this.activeTab === 'expert') {
+            if (!criteria.expertQuery || criteria.expertQuery.trim().length === 0) {
+                return { valid: false, message: 'Expert query is required' };
+            }
+        } else {
+            const hasBasicQuery = criteria.query && criteria.query.trim().length > 0;
+            const hasAdvancedFields = criteria.title || criteria.author || criteria.subject || 
+                                     criteria.isbn || criteria.publisher || criteria.keywords;
+            
+            if (!hasBasicQuery && !hasAdvancedFields) {
+                return { valid: false, message: 'Please enter search criteria' };
+            }
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Update criteria from form inputs
+     */
+    updateCriteriaFromForm() {
+        if (!this.containerElement) return;
+
+        this.currentSearch.criteria = {
+            query: DOMUtils.query('#basic-query', this.containerElement)?.value || '',
+            title: DOMUtils.query('#title-field', this.containerElement)?.value || '',
+            author: DOMUtils.query('#author-field', this.containerElement)?.value || '',
+            subject: DOMUtils.query('#subject-field', this.containerElement)?.value || '',
+            isbn: DOMUtils.query('#isbn-field', this.containerElement)?.value || '',
+            publisher: DOMUtils.query('#publisher-field', this.containerElement)?.value || '',
+            keywords: DOMUtils.query('#keywords-field', this.containerElement)?.value || '',
+            expertQuery: DOMUtils.query('#expert-query', this.containerElement)?.value || ''
+        };
+    }
+
+    /**
+     * Update filters from form inputs
+     */
+    updateFiltersFromForm() {
+        if (!this.containerElement) return;
+
+        this.currentSearch.filters = {
+            language: DOMUtils.query('#language-filter', this.containerElement)?.value || 'all',
+            yearFrom: parseInt(DOMUtils.query('#year-from', this.containerElement)?.value) || null,
+            yearTo: parseInt(DOMUtils.query('#year-to', this.containerElement)?.value) || null,
+            printType: DOMUtils.query('#print-type', this.containerElement)?.value || '',
+            orderBy: DOMUtils.query('#sort-order', this.containerElement)?.value || 'relevance',
+            maxResults: parseInt(DOMUtils.query('#max-results', this.containerElement)?.value) || 20,
+            previewAvailable: DOMUtils.query('#preview-available', this.containerElement)?.checked || false,
+            freeEbooks: DOMUtils.query('#free-ebooks', this.containerElement)?.checked || false
+        };
+    }
+
+    /**
+     * Apply current search state to form
+     */
+    applySearchState() {
+        if (!this.containerElement) return;
+
+        // Apply criteria
+        const basicQuery = DOMUtils.query('#basic-query', this.containerElement);
+        if (basicQuery) basicQuery.value = this.currentSearch.criteria.query || '';
+
+        const titleField = DOMUtils.query('#title-field', this.containerElement);
+        if (titleField) titleField.value = this.currentSearch.criteria.title || '';
+
+        // Apply filters
+        const languageFilter = DOMUtils.query('#language-filter', this.containerElement);
+        if (languageFilter) languageFilter.value = this.currentSearch.filters.language || 'all';
+
+        // Update search state UI
+        this.updateSearchState();
+    }
+
+    /**
+     * Update search state in UI
+     */
+    updateSearchState() {
+        const progressBar = DOMUtils.query('.progress-bar', this.containerElement);
+        const progressText = DOMUtils.query('.progress-text', this.containerElement);
+        const searchBtn = DOMUtils.query('#perform-search', this.containerElement);
+        const previewBtn = DOMUtils.query('#search-preview', this.containerElement);
+
+        if (this.currentSearch.isSearching) {
+            DOMUtils.addClass(progressBar, 'active');
+            progressText.textContent = 'Searching...';
+            searchBtn.disabled = true;
+            previewBtn.disabled = true;
+            searchBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Searching...</span>';
+        } else {
+            DOMUtils.removeClass(progressBar, 'active');
+            progressText.textContent = 'Ready to search';
+            searchBtn.disabled = false;
+            previewBtn.disabled = false;
+            searchBtn.innerHTML = '<span class="btn-icon">🔍</span><span class="btn-text">Search Books</span>';
+        }
+
+        this.updateExportButton();
+    }
+
+    /**
+     * Update export button state
+     */
+    updateExportButton() {
+        const exportBtn = DOMUtils.query('#export-results', this.containerElement);
+        if (exportBtn) {
+            exportBtn.disabled = this.currentSearch.results.length === 0;
+        }
+    }
+
+    /**
+     * Clear all search criteria and filters
+     */
+    clearSearch() {
+        this.currentSearch.criteria = this.getDefaultCriteria();
+        this.currentSearch.filters = this.getDefaultFilters();
+        this.currentSearch.results = [];
+        
+        this.applySearchState();
+        console.log('🧹 Search criteria cleared');
+    }
+
+    /**
+     * Save current search
+     */
+    async saveCurrentSearch() {
+        const modalManager = window.bookBuddyApp?.modalManager;
+        if (!modalManager) return;
+
+        this.updateCriteriaFromForm();
+        this.updateFiltersFromForm();
+
+        const searchName = await modalManager.showPrompt(
+            'Save Search',
+            'Enter a name for this search:',
+            '',
+            'My Advanced Search'
+        );
+
+        if (searchName && searchName.trim()) {
+            const savedSearch = {
+                id: `saved_${Date.now()}`,
+                name: searchName.trim(),
+                criteria: { ...this.currentSearch.criteria },
+                filters: { ...this.currentSearch.filters },
+                displayQuery: this.buildSearchQuery(),
+                savedAt: new Date().toISOString()
+            };
+
+            this.savedSearches.unshift(savedSearch);
+            this.saveSavedSearches();
+            this.refreshSavedSearches();
+
+            modalManager.showAlert('Search Saved', `Search "${searchName}" has been saved!`);
+            console.log('💾 Search saved:', searchName);
+        }
+    }
+
+    /**
+     * Load and apply saved search
+     */
+    loadSavedSearch(searchId) {
+        const savedSearch = this.savedSearches.find(s => s.id === searchId);
+        if (!savedSearch) return;
+
+        this.currentSearch.criteria = { ...savedSearch.criteria };
+        this.currentSearch.filters = { ...savedSearch.filters };
+        this.applySearchState();
+
+        console.log('📂 Loaded saved search:', savedSearch.name);
+    }
+
+    /**
+     * Delete saved search
+     */
+    deleteSavedSearch(searchId) {
+        this.savedSearches = this.savedSearches.filter(s => s.id !== searchId);
+        this.saveSavedSearches();
+        this.refreshSavedSearches();
+        console.log('🗑️ Deleted saved search');
+    }
+
+    /**
+     * Load search from history
+     */
+    loadHistorySearch(searchId) {
+        const historySearch = this.searchHistory.find(s => s.id === searchId);
+        if (!historySearch) return;
+
+        // Apply the search from history
+        if (historySearch.criteria) {
+            this.currentSearch.criteria = { ...historySearch.criteria };
+        }
+        if (historySearch.filters) {
+            this.currentSearch.filters = { ...historySearch.filters };
+        }
+
+        this.applySearchState();
+        console.log('📂 Loaded search from history');
+    }
+
+    /**
+     * Delete search from history
+     */
+    deleteHistorySearch(searchId) {
+        this.searchHistory = this.searchHistory.filter(s => s.id !== searchId);
+        this.saveSearchHistory();
+        this.refreshSearchHistory();
+        console.log('🗑️ Deleted search from history');
+    }
+
+    /**
+     * Clear search history
+     */
+    clearSearchHistory() {
+        this.searchHistory = [];
+        this.saveSearchHistory();
+        this.refreshSearchHistory();
+        console.log('🧹 Search history cleared');
+    }
+
+    /**
+     * Preview query without performing search
+     */
+    previewQuery() {
+        this.updateCriteriaFromForm();
+        this.updateFiltersFromForm();
+
+        const query = this.buildSearchQuery();
+        const options = this.buildSearchOptions();
+
+        const modalManager = window.bookBuddyApp?.modalManager;
+        if (modalManager) {
+            modalManager.showModal({
+                title: '👁️ Search Query Preview',
+                content: `
+                    <div class="query-preview-content">
+                        <div class="preview-section">
+                            <h4>Generated Query:</h4>
+                            <code class="query-code">${StringUtils.escapeHtml(query || 'No query generated')}</code>
+                        </div>
+                        
+                        <div class="preview-section">
+                            <h4>Search Options:</h4>
+                            <pre><code>${JSON.stringify(options, null, 2)}</code></pre>
+                        </div>
+                        
+                        <div class="preview-section">
+                            <h4>Active Tab:</h4>
+                            <p>${this.activeTab.charAt(0).toUpperCase() + this.activeTab.slice(1)} Search</p>
+                        </div>
+                    </div>
+                `,
+                buttons: [
+                    {
+                        text: 'Perform Search',
+                        action: 'search',
+                        className: 'btn-primary'
+                    },
+                    {
+                        text: 'Close',
+                        action: 'close',
+                        className: 'btn-outline'
+                    }
+                ],
+                onAction: (action) => {
+                    if (action === 'search') {
+                        this.performSearch();
+                    }
+                    return true;
+                }
+            });
+        }
+    }
+
+    /**
+     * Show search tips modal
+     */
+    showSearchTips() {
+        const modalManager = window.bookBuddyApp?.modalManager;
+        if (!modalManager) return;
+
+        modalManager.showModal({
+            title: '💡 Advanced Search Tips',
+            content: `
+                <div class="search-tips">
+                    <div class="tip-section">
+                        <h4>Basic Search</h4>
+                        <ul>
+                            <li>Use quotes for exact phrases: <code>"clean code"</code></li>
+                            <li>Use OR for alternatives: <code>python OR javascript</code></li>
+                            <li>Use minus to exclude: <code>programming -java</code></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tip-section">
+                        <h4>Advanced Fields</h4>
+                        <ul>
+                            <li><strong>Title:</strong> Search specifically in book titles</li>
+                            <li><strong>Author:</strong> Find books by specific authors</li>
+                            <li><strong>Subject:</strong> Search by genre or topic</li>
+                            <li><strong>ISBN:</strong> Find exact books by ISBN</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tip-section">
+                        <h4>Expert Query Syntax</h4>
+                        <ul>
+                            <li><code>intitle:"title"</code> - Search in titles</li>
+                            <li><code>inauthor:"author"</code> - Search by author</li>
+                            <li><code>subject:"topic"</code> - Search by subject</li>
+                            <li><code>isbn:1234567890</code> - Search by ISBN</li>
+                            <li><code>inpublisher:"publisher"</code> - Search by publisher</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tip-section">
+                        <h4>Filters</h4>
+                        <ul>
+                            <li>Use language filters to find books in specific languages</li>
+                            <li>Set year ranges to find books from specific time periods</li>
+                            <li>Use content type to filter books vs magazines</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            buttons: [
+                {
+                    text: 'Got it!',
+                    action: 'close',
+                    className: 'btn-primary'
+                }
+            ]
+        });
+    }
+
+    /**
+     * Build query from advanced fields
+     */
+    buildQueryFromFields() {
+        this.updateCriteriaFromForm();
+        const query = this.buildSearchQuery();
+        
+        const expertQueryField = DOMUtils.query('#expert-query', this.containerElement);
+        if (expertQueryField) {
+            expertQueryField.value = query;
+        }
+
+        const generatedQuery = DOMUtils.query('#generated-query', this.containerElement);
+        if (generatedQuery) {
+            generatedQuery.textContent = query;
+        }
+
+        console.log('🔧 Built query from fields:', query);
+    }
+
+    /**
+     * Export search results
+     */
+    exportResults() {
+        if (this.currentSearch.results.length === 0) {
+            const modalManager = window.bookBuddyApp?.modalManager;
+            if (modalManager) {
+                modalManager.showAlert('No Results', 'No search results to export. Please perform a search first.');
+            }
+            return;
+        }
+
+        const modalManager = window.bookBuddyApp?.modalManager;
+        if (!modalManager) return;
+
+        modalManager.showModal({
+            title: '📤 Export Search Results',
+            content: `
+                <div class="export-dialog">
+                    <p>Export ${this.currentSearch.results.length} search results:</p>
+                    
+                    <div class="export-options">
+                        <div class="format-group">
+                            <div class="format-option">
+                                <input type="radio" name="export-format" value="json" id="export-json" checked>
+                                <label for="export-json" class="format-label">
+                                    <strong>JSON</strong>
+                                    <small>Complete data with all metadata</small>
+                                </label>
+                            </div>
+                            
+                            <div class="format-option">
+                                <input type="radio" name="export-format" value="csv" id="export-csv">
+                                <label for="export-csv" class="format-label">
+                                    <strong>CSV</strong>
+                                    <small>Spreadsheet format with key fields</small>
+                                </label>
+                            </div>
+                            
+                            <div class="format-option">
+                                <input type="radio" name="export-format" value="txt" id="export-txt">
+                                <label for="export-txt" class="format-label">
+                                    <strong>Text</strong>
+                                    <small>Simple text list</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            buttons: [
+                {
+                    text: 'Export',
+                    action: 'export',
+                    className: 'btn-primary'
+                },
+                {
+                    text: 'Cancel',
+                    action: 'close',
+                    className: 'btn-outline'
+                }
+            ],
+            onAction: (action) => {
+                if (action === 'export') {
+                    const format = DOMUtils.query('input[name="export-format"]:checked')?.value || 'json';
+                    this.performExport(format);
+                }
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Perform actual export
+     */
+    performExport(format) {
+        const results = this.currentSearch.results;
+        const timestamp = DateUtils.formatDate(new Date().toISOString()).replace(/\s/g, '-');
+        
+        let content, filename, mimeType;
+
+        switch (format) {
+            case 'json':
+                content = JSON.stringify(results, null, 2);
+                filename = `book-search-results-${timestamp}.json`;
+                mimeType = 'application/json';
+                break;
+            case 'csv':
+                content = this.convertToCSV(results);
+                filename = `book-search-results-${timestamp}.csv`;
+                mimeType = 'text/csv';
+                break;
+            case 'txt':
+                content = this.convertToText(results);
+                filename = `book-search-results-${timestamp}.txt`;
+                mimeType = 'text/plain';
+                break;
+            default:
+                return;
+        }
+
+        this.downloadFile(content, filename, mimeType);
+        console.log(`📤 Exported ${results.length} results as ${format.toUpperCase()}`);
+    }
+
+    /**
+     * Convert results to CSV format
+     */
+    convertToCSV(results) {
+        const headers = ['Title', 'Authors', 'Publisher', 'Published Date', 'Page Count', 'Categories', 'Language', 'Preview Link'];
+        const rows = [headers];
+
+        results.forEach(book => {
+            const row = [
+                this.escapeCSV(book.title || ''),
+                this.escapeCSV((book.authors || []).join('; ')),
+                this.escapeCSV(book.publisher || ''),
+                this.escapeCSV(book.publishedDate || ''),
+                book.pageCount || '',
+                this.escapeCSV((book.categories || []).join('; ')),
+                book.language || '',
+                book.previewLink || ''
+            ];
+            rows.push(row);
+        });
+
+        return rows.map(row => row.join(',')).join('\n');
+    }
+
+    /**
+     * Convert results to text format
+     */
+    convertToText(results) {
+        return results.map((book, index) => {
+            const lines = [
+                `${index + 1}. ${book.title || 'Unknown Title'}`,
+                `   Authors: ${(book.authors || []).join(', ') || 'Unknown'}`,
+                `   Publisher: ${book.publisher || 'Unknown'}`,
+                `   Published: ${book.publishedDate || 'Unknown'}`,
+                `   Pages: ${book.pageCount || 'Unknown'}`,
+                `   Language: ${book.language || 'Unknown'}`,
+                `   Categories: ${(book.categories || []).join(', ') || 'None'}`,
+                book.previewLink ? `   Preview: ${book.previewLink}` : '',
+                ''
+            ];
+            return lines.filter(line => line).join('\n');
+        }).join('\n');
+    }
+
+    /**
+     * Escape CSV values
+     */
+    escapeCSV(value) {
+        if (typeof value !== 'string') return value;
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+    }
+
+    /**
+     * Download file
+     */
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Add search to history
+     */
+    addToSearchHistory(query, results) {
+        const historyEntry = {
+            id: `history_${Date.now()}`,
+            displayQuery: query,
+            criteria: { ...this.currentSearch.criteria },
+            filters: { ...this.currentSearch.filters },
+            resultsCount: results.books ? results.books.length : 0,
+            timestamp: new Date().toISOString()
+        };
+
+        this.searchHistory.unshift(historyEntry);
+        
+        if (this.searchHistory.length > this.searchConfig.maxHistoryItems) {
+            this.searchHistory = this.searchHistory.slice(0, this.searchConfig.maxHistoryItems);
+        }
+
+        this.saveSearchHistory();
+        this.refreshSearchHistory();
+    }
+
+    /**
+     * Handle search performed event
+     */
+    handleSearchPerformed(data) {
+        this.currentSearch.results = data.results?.books || [];
+        this.updateExportButton();
+    }
+
+    /**
+     * Show error message
+     */
+    showError(message) {
+        const errorContainer = DOMUtils.query('.search-error', this.containerElement);
+        if (errorContainer) {
+            errorContainer.remove();
+        }
+
+        const form = DOMUtils.query('.search-form', this.containerElement);
+        if (form) {
+            const errorHTML = `
+                <div class="search-error">
+                    <div class="error-content">
+                        <span class="error-icon">⚠️</span>
+                        <span class="error-message">${StringUtils.escapeHtml(message)}</span>
+                        <button class="error-close" type="button">&times;</button>
+                    </div>
+                </div>
+            `;
+            
+            form.insertAdjacentHTML('afterbegin', errorHTML);
+            
+            const closeBtn = DOMUtils.query('.error-close', form);
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    DOMUtils.query('.search-error', form)?.remove();
+                });
+            }
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                DOMUtils.query('.search-error', form)?.remove();
+            }, 5000);
+        }
+    }
+
+    /**
+     * Get popular search suggestions
+     */
+    getPopularSearches() {
+        return [
+            'JavaScript programming',
+            'Python cookbook',
+            'Machine learning',
+            'Web development',
+            'Data science',
+            'Science fiction',
+            'Historical fiction',
+            'Biography'
+        ];
+    }
+
+    /**
+     * Get suggestions from search history
+     */
+    getHistorySuggestions(query, field) {
+        const suggestions = [];
+        const queryLower = query.toLowerCase();
+
+        this.searchHistory.forEach(search => {
+            if (field === 'query' && search.displayQuery && 
+                search.displayQuery.toLowerCase().includes(queryLower)) {
+                suggestions.push({
+                    text: search.displayQuery,
+                    source: 'history'
+                });
+            } else if (search.criteria && search.criteria[field] && 
+                       search.criteria[field].toLowerCase().includes(queryLower)) {
+                suggestions.push({
+                    text: search.criteria[field],
+                    source: 'history'
+                });
+            }
+        });
+
+        return suggestions.slice(0, 3);
+    }
+
+    /**
+     * Get popular suggestions for field
+     */
+    getPopularSuggestions(query, field) {
+        const popularSuggestions = {
+            query: [
+                'JavaScript programming',
+                'Python tutorial',
+                'Machine learning basics',
+                'Web development guide',
+                'Data structures algorithms'
+            ],
+            author: [
+                'Robert C. Martin',
+                'Martin Fowler',
+                'Eric Evans',
+                'Gang of Four',
+                'Steve McConnell'
+            ],
+            subject: [
+                'Programming',
+                'Computer Science',
+                'Software Engineering',
+                'Web Development',
+                'Data Science',
+                'Fiction',
+                'Biography',
+                'History'
+            ],
+            publisher: [
+                'O\'Reilly Media',
+                'Addison-Wesley',
+                'Manning Publications',
+                'Pearson',
+                'MIT Press'
+            ]
+        };
+
+        const suggestions = popularSuggestions[field] || [];
+        const queryLower = query.toLowerCase();
+
+        return suggestions
+            .filter(suggestion => suggestion.toLowerCase().includes(queryLower))
+            .slice(0, 5)
+            .map(text => ({ text, source: 'popular' }));
+    }
+
+    /**
+     * Load auto-complete suggestions
+     */
+    async loadAutoCompleteSuggestions() {
+        // Pre-load common suggestions into cache
+        const commonQueries = this.getPopularSearches();
+        commonQueries.forEach(query => {
+            this.suggestionCache.set(`query:${query.toLowerCase()}`, [
+                { text: query, source: 'popular' }
+            ]);
+        });
+    }
+
+    /**
+     * Refresh search history display
+     */
+    refreshSearchHistory() {
+        const historySection = DOMUtils.query('[data-section="history"]', this.containerElement);
+        if (historySection) {
+            const newContent = this.renderSearchHistory();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newContent;
+            const newHistorySection = tempDiv.firstElementChild;
+            
+            historySection.parentNode.replaceChild(newHistorySection, historySection);
+            this.setupHistoryActions();
+        }
+    }
+
+    /**
+     * Refresh saved searches display
+     */
+    refreshSavedSearches() {
+        const savedSection = DOMUtils.query('[data-section="saved"]', this.containerElement);
+        if (savedSection) {
+            const newContent = this.renderSavedSearches();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newContent;
+            const newSavedSection = tempDiv.firstElementChild;
+            
+            savedSection.parentNode.replaceChild(newSavedSection, savedSection);
+            this.setupHistoryActions();
+        }
+    }
+
+    /**
+     * Load search history from storage
+     */
+    loadSearchHistory() {
+        const storage = window.bookBuddyApp?.storage;
+        if (storage) {
+            const result = storage.load('advanced_search_history', []);
+            return result.success ? result.data : [];
+        }
+        return [];
+    }
+
+    /**
+     * Save search history to storage
+     */
+    saveSearchHistory() {
+        const storage = window.bookBuddyApp?.storage;
+        if (storage) {
+            storage.save('advanced_search_history', this.searchHistory);
+        }
+    }
+
+    /**
+     * Load saved searches from storage
+     */
+    loadSavedSearches() {
+        const storage = window.bookBuddyApp?.storage;
+        if (storage) {
+            const result = storage.load('advanced_saved_searches', []);
+            return result.success ? result.data : [];
+        }
+        return [];
+    }
+
+    /**
+     * Save saved searches to storage
+     */
+    saveSavedSearches() {
+        const storage = window.bookBuddyApp?.storage;
+        if (storage) {
+            storage.save('advanced_saved_searches', this.savedSearches);
+        }
+    }
+
+    /**
+     * Show/hide the interface
+     */
+    show() {
+        if (this.containerElement) {
+            this.containerElement.style.display = 'block';
+            this.isVisible = true;
+        }
+    }
+
+    hide() {
+        if (this.containerElement) {
+            this.containerElement.style.display = 'none';
+            this.isVisible = false;
+        }
+    }
+
+    /**
+     * Get current search state
+     */
+    getCurrentSearch() {
+        return {
+            ...this.currentSearch,
+            activeTab: this.activeTab,
+            expandedSections: Array.from(this.expandedSections)
+        };
+    }
+
+    /**
+     * Set search state
+     */
+    setSearchState(state) {
+        if (state.criteria) {
+            this.currentSearch.criteria = { ...state.criteria };
+        }
+        if (state.filters) {
+            this.currentSearch.filters = { ...state.filters };
+        }
+        if (state.activeTab) {
+            this.activeTab = state.activeTab;
+        }
+        if (state.expandedSections) {
+            this.expandedSections = new Set(state.expandedSections);
+        }
+        
+        this.applySearchState();
+    }
+
+    /**
+     * Destroy the interface and cleanup
+     */
+    destroy() {
+        if (this.containerElement) {
+            this.containerElement.innerHTML = '';
+        }
+        this.suggestionCache.clear();
+        eventBus.off('search:performed');
+        eventBus.off('search:resultsUpdated');
+        console.log('🗑️ AdvancedSearchInterface destroyed');
+    }
+}input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    this.handleAutoComplete(e.target);
+                }, this.searchConfig.debounceDelay);
+            });
+
+            input.addEventListener('focus', (e) => {
+                this.showSuggestions(e.target);
+            });
+
+            input.addEventListener('
