@@ -1,5 +1,5 @@
 /**
- * Book Buddy - Main Application Controller (Step 9.5 Integration)
+ * Book Buddy - Main Application Controller (Step 9.5 Integration - CORRECTED)
  * Now includes ErrorNotificationManager and LoadingStateManager
  */
 
@@ -21,6 +21,10 @@ import APITestUtils from './utils/APITestUtils.js';
 import { eventBus, EVENTS } from './utils/EventBus.js';
 import { DOMUtils, DateUtils, StringUtils } from './utils/Helpers.js';
 
+// ✅ Make EventBus globally available for testing
+window.eventBus = eventBus;
+window.EVENTS = EVENTS;
+
 class BookBuddyApp {
     constructor() {
         this.storage = new StorageManager('book-buddy');
@@ -31,7 +35,7 @@ class BookBuddyApp {
         this.bookListRenderer = new BookListRenderer();
         this.readingInterface = new ReadingInterface();
         
-        // ✅ NEW: Initialize Step 9 components
+        // ✅ NEW: Initialize Step 9 components in correct order
         this.errorNotificationManager = new ErrorNotificationManager(this.modalManager);
         this.loadingStateManager = new LoadingStateManager();
         this.apiTestUtils = new APITestUtils();
@@ -56,7 +60,7 @@ class BookBuddyApp {
 
     async initialize() {
         try {
-            console.log('🚀 Initializing Book Buddy (Step 9.5 - API Foundation)...');
+            console.log('🚀 Initializing Book Buddy (Step 9.5 - API Foundation - CORRECTED)...');
             
             // Load app settings
             await this.loadAppSettings();
@@ -64,7 +68,7 @@ class BookBuddyApp {
             // Setup UI
             this.setupUI();
             
-            // ✅ NEW: Setup Step 9 event listeners
+            // ✅ NEW: Setup Step 9 event listeners FIRST
             this.setupStep9EventListeners();
             
             // Setup event listeners
@@ -82,6 +86,14 @@ class BookBuddyApp {
             // Show welcome message if no books
             this.checkForFirstTimeUser();
             
+            // ✅ NEW: Auto-run API foundation tests in development
+            if (this.isDevelopmentMode()) {
+                setTimeout(() => {
+                    console.log('🧪 Running API Foundation Tests...');
+                    this.runAPIFoundationTests();
+                }, 2000);
+            }
+            
         } catch (error) {
             console.error('❌ Failed to initialize Book Buddy:', error);
             this.modalManager.showAlert(
@@ -93,9 +105,12 @@ class BookBuddyApp {
 
     // ✅ NEW: Setup Step 9 specific event listeners
     setupStep9EventListeners() {
+        console.log('🔧 Setting up Step 9 event listeners...');
+        
         // Listen for API errors to show user notifications
         eventBus.on(EVENTS.API_REQUEST_FAILED, (data) => {
-            console.log('🚨 API Request failed, showing user notification');
+            console.log('🚨 API Request failed, showing user notification:', data);
+            this.errorNotificationManager.handleAPIError(data);
         });
 
         // Listen for API loading states
@@ -106,20 +121,18 @@ class BookBuddyApp {
             }
         });
 
-        // Test API foundation on app start (in development)
-        if (this.isDevelopmentMode()) {
-            setTimeout(() => {
-                this.runAPIFoundationTests();
-            }, 3000);
-        }
+        // Listen for storage errors
+        eventBus.on(EVENTS.STORAGE_ERROR, (data) => {
+            console.log('💾 Storage error occurred:', data);
+            this.errorNotificationManager.handleStorageError(data);
+        });
+
+        console.log('✅ Step 9 event listeners configured');
     }
 
     // ✅ NEW: Test the complete API foundation
     async runAPIFoundationTests() {
         console.log('🧪 Running API Foundation Tests...');
-        
-        // Create a test button in the UI for manual testing
-        this.addTestingControls();
         
         try {
             // Test 1: Basic API Service functionality
@@ -128,7 +141,7 @@ class BookBuddyApp {
             // Test 2: Error notification system
             await this.testErrorNotifications();
             
-            // Test 3: Loading state management
+            // Test 3: Loading state management  
             await this.testLoadingStates();
             
             // Test 4: Google Books API integration
@@ -145,93 +158,106 @@ class BookBuddyApp {
     async testAPIService() {
         console.log('🔧 Testing APIService...');
         
-        // Use APITestUtils to run comprehensive tests
-        const results = await this.apiTestUtils.testAPIService(this.googleBooksAPI);
-        
-        console.log(`📊 APIService Test Results: ${results.passed} passed, ${results.failed} failed`);
-        
-        if (results.failed > 0) {
-            console.warn('⚠️ Some API tests failed - check network connectivity');
+        try {
+            // Use APITestUtils to run comprehensive tests
+            const results = await this.apiTestUtils.testAPIService(this.googleBooksAPI);
+            
+            console.log(`📊 APIService Test Results: ${results.passed} passed, ${results.failed} failed`);
+            
+            if (results.failed > 0) {
+                console.warn('⚠️ Some API tests failed - check network connectivity');
+            }
+            
+            return results;
+        } catch (error) {
+            console.error('❌ APIService test error:', error);
+            return { passed: 0, failed: 1, error: error.message };
         }
-        
-        return results;
     }
 
     // ✅ NEW: Test error notification system
     async testErrorNotifications() {
         console.log('🔔 Testing Error Notifications...');
         
-        // Simulate different types of errors
-        const testErrors = [
-            {
-                type: 'api',
-                data: {
-                    error: 'Test API connection error',
-                    url: 'https://test-api.example.com',
-                    requestId: 'test-001',
-                    timestamp: new Date().toISOString()
+        try {
+            // Simulate different types of errors
+            const testErrors = [
+                {
+                    type: 'api',
+                    data: {
+                        error: 'Test API connection error',
+                        url: 'https://test-api.example.com',
+                        requestId: 'test-001',
+                        timestamp: new Date().toISOString()
+                    }
+                },
+                {
+                    type: 'storage',
+                    data: {
+                        error: { message: 'Test storage quota warning' },
+                        context: 'testing error notifications'
+                    }
                 }
-            },
-            {
-                type: 'storage',
-                data: {
-                    error: { message: 'Test storage quota warning' },
-                    context: 'testing error notifications'
-                }
-            }
-        ];
+            ];
 
-        for (const testError of testErrors) {
-            console.log(`🧪 Testing ${testError.type} error notification...`);
-            
-            if (testError.type === 'api') {
-                this.errorNotificationManager.handleAPIError(testError.data);
-            } else if (testError.type === 'storage') {
-                this.errorNotificationManager.handleStorageError(testError.data);
+            for (const testError of testErrors) {
+                console.log(`🧪 Testing ${testError.type} error notification...`);
+                
+                if (testError.type === 'api') {
+                    this.errorNotificationManager.handleAPIError(testError.data);
+                } else if (testError.type === 'storage') {
+                    this.errorNotificationManager.handleStorageError(testError.data);
+                }
+                
+                // Wait to see the notification
+                await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
-            // Wait to see the notification
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log('✅ Error notification tests completed');
+        } catch (error) {
+            console.error('❌ Error notification test failed:', error);
         }
-        
-        console.log('✅ Error notification tests completed');
     }
 
     // ✅ NEW: Test loading state management
     async testLoadingStates() {
         console.log('⏳ Testing Loading States...');
         
-        // Test global loading
-        this.loadingStateManager.startLoading('test-global', {
-            message: 'Testing global loading state...',
-            showGlobal: true
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        this.loadingStateManager.stopLoading('test-global');
-        
-        // Test target loading on books grid
-        const booksGrid = DOMUtils.query('#books-grid');
-        if (booksGrid) {
-            this.loadingStateManager.startLoading('test-target', {
-                message: 'Testing target loading...',
-                target: booksGrid,
-                showGlobal: false
+        try {
+            // Test global loading
+            this.loadingStateManager.startLoading('test-global', {
+                message: 'Testing global loading state...',
+                showGlobal: true
             });
             
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            this.loadingStateManager.stopLoading('test-target');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            this.loadingStateManager.stopLoading('test-global');
+            
+            // Test target loading on books grid
+            const booksGrid = DOMUtils.query('#books-grid');
+            if (booksGrid) {
+                this.loadingStateManager.startLoading('test-target', {
+                    message: 'Testing target loading...',
+                    target: booksGrid,
+                    showGlobal: false
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                this.loadingStateManager.stopLoading('test-target');
+            }
+            
+            // Test button loading
+            const uploadBtn = DOMUtils.query('#upload-book-btn');
+            if (uploadBtn) {
+                this.loadingStateManager.showButtonLoading(uploadBtn, 'Upload Book');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                this.loadingStateManager.hideButtonLoading(uploadBtn);
+            }
+            
+            console.log('✅ Loading state tests completed');
+        } catch (error) {
+            console.error('❌ Loading state test failed:', error);
         }
-        
-        // Test button loading
-        const uploadBtn = DOMUtils.query('#upload-book-btn');
-        if (uploadBtn) {
-            this.loadingStateManager.showButtonLoading(uploadBtn, 'Upload Book');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            this.loadingStateManager.hideButtonLoading(uploadBtn);
-        }
-        
-        console.log('✅ Loading state tests completed');
     }
 
     // ✅ NEW: Test Google Books API integration
@@ -256,56 +282,12 @@ class BookBuddyApp {
         }
     }
 
-    // ✅ NEW: Add testing controls to the UI
-    addTestingControls() {
-        // Only add in development mode
-        if (!this.isDevelopmentMode()) return;
-        
-        const existingControls = DOMUtils.query('#api-testing-controls');
-        if (existingControls) return; // Already added
-        
-        const testingHTML = `
-            <div id="api-testing-controls" style="
-                position: fixed; 
-                bottom: 20px; 
-                right: 20px; 
-                background: var(--card-background); 
-                padding: 1rem; 
-                border-radius: var(--border-radius);
-                box-shadow: var(--shadow-lg);
-                border: 1px solid var(--border-color);
-                z-index: 999;
-                min-width: 200px;
-            ">
-                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">🧪 API Testing</h4>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <button class="btn btn-sm btn-outline" id="test-api-service">Test API Service</button>
-                    <button class="btn btn-sm btn-outline" id="test-error-notifications">Test Errors</button>
-                    <button class="btn btn-sm btn-outline" id="test-loading-states">Test Loading</button>
-                    <button class="btn btn-sm btn-outline" id="test-google-books">Test Google Books</button>
-                    <button class="btn btn-sm btn-outline" id="hide-testing-controls">Hide</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', testingHTML);
-        
-        // Setup event listeners for test buttons
-        DOMUtils.query('#test-api-service')?.addEventListener('click', () => this.testAPIService());
-        DOMUtils.query('#test-error-notifications')?.addEventListener('click', () => this.testErrorNotifications());
-        DOMUtils.query('#test-loading-states')?.addEventListener('click', () => this.testLoadingStates());
-        DOMUtils.query('#test-google-books')?.addEventListener('click', () => this.testGoogleBooksAPI());
-        DOMUtils.query('#hide-testing-controls')?.addEventListener('click', () => {
-            DOMUtils.query('#api-testing-controls')?.remove();
-        });
-    }
-
     // ✅ NEW: Check if in development mode
     isDevelopmentMode() {
-        // Simple check - you can enhance this
         return window.location.hostname === 'localhost' || 
                window.location.hostname === '127.0.0.1' ||
-               window.location.search.includes('debug=true');
+               window.location.search.includes('debug=true') ||
+               window.location.protocol === 'file:';
     }
 
     // ✅ ENHANCED: Improved search functionality with API integration
@@ -373,7 +355,7 @@ class BookBuddyApp {
         });
     }
 
-    // ✅ NEW: Add book from search results to library
+    // Enhanced addBookFromSearch method - ADD THIS TO app.js
     async addBookFromSearch(bookInfo) {
         try {
             console.log(`📚 Adding book to library: ${bookInfo.title}`);
@@ -385,15 +367,22 @@ class BookBuddyApp {
             // Create book data from search result
             const bookData = {
                 title: bookInfo.title,
-                filename: `${bookInfo.title}.txt`,
-                content: bookInfo.description || 'No content available for this book.',
+                filename: `${bookInfo.title.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_')}.txt`,
+                content: this.createBookContentFromSearch(bookInfo),
                 metadata: {
                     authors: bookInfo.authors || [],
                     publisher: bookInfo.publisher || '',
                     publishedDate: bookInfo.publishedDate || '',
+                    pageCount: bookInfo.pageCount || 0,
                     thumbnail: bookInfo.thumbnail || '',
                     source: 'Google Books',
-                    sourceId: bookInfo.id
+                    sourceId: bookInfo.id,
+                    previewLink: bookInfo.previewLink || '',
+                    infoLink: bookInfo.infoLink || '',
+                    categories: bookInfo.categories || [],
+                    language: bookInfo.language || 'en',
+                    averageRating: bookInfo.averageRating || 0,
+                    ratingsCount: bookInfo.ratingsCount || 0
                 }
             };
             
@@ -403,9 +392,15 @@ class BookBuddyApp {
             
             if (result.success) {
                 this.modalManager.showAlert(
-                    'Book Added',
+                    'Book Added! 📚',
                     `"${bookInfo.title}" has been added to your library!`
                 );
+                
+                // Update button to show success
+                button.textContent = '✅ Added!';
+                button.disabled = true;
+                button.style.background = 'var(--success-color)';
+                button.style.cursor = 'default';
                 
                 // Refresh library view if we're on that view
                 if (this.navigationController.getCurrentView() === 'library') {
@@ -417,9 +412,45 @@ class BookBuddyApp {
             
         } catch (error) {
             console.error('❌ Error adding book from search:', error);
+            this.loadingStateManager.hideButtonLoading(event.target);
             this.modalManager.showAlert('Error', `Failed to add book: ${error.message}`);
         }
     }
+
+    // Helper method to create book content from search results - ADD THIS TO app.js
+    createBookContentFromSearch(bookInfo) {
+        const authorsText = bookInfo.authors && bookInfo.authors.length > 0 
+            ? `by ${bookInfo.authors.join(', ')}` 
+            : '';
+        
+        const publishedText = bookInfo.publishedDate 
+            ? `Published: ${bookInfo.publishedDate}` 
+            : '';
+        
+        const pagesText = bookInfo.pageCount 
+            ? `Pages: ${bookInfo.pageCount}` 
+            : '';
+        
+        const categoriesText = bookInfo.categories && bookInfo.categories.length > 0 
+            ? `Categories: ${bookInfo.categories.join(', ')}` 
+            : '';
+
+        return `${bookInfo.title}
+        ${authorsText}
+
+        ${bookInfo.description || 'No description available.'}
+
+        Book Information:
+        ${publishedText}
+        ${pagesText}
+        ${categoriesText}
+        ${bookInfo.publisher ? `Publisher: ${bookInfo.publisher}` : ''}
+
+        This book was added from Google Books search. For the complete content, please refer to the original source or purchase the book.
+
+        ${bookInfo.previewLink ? `Preview: ${bookInfo.previewLink}` : ''}
+        ${bookInfo.infoLink ? `More Info: ${bookInfo.infoLink}` : ''}`;
+            }
 
     // ✅ ENHANCED: Enhanced search online button handler
     setupEventListeners() {
@@ -1038,7 +1069,34 @@ class BookBuddyApp {
             }, 1000);
         }
     }
+
+    // ✅ NEW: Get API Foundation statistics
+    getAPIFoundationStats() {
+        return {
+            errorManager: {
+                available: !!this.errorNotificationManager,
+                errorHistory: this.errorNotificationManager?.getErrorStats?.() || {}
+            },
+            loadingManager: {
+                available: !!this.loadingStateManager,
+                stats: this.loadingStateManager?.getLoadingStats?.() || {}
+            },
+            apiTestUtils: {
+                available: !!this.apiTestUtils,
+                requestHistory: this.apiTestUtils?.getRequestHistory?.() || []
+            },
+            googleBooksAPI: {
+                available: !!this.googleBooksAPI,
+                stats: this.googleBooksAPI?.getStats?.() || {}
+            }
+        };
+    }
 }
 
-// Export the main app class for use in index.html
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.bookBuddyApp = new BookBuddyApp();
+});
+
+// Export the main app class for use in other modules
 export default BookBuddyApp;

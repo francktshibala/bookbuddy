@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Buddy - Modular Architecture</title>
+    <title>Book Buddy - API Foundation (Step 9.5)</title>
     
     <!-- Enhanced CSS with component-specific styles -->
     <link rel="stylesheet" href="css/main.css">
@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="css/components/modals.css">
     
     <style>
-        /* Enhanced main styles for modular architecture */
+        /* Enhanced main styles for Step 9.5 API Foundation */
         :root {
             --primary-color: #2563eb;
             --secondary-color: #64748b;
@@ -340,109 +340,59 @@
             margin-bottom: 1rem;
         }
 
-        /* Loading States */
-        .loading {
-            position: relative;
-            overflow: hidden;
+        /* Search Section for Online Search */
+        .search-section {
+            max-width: 600px;
+            margin: 0 auto 2rem;
         }
 
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: loading 1.5s infinite;
+        .search-filters {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        @keyframes loading {
-            0% { left: -100%; }
-            100% { left: 100%; }
+        /* Step 9.5 API Foundation Status Indicator */
+        .api-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--card-background);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color);
+            z-index: 999;
         }
 
-        /* Modal Styles */
-        .modal-container {
+        .api-status.ready {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .api-status.error {
+            border-left: 4px solid var(--error-color);
+        }
+
+        /* Loading overlay for development */
+        .dev-overlay {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            pointer-events: none;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            max-width: 300px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            z-index: 10000;
+            display: none;
         }
 
-        .modal-backdrop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0);
-            transition: background 0.3s ease;
-            pointer-events: none;
-        }
-
-        .modal-backdrop.show {
-            background: rgba(0, 0, 0, 0.5);
-            pointer-events: all;
-        }
-
-        .modal {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background: var(--card-background);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-lg);
-            min-width: 400px;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow: hidden;
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-
-        .modal.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
+        .dev-overlay.show {
+            display: block;
         }
 
         /* Responsive Design */
@@ -485,13 +435,17 @@
                 justify-content: center;
             }
 
-            .modal {
-                min-width: 0;
-                margin: 1rem;
+            .search-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .api-status {
+                bottom: 10px;
+                left: 10px;
+                font-size: 0.7rem;
             }
         }
-
-        /* Component-specific styles will be loaded from separate CSS files */
     </style>
 </head>
 <body>
@@ -539,28 +493,42 @@
             <!-- Search View -->
             <div class="view" id="search-view">
                 <div class="view-header">
-                    <h2 class="view-title">🔍 Search Books</h2>
+                    <h2 class="view-title">🔍 Search Books Online</h2>
+                    <div class="view-actions">
+                        <button class="btn btn-outline" id="back-to-library">
+                            ← Back to Library
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="search-section">
                     <div class="search-bar">
                         <input type="text" 
                                id="online-search" 
-                               placeholder="Search for books online..." 
+                               placeholder="Search for books online (e.g., 'JavaScript programming', 'Harry Potter')..." 
                                class="search-input">
                     </div>
                     
                     <div class="search-filters">
-                        <select id="search-source" class="search-input" style="width: auto; margin-right: 1rem;">
+                        <select id="search-source" class="search-input" style="width: auto;">
                             <option value="all">All Sources</option>
                             <option value="google">Google Books</option>
                             <option value="openlibrary">Open Library</option>
                         </select>
-                        <button class="btn btn-primary" id="search-btn">Search</button>
+                        <button class="btn btn-primary" id="search-btn">
+                            🔍 Search Books
+                        </button>
                     </div>
-                    
-                    <div id="search-results" class="books-grid" style="margin-top: 2rem;">
-                        <!-- Search results will be populated here -->
+                </div>
+                
+                <div id="search-results" class="books-grid">
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                        <h3>Search for Books Online</h3>
+                        <p>Enter a book title, author, or topic above to find books from Google Books and other sources.</p>
+                        <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            ✨ Powered by Step 9.5 API Foundation
+                        </p>
                     </div>
                 </div>
             </div>
@@ -569,11 +537,20 @@
             <div class="view" id="reading-view">
                 <div class="view-header">
                     <h2 class="view-title">📖 Reading</h2>
+                    <div class="view-actions">
+                        <button class="btn btn-outline" id="back-to-library-reading">
+                            ← Back to Library
+                        </button>
+                    </div>
                 </div>
                 <div id="reading-content">
                     <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📖</div>
                         <h3>No book currently open</h3>
                         <p>Select a book from your library to start reading</p>
+                        <button class="btn btn-primary" onclick="document.querySelector('[data-view=library]').click()">
+                            📚 Go to Library
+                        </button>
                     </div>
                 </div>
             </div>
@@ -582,9 +559,21 @@
             <div class="view" id="statistics-view">
                 <div class="view-header">
                     <h2 class="view-title">📊 Reading Statistics</h2>
+                    <div class="view-actions">
+                        <button class="btn btn-outline" id="refresh-stats">
+                            🔄 Refresh
+                        </button>
+                    </div>
                 </div>
                 <div id="statistics-content">
-                    <!-- Statistics will be populated dynamically -->
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                        <h3>Reading Statistics</h3>
+                        <p>Detailed statistics will be available in Week 2 Phase 3!</p>
+                        <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            Track your reading progress, goals, and achievements.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -592,608 +581,177 @@
             <div class="view" id="settings-view">
                 <div class="view-header">
                     <h2 class="view-title">⚙️ Settings</h2>
+                    <div class="view-actions">
+                        <button class="btn btn-outline" id="reset-settings">
+                            🔄 Reset to Defaults
+                        </button>
+                    </div>
                 </div>
                 <div id="settings-content">
-                    <!-- Settings will be populated dynamically -->
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
+                        <h3>Application Settings</h3>
+                        <p>Customize your Book Buddy experience</p>
+                        <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            Settings will be loaded once the app initializes.
+                        </p>
+                    </div>
                 </div>
             </div>
         </main>
+
+        <!-- API Foundation Status Indicator -->
+        <div class="api-status" id="api-status">
+            <span id="api-status-text">🔄 Initializing API Foundation...</span>
+        </div>
+
+        <!-- Development Overlay (only shown in dev mode) -->
+        <div class="dev-overlay" id="dev-overlay">
+            <div style="font-weight: bold; margin-bottom: 0.5rem;">📊 Step 9.5 Debug Info</div>
+            <div id="dev-info">
+                Loading debug information...
+            </div>
+        </div>
     </div>
 
-    <!-- Replace the <script type="module"> section in your index.html with this: -->
-
-<script type="module">
-    // Enhanced Book Buddy - Fixed Import Paths
+    <!-- ✅ CRITICAL: Load the app with proper module support -->
+    <script type="module" src="js/app.js"></script>
     
-    // Import all required modules with CORRECT PATHS
-    import StorageManager from './js/utils/StorageManager.js';
-    import Book from './js/modules/models/Book.js';
-    import Library from './js/modules/models/Library.js';
-    import FileProcessor from './js/utils/FileProcessor.js';
-    import NavigationController from './js/modules/ui/NavigationController.js';
-    import ModalManager from './js/modules/ui/ModalManager.js';
-    import BookListRenderer from './js/modules/ui/BookListRenderer.js';
-    import ReadingInterface from './js/modules/ui/ReadingInterface.js';
-    import { eventBus, EVENTS } from './js/utils/EventBus.js';
-    import { DOMUtils, DateUtils, StringUtils } from './js/utils/Helpers.js';
+    <!-- ✅ Load Step 9.5 testing utilities -->
+    <script src="js/test-step9-5.js"></script>
 
-    // For now, we'll skip the API services since they're empty
-    // import APIService from './js/modules/services/APIService.js';
-    // import GoogleBooksAPI from './js/modules/services/GoogleBooksAPI.js';
+    <!-- ✅ Development Mode Setup -->
+    <script>
+        // Development mode detection and setup
+        const isDev = window.location.hostname === 'localhost' || 
+                     window.location.hostname === '127.0.0.1' ||
+                     window.location.protocol === 'file:' ||
+                     window.location.search.includes('debug=true');
 
-    // Main Application Class - Coordinates all modules
-    class BookBuddyApp {
-        constructor() {
-            this.storage = new StorageManager('book-buddy');
-            this.library = new Library(this.storage);
-            this.fileProcessor = new FileProcessor();
-            this.navigationController = new NavigationController();
-            this.modalManager = new ModalManager();
-            this.bookListRenderer = new BookListRenderer();
-            this.readingInterface = new ReadingInterface();
-            
-            // Temporarily comment out API services
-            // this.googleBooksAPI = new GoogleBooksAPI();
-            
-            this.currentBook = null;
-            this.appState = {
-                initialized: false,
-                currentView: 'library',
-                theme: 'light',
-                settings: {
-                    readingSpeed: 250,
-                    autoSave: true,
-                    notifications: true
-                }
-            };
-            
-            this.initialize();
-        }
-        
-        async initialize() {
-            try {
-                console.log('🚀 Initializing Book Buddy (Fixed Imports)...');
+        if (isDev) {
+            // Show development overlay
+            setTimeout(() => {
+                const devOverlay = document.getElementById('dev-overlay');
+                const devInfo = document.getElementById('dev-info');
                 
-                // Load app settings
-                await this.loadAppSettings();
-                
-                // Setup UI components
-                this.setupUI();
-                
-                // Setup event listeners
-                this.setupEventListeners();
-                
-                // Initialize all view controllers
-                this.initializeViews();
-                
-                // Setup file upload capabilities
-                this.setupFileUpload();
-                
-                this.appState.initialized = true;
-                console.log('✅ Book Buddy initialized successfully!');
-                
-                // Show welcome message if first time user
-                this.checkForFirstTimeUser();
-                
-            } catch (error) {
-                console.error('❌ Failed to initialize Book Buddy:', error);
-                this.modalManager.showAlert(
-                    'Initialization Error',
-                    'Failed to initialize the application. Please refresh the page and try again.'
-                );
-            }
-        }
-
-        async loadAppSettings() {
-            const settingsResult = this.storage.load('app_settings', this.appState.settings);
-            
-            if (settingsResult.success) {
-                this.appState.settings = { ...this.appState.settings, ...settingsResult.data };
-                
-                // Apply theme
-                if (settingsResult.data.theme) {
-                    document.body.classList.add(`theme-${settingsResult.data.theme}`);
-                }
-            }
-        }
-
-        setupUI() {
-            // Register views with navigation controller
-            this.navigationController.registerView('library', DOMUtils.query('#library-view'));
-            this.navigationController.registerView('search', DOMUtils.query('#search-view'));
-            this.navigationController.registerView('reading', DOMUtils.query('#reading-view'));
-            this.navigationController.registerView('statistics', DOMUtils.query('#statistics-view'));
-            this.navigationController.registerView('settings', DOMUtils.query('#settings-view'));
-        }
-
-        setupEventListeners() {
-            // Upload book button
-            const uploadBtn = DOMUtils.query('#upload-book-btn');
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', () => this.showUploadModal());
-            }
-
-            // Search online button (temporarily disabled until API services are ready)
-            const searchOnlineBtn = DOMUtils.query('#search-online-btn');
-            if (searchOnlineBtn) {
-                searchOnlineBtn.addEventListener('click', () => {
-                    this.modalManager.showAlert('Feature Coming Soon', 'Online book search will be available in Week 2!');
-                });
-            }
-
-            // Library search
-            const searchInput = DOMUtils.query('#library-search');
-            if (searchInput) {
-                let searchTimeout;
-                searchInput.addEventListener('input', (e) => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        this.searchLibrary(e.target.value);
-                    }, 300);
-                });
-            }
-
-            // Book filters
-            const filterButtons = DOMUtils.queryAll('.filter-btn');
-            filterButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    // Update active filter
-                    filterButtons.forEach(btn => DOMUtils.removeClass(btn, 'active'));
-                    DOMUtils.addClass(e.target, 'active');
+                if (devOverlay && devInfo) {
+                    devOverlay.classList.add('show');
                     
-                    // Filter books
-                    this.filterBooks(e.target.dataset.filter);
-                });
-            });
-
-            // Book events from EventBus
-            eventBus.on(EVENTS.BOOK_ADDED, (data) => {
-                this.refreshLibraryView();
-                this.modalManager.showAlert(
-                    'Book Added',
-                    `"${data.book.title}" has been added to your library!`
-                );
-            });
-
-            eventBus.on(EVENTS.BOOK_UPDATED, () => {
-                this.refreshLibraryView();
-            });
-
-            eventBus.on(EVENTS.BOOK_DELETED, (data) => {
-                this.refreshLibraryView();
-                this.modalManager.showAlert(
-                    'Book Removed',
-                    `"${data.book.title}" has been removed from your library.`
-                );
-            });
-
-            // View change events
-            eventBus.on(EVENTS.UI_VIEW_CHANGED, (data) => {
-                this.handleViewChange(data.to);
-            });
-
-            // Reading events
-            eventBus.on(EVENTS.BOOK_OPENED, (data) => {
-                this.currentBook = data.book;
-                this.readingInterface.loadBook(data.book);
-                this.navigationController.navigateToView('reading');
-            });
-        }
-
-        initializeViews() {
-            // Initialize library view
-            this.refreshLibraryView();
-            
-            // Initialize statistics view
-            this.initializeStatisticsView();
-            
-            // Initialize settings view
-            this.initializeSettingsView();
-        }
-
-        setupFileUpload() {
-            // Setup drag and drop for the entire library view
-            const libraryView = DOMUtils.query('#library-view');
-            if (libraryView) {
-                this.fileProcessor.setupDragAndDrop(libraryView, (result) => {
-                    if (result.success) {
-                        this.library.addBook(result.bookData);
-                    } else {
-                        this.modalManager.showAlert('Upload Error', result.message);
-                    }
-                });
-            }
-        }
-
-        showUploadModal() {
-            this.modalManager.showBookUpload(async (file) => {
-                try {
-                    // Show processing message
-                    const processingModal = this.modalManager.showModal({
-                        title: 'Processing File',
-                        content: '<p>📚 Processing your book file...</p>',
-                        closable: false
-                    });
-
-                    // Process file
-                    const result = await this.fileProcessor.processFile(file);
-                    
-                    // Close processing modal
-                    processingModal.close();
-
-                    if (result.success) {
-                        // Add book to library
-                        const addResult = await this.library.addBook(result.bookData);
-                        
-                        if (!addResult.success) {
-                            this.modalManager.showAlert('Error', addResult.message);
-                        }
-                    } else {
-                        this.modalManager.showAlert('Upload Error', result.message);
-                    }
-                } catch (error) {
-                    this.modalManager.showAlert('Error', 'Failed to process file: ' + error.message);
-                }
-            });
-        }
-
-        refreshLibraryView() {
-            this.updateLibraryStats();
-            this.renderBooks();
-        }
-
-        updateLibraryStats() {
-            const stats = this.library.getLibraryStats();
-            const statsElement = DOMUtils.query('#library-stats');
-            
-            if (statsElement) {
-                statsElement.innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.totalBooks}</div>
-                        <div class="stat-label">Total Books</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.booksRead}</div>
-                        <div class="stat-label">Books Read</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.booksReading}</div>
-                        <div class="stat-label">Currently Reading</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.totalWords.toLocaleString()}</div>
-                        <div class="stat-label">Total Words</div>
-                    </div>
-                `;
-            }
-        }
-
-        renderBooks(books = null) {
-            const booksToRender = books || this.library.getAllBooks();
-            const gridElement = DOMUtils.query('#books-grid');
-            
-            if (!gridElement) return;
-
-            if (booksToRender.length === 0) {
-                gridElement.innerHTML = `
-                    <div class="empty-state">
-                        <h3>📚 No books in your library yet</h3>
-                        <p>Upload your first book to get started!</p>
-                        <button class="btn btn-primary" onclick="document.getElementById('upload-book-btn').click()">
-                            📤 Upload Book
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-
-            gridElement.innerHTML = this.bookListRenderer.renderBookCards(booksToRender);
-            
-            // Setup book card event listeners
-            this.setupBookCardListeners();
-        }
-
-        setupBookCardListeners() {
-            const bookCards = DOMUtils.queryAll('.book-card');
-            bookCards.forEach(card => {
-                const bookId = card.dataset.bookId;
-                
-                // Open book for reading
-                const readBtn = card.querySelector('.btn-read');
-                if (readBtn) {
-                    readBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const book = this.library.getBook(bookId);
-                        if (book) {
-                            eventBus.emit(EVENTS.BOOK_OPENED, { book });
-                        }
-                    });
-                }
-                
-                // Delete book
-                const deleteBtn = card.querySelector('.btn-delete');
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        const book = this.library.getBook(bookId);
-                        if (book) {
-                            const confirmed = await this.modalManager.showConfirm(
-                                'Delete Book',
-                                `Are you sure you want to delete "${book.title}"? This action cannot be undone.`,
-                                'Delete',
-                                'Cancel'
-                            );
-                            
-                            if (confirmed) {
-                                this.library.removeBook(bookId);
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        searchLibrary(query) {
-            if (!query.trim()) {
-                this.renderBooks();
-                return;
-            }
-            
-            const results = this.library.searchBooks(query);
-            this.renderBooks(results);
-        }
-
-        filterBooks(filter) {
-            let books;
-            
-            switch (filter) {
-                case 'unread':
-                    books = this.library.getBooksByStatus('unread');
-                    break;
-                case 'reading':
-                    books = this.library.getBooksByStatus('reading');
-                    break;
-                case 'finished':
-                    books = this.library.getBooksByStatus('finished');
-                    break;
-                default:
-                    books = this.library.getAllBooks();
-            }
-            
-            this.renderBooks(books);
-        }
-
-        handleViewChange(viewName) {
-            switch (viewName) {
-                case 'library':
-                    this.refreshLibraryView();
-                    break;
-                case 'statistics':
-                    this.updateStatisticsView();
-                    break;
-                case 'settings':
-                    this.updateSettingsView();
-                    break;
-            }
-        }
-
-        initializeStatisticsView() {
-            const content = DOMUtils.query('#statistics-content');
-            if (content) {
-                content.innerHTML = `
-                    <div class="empty-state">
-                        <h3>📊 Reading Statistics</h3>
-                        <p>Detailed statistics will be available in Week 2!</p>
-                    </div>
-                `;
-            }
-        }
-
-        updateStatisticsView() {
-            const stats = this.library.getLibraryStats();
-            const content = DOMUtils.query('#statistics-content');
-            
-            if (content) {
-                content.innerHTML = `
-                    <div class="stats-overview">
-                        <div class="library-stats">
-                            <div class="stat-card">
-                                <div class="stat-value">${stats.totalBooks}</div>
-                                <div class="stat-label">Total Books</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${Math.round(stats.avgProgress * 100)}%</div>
-                                <div class="stat-label">Average Progress</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${stats.totalWords.toLocaleString()}</div>
-                                <div class="stat-label">Total Words</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${stats.totalNotes}</div>
-                                <div class="stat-label">Notes</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        initializeSettingsView() {
-            const content = DOMUtils.query('#settings-content');
-            if (content) {
-                content.innerHTML = `
-                    <div class="settings-form">
-                        <div class="setting-group">
-                            <label>Reading Speed (words per minute)</label>
-                            <input type="number" id="reading-speed" class="form-input" value="${this.appState.settings.readingSpeed}" min="100" max="1000">
-                        </div>
-                        <div class="setting-group">
-                            <label>
-                                <input type="checkbox" id="auto-save" ${this.appState.settings.autoSave ? 'checked' : ''}>
-                                Auto-save reading progress
-                            </label>
-                        </div>
-                        <div class="setting-group">
-                            <label>
-                                <input type="checkbox" id="notifications" ${this.appState.settings.notifications ? 'checked' : ''}>
-                                Enable notifications
-                            </label>
-                        </div>
-                        <div class="setting-actions">
-                            <button class="btn btn-primary" id="save-settings">Save Settings</button>
-                            <button class="btn btn-outline" id="export-library">Export Library</button>
-                            <button class="btn btn-outline" id="import-library">Import Library</button>
-                        </div>
-                    </div>
-                `;
-                
-                this.setupSettingsListeners();
-            }
-        }
-
-        updateSettingsView() {
-            this.initializeSettingsView();
-        }
-
-        setupSettingsListeners() {
-            const saveBtn = DOMUtils.query('#save-settings');
-            if (saveBtn) {
-                saveBtn.addEventListener('click', () => this.saveSettings());
-            }
-
-            const exportBtn = DOMUtils.query('#export-library');
-            if (exportBtn) {
-                exportBtn.addEventListener('click', () => this.exportLibrary());
-            }
-
-            const importBtn = DOMUtils.query('#import-library');
-            if (importBtn) {
-                importBtn.addEventListener('click', () => this.importLibrary());
-            }
-        }
-
-        saveSettings() {
-            const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
-            const autoSave = DOMUtils.query('#auto-save')?.checked || false;
-            const notifications = DOMUtils.query('#notifications')?.checked || false;
-
-            this.appState.settings = {
-                readingSpeed,
-                autoSave,
-                notifications
-            };
-
-            const result = this.storage.save('app_settings', this.appState.settings);
-            
-            if (result.success) {
-                this.modalManager.showAlert('Settings Saved', 'Your settings have been saved successfully!');
-            } else {
-                this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
-            }
-        }
-
-        exportLibrary() {
-            try {
-                const exportData = this.library.exportLibrary();
-                const blob = new Blob([exportData], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `book-buddy-library-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                this.modalManager.showAlert('Export Complete', 'Your library has been exported successfully!');
-            } catch (error) {
-                this.modalManager.showAlert('Export Error', 'Failed to export library: ' + error.message);
-            }
-        }
-
-        async importLibrary() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                try {
-                    const text = await file.text();
-                    const result = await this.library.importLibrary(text);
-                    
-                    if (result.success) {
-                        this.modalManager.showAlert(
-                            'Import Complete', 
-                            `Successfully imported ${result.results.imported} books!`
-                        );
-                        this.refreshLibraryView();
-                    } else {
-                        this.modalManager.showAlert('Import Error', result.message);
-                    }
-                } catch (error) {
-                    this.modalManager.showAlert('Import Error', 'Failed to import library: ' + error.message);
-                }
-            };
-            
-            input.click();
-        }
-
-        checkForFirstTimeUser() {
-            const books = this.library.getAllBooks();
-            if (books.length === 0) {
-                setTimeout(() => {
-                    this.modalManager.showModal({
-                        title: '👋 Welcome to Book Buddy!',
-                        content: `
-                            <div style="text-align: center;">
-                                <h3>Your Personal Digital Library</h3>
-                                <p>Get started by uploading your first book!</p>
-                                <div style="margin: 1.5rem 0;">
-                                    <button class="btn btn-primary" id="welcome-upload">📤 Upload a Book</button>
+                    // Update debug info every 2 seconds
+                    const updateDebugInfo = () => {
+                        const app = window.bookBuddyApp;
+                        if (app) {
+                            const stats = app.getAPIFoundationStats?.() || {};
+                            devInfo.innerHTML = `
+                                <div>✅ App: ${!!app}</div>
+                                <div>🚨 Error Mgr: ${stats.errorManager?.available ? '✅' : '❌'}</div>
+                                <div>⏳ Loading Mgr: ${stats.loadingManager?.available ? '✅' : '❌'}</div>
+                                <div>🧪 Test Utils: ${stats.apiTestUtils?.available ? '✅' : '❌'}</div>
+                                <div>📚 Google Books: ${stats.googleBooksAPI?.available ? '✅' : '❌'}</div>
+                                <div style="margin-top: 0.5rem; font-size: 0.7rem;">
+                                    Active Requests: ${stats.loadingManager?.stats?.activeOperations || 0}
                                 </div>
-                            </div>
-                        `,
-                        buttons: [
-                            {
-                                text: 'Get Started',
-                                action: 'close',
-                                className: 'btn-primary'
-                            }
-                        ],
-                        onAction: (action, modalId) => {
-                            if (action === 'close') return true;
+                                <div style="font-size: 0.7rem;">
+                                    Error Count: ${Object.keys(stats.errorManager?.errorHistory || {}).length}
+                                </div>
+                            `;
+                        } else {
+                            devInfo.innerHTML = '<div>❌ App not loaded</div>';
                         }
-                    });
+                    };
+                    
+                    updateDebugInfo();
+                    setInterval(updateDebugInfo, 2000);
+                }
+            }, 3000);
 
-                    // Setup welcome modal buttons
-                    setTimeout(() => {
-                        const uploadBtn = DOMUtils.query('#welcome-upload');
-                        
-                        if (uploadBtn) {
-                            uploadBtn.addEventListener('click', () => {
-                                this.modalManager.closeAllModals();
-                                this.showUploadModal();
-                            });
-                        }
-                    }, 100);
-                }, 1000);
-            }
+            // Add quick test buttons for development
+            setTimeout(() => {
+                const devOverlay = document.getElementById('dev-overlay');
+                if (devOverlay) {
+                    const testButtons = document.createElement('div');
+                    testButtons.innerHTML = `
+                        <div style="margin-top: 1rem; border-top: 1px solid #444; padding-top: 0.5rem;">
+                            <button onclick="testStep9Integration()" style="background: #2563eb; color: white; border: none; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 3px; font-size: 0.7rem; cursor: pointer;">
+                                Run Tests
+                            </button>
+                            <button onclick="quickTestManagers()" style="background: #10b981; color: white; border: none; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 3px; font-size: 0.7rem; cursor: pointer;">
+                                Quick Test
+                            </button>
+                            <button onclick="document.getElementById('dev-overlay').classList.remove('show')" style="background: #ef4444; color: white; border: none; padding: 0.25rem 0.5rem; margin: 0.25rem; border-radius: 3px; font-size: 0.7rem; cursor: pointer;">
+                                Hide
+                            </button>
+                        </div>
+                    `;
+                    devOverlay.appendChild(testButtons);
+                }
+            }, 5000);
         }
-    }
 
-    // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-        window.bookBuddyApp = new BookBuddyApp();
-    });
+        // API Status indicator updates
+        window.addEventListener('load', () => {
+            const statusElement = document.getElementById('api-status');
+            const statusText = document.getElementById('api-status-text');
+            
+            if (statusElement && statusText) {
+                // Check app initialization status
+                const checkAppStatus = () => {
+                    const app = window.bookBuddyApp;
+                    
+                    if (app && app.appState?.initialized) {
+                        statusElement.className = 'api-status ready';
+                        statusText.textContent = '✅ API Foundation Ready';
+                        
+                        // Hide after 5 seconds
+                        setTimeout(() => {
+                            statusElement.style.opacity = '0';
+                            setTimeout(() => {
+                                statusElement.style.display = 'none';
+                            }, 300);
+                        }, 5000);
+                    } else {
+                        statusElement.className = 'api-status';
+                        statusText.textContent = '🔄 Loading API Foundation...';
+                        
+                        // Check again in 1 second
+                        setTimeout(checkAppStatus, 1000);
+                    }
+                };
+                
+                // Start checking after 2 seconds
+                setTimeout(checkAppStatus, 2000);
+            }
+        });
 
-    window.BookBuddyApp = BookBuddyApp;
-</script>
-<script src="js/test-step9-5.js"></script>
+        // Back to library button handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'back-to-library' || e.target.id === 'back-to-library-reading') {
+                const libraryLink = document.querySelector('[data-view="library"]');
+                if (libraryLink) {
+                    libraryLink.click();
+                }
+            }
+        });
 
+        // Console welcome message
+        setTimeout(() => {
+            console.log(`
+%c📚 Book Buddy - Step 9.5 API Foundation%c
+
+🚀 Enhanced Features:
+✅ Error Notification System
+✅ Loading State Management  
+✅ API Testing Utilities
+✅ Google Books Integration
+
+🧪 Testing Commands:
+• testStep9Integration() - Full integration test
+• quickTestManagers() - Quick manager test
+• checkBrowserCompatibility() - Check browser support
+
+🔧 Debug Mode: ${isDev ? 'ON' : 'OFF'}
+`, 'color: #2563eb; font-size: 16px; font-weight: bold;', 'color: #64748b; font-size: 12px;');
+        }, 3000);
+    </script>
 </body>
 </html>

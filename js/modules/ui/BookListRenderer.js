@@ -133,13 +133,23 @@ export default class BookListRenderer {
         `;
     }
 
+    // Enhanced renderSearchResults method - ADD THIS TO BookListRenderer.js
     renderSearchResults(results) {
         if (!Array.isArray(results) || results.length === 0) {
             return `
                 <div class="empty-state">
                     <div class="empty-icon">🔍</div>
                     <h3>No search results</h3>
-                    <p>Try adjusting your search terms or search source.</p>
+                    <p>Try different search terms like:</p>
+                    <ul style="text-align: left; display: inline-block; margin: 1rem 0;">
+                        <li>"javascript programming"</li>
+                        <li>"python cookbook"</li>
+                        <li>"agatha christie"</li>
+                        <li>"science fiction"</li>
+                    </ul>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Make sure you have an internet connection.
+                    </p>
                 </div>
             `;
         }
@@ -147,6 +157,7 @@ export default class BookListRenderer {
         return results.map(result => this.renderSearchResultCard(result)).join('');
     }
 
+    // Enhanced renderSearchResultCard method - ADD THIS TO BookListRenderer.js
     renderSearchResultCard(result) {
         return `
             <div class="search-result-card">
@@ -168,13 +179,13 @@ export default class BookListRenderer {
                 ` : ''}
                 
                 <div class="result-meta">
-                    ${result.publishedDate ? `<span>Published: ${result.publishedDate}</span>` : ''}
-                    ${result.pageCount ? `<span>${result.pageCount} pages</span>` : ''}
-                    ${result.language ? `<span>Language: ${result.language}</span>` : ''}
+                    ${result.publishedDate ? `<span>📅 ${result.publishedDate}</span>` : ''}
+                    ${result.pageCount ? `<span>📄 ${result.pageCount} pages</span>` : ''}
+                    ${result.language && result.language !== 'en' ? `<span>🌐 ${result.language.toUpperCase()}</span>` : ''}
                 </div>
                 
                 <div class="result-actions">
-                    <button class="btn btn-primary btn-add-book" data-book-info='${JSON.stringify(result)}'>
+                    <button class="btn btn-add-book btn-add-book" data-book-info='${JSON.stringify(result).replace(/'/g, "&apos;")}'>
                         📚 Add to Library
                     </button>
                     ${result.previewLink ? `

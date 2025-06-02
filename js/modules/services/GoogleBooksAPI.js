@@ -1,6 +1,6 @@
 /**
- * GoogleBooksAPI - Integration with Google Books API
- * Handles book search and metadata retrieval
+ * GoogleBooksAPI - Enhanced Integration with Google Books API
+ * Fixed version that properly handles book search and metadata retrieval
  */
 import APIService from './APIService.js';
 
@@ -31,29 +31,49 @@ export default class GoogleBooksAPI extends APIService {
         });
 
         try {
-            const response = await this.request(`/volumes?${params}`);
+            console.log(`🔍 Searching Google Books for: "${query}"`);
+            const endpoint = `/volumes?${params}`;
             
-            if (response.items) {
-                const books = response.items.map(item => this.formatBookData(item));
+            // Use the enhanced request method from APIService
+            const result = await this.request(endpoint);
+            
+            if (result.success && result.data) {
+                const data = result.data;
+                
+                if (data.items && data.items.length > 0) {
+                    const books = data.items.map(item => this.formatBookData(item));
+                    console.log(`✅ Successfully formatted ${books.length} books`);
+                    
+                    return {
+                        success: true,
+                        books,
+                        totalItems: data.totalItems || 0,
+                        query,
+                        source: 'Google Books'
+                    };
+                } else {
+                    console.log('⚠️ No books found in API response');
+                    return {
+                        success: true,
+                        books: [],
+                        totalItems: 0,
+                        query,
+                        source: 'Google Books',
+                        message: 'No books found'
+                    };
+                }
+            } else {
+                console.warn('⚠️ API request failed:', result.message);
                 return {
-                    success: true,
-                    books,
-                    totalItems: response.totalItems || 0,
+                    success: false,
+                    message: result.userMessage || result.message || 'Search failed',
+                    books: [],
                     query,
                     source: 'Google Books'
                 };
-            } else {
-                return {
-                    success: true,
-                    books: [],
-                    totalItems: 0,
-                    query,
-                    source: 'Google Books',
-                    message: 'No books found'
-                };
             }
         } catch (error) {
-            console.error('Google Books API error:', error);
+            console.error('❌ Google Books API error:', error);
             return {
                 success: false,
                 message: `Search failed: ${error.message}`,
@@ -66,12 +86,21 @@ export default class GoogleBooksAPI extends APIService {
 
     async getBookDetails(bookId) {
         try {
-            const response = await this.request(`/volumes/${bookId}`);
-            return {
-                success: true,
-                book: this.formatBookData(response),
-                source: 'Google Books'
-            };
+            const result = await this.request(`/volumes/${bookId}`);
+            
+            if (result.success && result.data) {
+                return {
+                    success: true,
+                    book: this.formatBookData(result.data),
+                    source: 'Google Books'
+                };
+            } else {
+                return {
+                    success: false,
+                    message: result.userMessage || result.message || 'Failed to get book details',
+                    source: 'Google Books'
+                };
+            }
         } catch (error) {
             return {
                 success: false,
@@ -93,13 +122,15 @@ export default class GoogleBooksAPI extends APIService {
             authors: volumeInfo.authors || ['Unknown Author'],
             publisher: volumeInfo.publisher || '',
             publishedDate: volumeInfo.publishedDate || '',
-            description: volumeInfo.description || '',
+            description: volumeInfo.description || 'No description available.',
             pageCount: volumeInfo.pageCount || 0,
             categories: volumeInfo.categories || [],
             language: volumeInfo.language || 'en',
             
-            // Images
-            thumbnail: volumeInfo.imageLinks?.thumbnail || '',
+            // Images - handle both thumbnail and smallThumbnail
+            thumbnail: volumeInfo.imageLinks?.thumbnail || 
+                      volumeInfo.imageLinks?.smallThumbnail || 
+                      '',
             smallThumbnail: volumeInfo.imageLinks?.smallThumbnail || '',
             
             // Identifiers
@@ -175,5 +206,57 @@ export default class GoogleBooksAPI extends APIService {
     getPublicationYear(publishedDate) {
         if (!publishedDate) return '';
         return publishedDate.split('-')[0];
+    }
+
+    // Enhanced search with better error handling
+    async enhancedSearch(query, options = {}) {
+        console.log(`🚀 Enhanced search for: "${query}"`);
+        
+        // First try the standard search
+        let result = await this.searchBooks(query, options);
+        
+        // If no results, try simplified search terms
+        if (result.success && result.books.length === 0) {
+            console.log('🔄 No results, trying simplified search...');
+            
+            // Extract key terms from query
+            const simplifiedQuery = query.split(' ').slice(0, 2).join(' ');
+            if (simplifiedQuery !== query) {
+                result = await this.searchBooks(simplifiedQuery, options);
+            }
+        }
+        
+        return result;
+    }
+
+    // Batch search for multiple queries
+    async batchSearch(queries, options = {}) {
+        console.log(`📚 Batch searching ${queries.length} queries`);
+        
+        const results = [];
+        for (const query of queries) {
+            try {
+                const result = await this.searchBooks(query, { ...options, maxResults: 5 });
+                if (result.success && result.books.length > 0) {
+                    results.push(...result.books);
+                }
+                // Small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (error) {
+                console.warn(`⚠️ Batch search failed for "${query}":`, error.message);
+            }
+        }
+        
+        // Remove duplicates by ID
+        const uniqueBooks = results.filter((book, index, arr) => 
+            arr.findIndex(b => b.id === book.id) === index
+        );
+        
+        return {
+            success: true,
+            books: uniqueBooks,
+            totalQueries: queries.length,
+            source: 'Google Books'
+        };
     }
 }
