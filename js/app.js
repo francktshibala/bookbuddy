@@ -4,6 +4,7 @@
  */
 
 // Import all modules with CORRECTED PATHS
+import BookCoverManager from './modules/ui/BookCoverManager.js';
 import StorageManager from './utils/StorageManager.js';
 import Book from './modules/models/Book.js';
 import Library from './modules/models/Library.js';
@@ -14,6 +15,7 @@ import NavigationController from './modules/ui/NavigationController.js';
 import ModalManager from './modules/ui/ModalManager.js';
 import BookListRenderer from './modules/ui/BookListRenderer.js';
 import ReadingInterface from './modules/ui/ReadingInterface.js';
+
 // ✅ NEW: Import Step 9 components
 import ErrorNotificationManager from './modules/ui/ErrorNotificationManager.js';
 import LoadingStateManager from './modules/ui/LoadingStateManager.js';
@@ -35,6 +37,13 @@ class BookBuddyApp {
         this.bookListRenderer = new BookListRenderer();
         this.readingInterface = new ReadingInterface();
         
+    try {
+        this.bookCoverManager = new BookCoverManager();
+        console.log('✅ BookCoverManager initialized successfully');
+    } catch (error) {
+    console.error('❌ BookCoverManager initialization failed:', error);
+    this.bookCoverManager = null;
+    }
         // ✅ NEW: Initialize Step 9 components in correct order
         this.errorNotificationManager = new ErrorNotificationManager(this.modalManager);
         this.loadingStateManager = new LoadingStateManager();
