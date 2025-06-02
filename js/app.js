@@ -1111,5 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.bookBuddyApp = new BookBuddyApp();
 });
 
+
+
 // Export the main app class for use in other modules
 export default BookBuddyApp;
