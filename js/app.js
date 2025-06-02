@@ -1,21 +1,25 @@
 /**
- * Book Buddy - Main Application Controller (Fixed Import Paths)
- * Coordinates all modules and manages application state
+ * Book Buddy - Main Application Controller (Step 9.5 Integration)
+ * Now includes ErrorNotificationManager and LoadingStateManager
  */
 
 // Import all modules with CORRECTED PATHS
-import StorageManager from './utils/StorageManager.js';  // ← FIXED PATH
+import StorageManager from './utils/StorageManager.js';
 import Book from './modules/models/Book.js';
 import Library from './modules/models/Library.js';
-import FileProcessor from './utils/FileProcessor.js';    // ← FIXED PATH
+import FileProcessor from './utils/FileProcessor.js';
 import APIService from './modules/services/APIService.js';
 import GoogleBooksAPI from './modules/services/GoogleBooksAPI.js';
 import NavigationController from './modules/ui/NavigationController.js';
 import ModalManager from './modules/ui/ModalManager.js';
 import BookListRenderer from './modules/ui/BookListRenderer.js';
 import ReadingInterface from './modules/ui/ReadingInterface.js';
-import { eventBus, EVENTS } from './utils/EventBus.js';   // ← FIXED PATH
-import { DOMUtils, DateUtils, StringUtils } from './utils/Helpers.js';  // ← FIXED PATH
+// ✅ NEW: Import Step 9 components
+import ErrorNotificationManager from './modules/ui/ErrorNotificationManager.js';
+import LoadingStateManager from './modules/ui/LoadingStateManager.js';
+import APITestUtils from './utils/APITestUtils.js';
+import { eventBus, EVENTS } from './utils/EventBus.js';
+import { DOMUtils, DateUtils, StringUtils } from './utils/Helpers.js';
 
 class BookBuddyApp {
     constructor() {
@@ -26,6 +30,14 @@ class BookBuddyApp {
         this.modalManager = new ModalManager();
         this.bookListRenderer = new BookListRenderer();
         this.readingInterface = new ReadingInterface();
+        
+        // ✅ NEW: Initialize Step 9 components
+        this.errorNotificationManager = new ErrorNotificationManager(this.modalManager);
+        this.loadingStateManager = new LoadingStateManager();
+        this.apiTestUtils = new APITestUtils();
+        
+        // Initialize API services
+        this.googleBooksAPI = new GoogleBooksAPI();
         
         this.currentBook = null;
         this.appState = {
@@ -44,13 +56,16 @@ class BookBuddyApp {
 
     async initialize() {
         try {
-            console.log('🚀 Initializing Book Buddy (Fixed Imports)...');
+            console.log('🚀 Initializing Book Buddy (Step 9.5 - API Foundation)...');
             
             // Load app settings
             await this.loadAppSettings();
             
             // Setup UI
             this.setupUI();
+            
+            // ✅ NEW: Setup Step 9 event listeners
+            this.setupStep9EventListeners();
             
             // Setup event listeners
             this.setupEventListeners();
@@ -62,7 +77,7 @@ class BookBuddyApp {
             this.setupFileUpload();
             
             this.appState.initialized = true;
-            console.log('✅ Book Buddy initialized successfully!');
+            console.log('✅ Book Buddy initialized successfully with API Foundation!');
             
             // Show welcome message if no books
             this.checkForFirstTimeUser();
@@ -76,28 +91,337 @@ class BookBuddyApp {
         }
     }
 
-    async loadAppSettings() {
-        const settingsResult = this.storage.load('app_settings', this.appState.settings);
-        
-        if (settingsResult.success) {
-            this.appState.settings = { ...this.appState.settings, ...settingsResult.data };
-            
-            // Apply theme
-            if (settingsResult.data.theme) {
-                document.body.classList.add(`theme-${settingsResult.data.theme}`);
+    // ✅ NEW: Setup Step 9 specific event listeners
+    setupStep9EventListeners() {
+        // Listen for API errors to show user notifications
+        eventBus.on(EVENTS.API_REQUEST_FAILED, (data) => {
+            console.log('🚨 API Request failed, showing user notification');
+        });
+
+        // Listen for API loading states
+        eventBus.on(EVENTS.API_REQUEST_STARTED, (data) => {
+            if (data.isLoading !== undefined) {
+                // Global loading state change
+                console.log(`⏳ Global loading: ${data.isLoading ? 'started' : 'stopped'}`);
             }
+        });
+
+        // Test API foundation on app start (in development)
+        if (this.isDevelopmentMode()) {
+            setTimeout(() => {
+                this.runAPIFoundationTests();
+            }, 3000);
         }
     }
 
-    setupUI() {
-        // Register views with navigation controller
-        this.navigationController.registerView('library', DOMUtils.query('#library-view'));
-        this.navigationController.registerView('search', DOMUtils.query('#search-view'));
-        this.navigationController.registerView('reading', DOMUtils.query('#reading-view'));
-        this.navigationController.registerView('statistics', DOMUtils.query('#statistics-view'));
-        this.navigationController.registerView('settings', DOMUtils.query('#settings-view'));
+    // ✅ NEW: Test the complete API foundation
+    async runAPIFoundationTests() {
+        console.log('🧪 Running API Foundation Tests...');
+        
+        // Create a test button in the UI for manual testing
+        this.addTestingControls();
+        
+        try {
+            // Test 1: Basic API Service functionality
+            await this.testAPIService();
+            
+            // Test 2: Error notification system
+            await this.testErrorNotifications();
+            
+            // Test 3: Loading state management
+            await this.testLoadingStates();
+            
+            // Test 4: Google Books API integration
+            await this.testGoogleBooksAPI();
+            
+            console.log('✅ All API Foundation tests completed successfully!');
+            
+        } catch (error) {
+            console.error('❌ API Foundation tests failed:', error);
+        }
     }
 
+    // ✅ NEW: Test APIService with mock scenarios
+    async testAPIService() {
+        console.log('🔧 Testing APIService...');
+        
+        // Use APITestUtils to run comprehensive tests
+        const results = await this.apiTestUtils.testAPIService(this.googleBooksAPI);
+        
+        console.log(`📊 APIService Test Results: ${results.passed} passed, ${results.failed} failed`);
+        
+        if (results.failed > 0) {
+            console.warn('⚠️ Some API tests failed - check network connectivity');
+        }
+        
+        return results;
+    }
+
+    // ✅ NEW: Test error notification system
+    async testErrorNotifications() {
+        console.log('🔔 Testing Error Notifications...');
+        
+        // Simulate different types of errors
+        const testErrors = [
+            {
+                type: 'api',
+                data: {
+                    error: 'Test API connection error',
+                    url: 'https://test-api.example.com',
+                    requestId: 'test-001',
+                    timestamp: new Date().toISOString()
+                }
+            },
+            {
+                type: 'storage',
+                data: {
+                    error: { message: 'Test storage quota warning' },
+                    context: 'testing error notifications'
+                }
+            }
+        ];
+
+        for (const testError of testErrors) {
+            console.log(`🧪 Testing ${testError.type} error notification...`);
+            
+            if (testError.type === 'api') {
+                this.errorNotificationManager.handleAPIError(testError.data);
+            } else if (testError.type === 'storage') {
+                this.errorNotificationManager.handleStorageError(testError.data);
+            }
+            
+            // Wait to see the notification
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        console.log('✅ Error notification tests completed');
+    }
+
+    // ✅ NEW: Test loading state management
+    async testLoadingStates() {
+        console.log('⏳ Testing Loading States...');
+        
+        // Test global loading
+        this.loadingStateManager.startLoading('test-global', {
+            message: 'Testing global loading state...',
+            showGlobal: true
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        this.loadingStateManager.stopLoading('test-global');
+        
+        // Test target loading on books grid
+        const booksGrid = DOMUtils.query('#books-grid');
+        if (booksGrid) {
+            this.loadingStateManager.startLoading('test-target', {
+                message: 'Testing target loading...',
+                target: booksGrid,
+                showGlobal: false
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            this.loadingStateManager.stopLoading('test-target');
+        }
+        
+        // Test button loading
+        const uploadBtn = DOMUtils.query('#upload-book-btn');
+        if (uploadBtn) {
+            this.loadingStateManager.showButtonLoading(uploadBtn, 'Upload Book');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            this.loadingStateManager.hideButtonLoading(uploadBtn);
+        }
+        
+        console.log('✅ Loading state tests completed');
+    }
+
+    // ✅ NEW: Test Google Books API integration
+    async testGoogleBooksAPI() {
+        console.log('📚 Testing Google Books API...');
+        
+        try {
+            // Test search functionality
+            const searchResults = await this.googleBooksAPI.searchBooks('javascript programming', {
+                maxResults: 3
+            });
+            
+            if (searchResults.success && searchResults.books.length > 0) {
+                console.log(`✅ Google Books API working - found ${searchResults.books.length} books`);
+                console.log('📖 Sample book:', searchResults.books[0].title);
+            } else {
+                console.warn('⚠️ Google Books API returned no results');
+            }
+            
+        } catch (error) {
+            console.error('❌ Google Books API test failed:', error);
+        }
+    }
+
+    // ✅ NEW: Add testing controls to the UI
+    addTestingControls() {
+        // Only add in development mode
+        if (!this.isDevelopmentMode()) return;
+        
+        const existingControls = DOMUtils.query('#api-testing-controls');
+        if (existingControls) return; // Already added
+        
+        const testingHTML = `
+            <div id="api-testing-controls" style="
+                position: fixed; 
+                bottom: 20px; 
+                right: 20px; 
+                background: var(--card-background); 
+                padding: 1rem; 
+                border-radius: var(--border-radius);
+                box-shadow: var(--shadow-lg);
+                border: 1px solid var(--border-color);
+                z-index: 999;
+                min-width: 200px;
+            ">
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">🧪 API Testing</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button class="btn btn-sm btn-outline" id="test-api-service">Test API Service</button>
+                    <button class="btn btn-sm btn-outline" id="test-error-notifications">Test Errors</button>
+                    <button class="btn btn-sm btn-outline" id="test-loading-states">Test Loading</button>
+                    <button class="btn btn-sm btn-outline" id="test-google-books">Test Google Books</button>
+                    <button class="btn btn-sm btn-outline" id="hide-testing-controls">Hide</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', testingHTML);
+        
+        // Setup event listeners for test buttons
+        DOMUtils.query('#test-api-service')?.addEventListener('click', () => this.testAPIService());
+        DOMUtils.query('#test-error-notifications')?.addEventListener('click', () => this.testErrorNotifications());
+        DOMUtils.query('#test-loading-states')?.addEventListener('click', () => this.testLoadingStates());
+        DOMUtils.query('#test-google-books')?.addEventListener('click', () => this.testGoogleBooksAPI());
+        DOMUtils.query('#hide-testing-controls')?.addEventListener('click', () => {
+            DOMUtils.query('#api-testing-controls')?.remove();
+        });
+    }
+
+    // ✅ NEW: Check if in development mode
+    isDevelopmentMode() {
+        // Simple check - you can enhance this
+        return window.location.hostname === 'localhost' || 
+               window.location.hostname === '127.0.0.1' ||
+               window.location.search.includes('debug=true');
+    }
+
+    // ✅ ENHANCED: Improved search functionality with API integration
+    async searchOnlineBooks(query) {
+        if (!query || query.trim().length === 0) {
+            return { success: false, message: 'Search query is required' };
+        }
+
+        console.log(`🔍 Searching for books: "${query}"`);
+        
+        // Show loading state
+        this.loadingStateManager.startLoading('online-search', {
+            message: `Searching for "${query}"...`,
+            showGlobal: true
+        });
+
+        try {
+            const results = await this.googleBooksAPI.searchBooks(query, {
+                maxResults: 10
+            });
+            
+            this.loadingStateManager.stopLoading('online-search');
+            
+            if (results.success) {
+                console.log(`✅ Found ${results.books.length} books`);
+                this.displaySearchResults(results.books);
+                return results;
+            } else {
+                console.warn('⚠️ Search failed:', results.message);
+                return results;
+            }
+            
+        } catch (error) {
+            this.loadingStateManager.stopLoading('online-search');
+            console.error('❌ Search error:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    // ✅ NEW: Display search results in the UI
+    displaySearchResults(books) {
+        const searchResultsContainer = DOMUtils.query('#search-results');
+        if (!searchResultsContainer) return;
+
+        if (books.length === 0) {
+            searchResultsContainer.innerHTML = this.bookListRenderer.renderEmptyState();
+            return;
+        }
+
+        const resultsHTML = this.bookListRenderer.renderSearchResults(books);
+        searchResultsContainer.innerHTML = resultsHTML;
+
+        // Setup event listeners for "Add to Library" buttons
+        this.setupSearchResultListeners();
+    }
+
+    // ✅ NEW: Setup event listeners for search results
+    setupSearchResultListeners() {
+        const addButtons = DOMUtils.queryAll('.btn-add-book');
+        addButtons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const bookInfo = JSON.parse(e.target.dataset.bookInfo);
+                await this.addBookFromSearch(bookInfo);
+            });
+        });
+    }
+
+    // ✅ NEW: Add book from search results to library
+    async addBookFromSearch(bookInfo) {
+        try {
+            console.log(`📚 Adding book to library: ${bookInfo.title}`);
+            
+            // Show loading on the specific button
+            const button = event.target;
+            this.loadingStateManager.showButtonLoading(button, 'Add to Library');
+            
+            // Create book data from search result
+            const bookData = {
+                title: bookInfo.title,
+                filename: `${bookInfo.title}.txt`,
+                content: bookInfo.description || 'No content available for this book.',
+                metadata: {
+                    authors: bookInfo.authors || [],
+                    publisher: bookInfo.publisher || '',
+                    publishedDate: bookInfo.publishedDate || '',
+                    thumbnail: bookInfo.thumbnail || '',
+                    source: 'Google Books',
+                    sourceId: bookInfo.id
+                }
+            };
+            
+            const result = await this.library.addBook(bookData);
+            
+            this.loadingStateManager.hideButtonLoading(button);
+            
+            if (result.success) {
+                this.modalManager.showAlert(
+                    'Book Added',
+                    `"${bookInfo.title}" has been added to your library!`
+                );
+                
+                // Refresh library view if we're on that view
+                if (this.navigationController.getCurrentView() === 'library') {
+                    this.refreshLibraryView();
+                }
+            } else {
+                this.modalManager.showAlert('Error', `Failed to add book: ${result.message}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error adding book from search:', error);
+            this.modalManager.showAlert('Error', `Failed to add book: ${error.message}`);
+        }
+    }
+
+    // ✅ ENHANCED: Enhanced search online button handler
     setupEventListeners() {
         // Upload book button
         const uploadBtn = DOMUtils.query('#upload-book-btn');
@@ -105,11 +429,31 @@ class BookBuddyApp {
             uploadBtn.addEventListener('click', () => this.showUploadModal());
         }
 
-        // Search online button
+        // ✅ ENHANCED: Search online button with API integration
         const searchOnlineBtn = DOMUtils.query('#search-online-btn');
         if (searchOnlineBtn) {
             searchOnlineBtn.addEventListener('click', () => {
                 this.navigationController.navigateToView('search');
+            });
+        }
+
+        // ✅ NEW: Online search functionality
+        const onlineSearchInput = DOMUtils.query('#online-search');
+        const searchBtn = DOMUtils.query('#search-btn');
+        
+        if (onlineSearchInput && searchBtn) {
+            const performSearch = () => {
+                const query = onlineSearchInput.value.trim();
+                if (query) {
+                    this.searchOnlineBooks(query);
+                }
+            };
+            
+            searchBtn.addEventListener('click', performSearch);
+            onlineSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
             });
         }
 
@@ -172,6 +516,29 @@ class BookBuddyApp {
         });
     }
 
+    // Rest of your existing methods remain the same...
+    async loadAppSettings() {
+        const settingsResult = this.storage.load('app_settings', this.appState.settings);
+        
+        if (settingsResult.success) {
+            this.appState.settings = { ...this.appState.settings, ...settingsResult.data };
+            
+            // Apply theme
+            if (settingsResult.data.theme) {
+                document.body.classList.add(`theme-${settingsResult.data.theme}`);
+            }
+        }
+    }
+
+    setupUI() {
+        // Register views with navigation controller
+        this.navigationController.registerView('library', DOMUtils.query('#library-view'));
+        this.navigationController.registerView('search', DOMUtils.query('#search-view'));
+        this.navigationController.registerView('reading', DOMUtils.query('#reading-view'));
+        this.navigationController.registerView('statistics', DOMUtils.query('#statistics-view'));
+        this.navigationController.registerView('settings', DOMUtils.query('#settings-view'));
+    }
+
     initializeViews() {
         // Initialize library view
         this.refreshLibraryView();
@@ -198,18 +565,17 @@ class BookBuddyApp {
     showUploadModal() {
         this.modalManager.showBookUpload(async (file) => {
             try {
-                // Show processing message
-                const processingModal = this.modalManager.showModal({
-                    title: 'Processing File',
-                    content: '<div class="loading-modal"><div class="loading-spinner"></div><p class="loading-text">Processing your book file...</p></div>',
-                    closable: false
+                // Show processing message with loading manager
+                this.loadingStateManager.startLoading('file-processing', {
+                    message: 'Processing your book file...',
+                    showGlobal: true
                 });
 
                 // Process file
                 const result = await this.fileProcessor.processFile(file);
                 
-                // Close processing modal
-                processingModal.close();
+                // Stop loading
+                this.loadingStateManager.stopLoading('file-processing');
 
                 if (result.success) {
                     // Add book to library
@@ -222,6 +588,7 @@ class BookBuddyApp {
                     this.modalManager.showAlert('Upload Error', result.message);
                 }
             } catch (error) {
+                this.loadingStateManager.stopLoading('file-processing');
                 this.modalManager.showAlert('Error', 'Failed to process file: ' + error.message);
             }
         });
@@ -632,6 +999,9 @@ class BookBuddyApp {
                                 <button class="btn btn-primary" id="welcome-upload">📤 Upload a Book</button>
                                 <button class="btn btn-outline" id="welcome-search">🔍 Search Online</button>
                             </div>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                                ✨ New: Enhanced with API Foundation for better performance!
+                            </p>
                         </div>
                     `,
                     buttons: [
