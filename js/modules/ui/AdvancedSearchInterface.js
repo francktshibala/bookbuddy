@@ -2186,4 +2186,3 @@ export default class AdvancedSearchInterface {
  * searchInterface.destroy();
  */
 
-export default AdvancedSearchInterface;
