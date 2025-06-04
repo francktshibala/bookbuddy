@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/components/reading-interface.css">
     <link rel="stylesheet" href="css/components/modals.css">
     <link rel="stylesheet" href="css/components/search-results-renderer.css">
+    <link rel="stylesheet" href="css/components/advanced-search-interface.css">
     <style>
         /* Enhanced main styles for Step 9.5 API Foundation */
         :root {
@@ -490,7 +491,7 @@
                 </div>
             </div>
 
-            <!-- Search View -->
+                        <!-- Search View -->
             <div class="view" id="search-view">
                 <div class="view-header">
                     <h2 class="view-title">🔍 Search Books Online</h2>
@@ -501,33 +502,18 @@
                     </div>
                 </div>
                 
-                <div class="search-section">
-                    <div class="search-bar">
-                        <input type="text" 
-                            id="online-search" 
-                            placeholder="Search for books online (e.g., 'JavaScript programming', 'Harry Potter')..." 
-                            class="search-input">
-                    </div>
-                    
-                    <div class="search-filters">
-                        <select id="search-source" class="search-input" style="width: auto;">
-                            <option value="all">All Sources</option>
-                            <option value="google">Google Books</option>
-                            <option value="openlibrary">Open Library</option>
-                        </select>
-                        <button class="btn btn-primary" id="search-btn">
-                            🔍 Search Books
-                        </button>
-                    </div>
+                <!-- Advanced Search Interface Container -->
+                <div class="search-content" id="advanced-search-container">
+                    <!-- AdvancedSearchInterface will render here -->
                 </div>
                 
                 <div id="search-results" class="books-grid">
                     <div class="empty-state">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
                         <h3>Search for Books Online</h3>
-                        <p>Enter a book title, author, or topic above to find books from Google Books and other sources.</p>
+                        <p>Use the advanced search interface above to find books from Google Books and other sources.</p>
                         <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-                            ✨ Powered by Step 9.5 API Foundation
+                            ✨ Powered by Component 10.4 - Advanced Search Interface
                         </p>
                     </div>
                 </div>

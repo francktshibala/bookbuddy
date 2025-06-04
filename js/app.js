@@ -181,7 +181,13 @@ class BookBuddyApp {
         // Listen for search completion to display results
         eventBus.on('search:completed', (data) => {
             console.log(`🎯 Search completed: ${data.totalResults} results`);
-            this.displaySearchResults(data.results);
+            console.log('🔍 Search data received:', data); // Debug log
+            
+            // ✅ FIX: Handle different data structures
+            const books = data.results || data.books || [];
+            console.log('📚 Books to display:', books.length, books);
+            
+            this.displaySearchResults(books);
         });
 
         // Listen for add to library requests from search results
@@ -422,36 +428,54 @@ class BookBuddyApp {
     // ✅ NEW: Display search results in the UI
     // Update the displaySearchResults method
     displaySearchResults(books) {
-        console.log(`📊 Displaying ${books.length} search results`);
-        
-        const resultsContainer = DOMUtils.query('#search-results');
-        if (!resultsContainer) {
-            console.error('❌ Search results container not found');
-            return;
-        }
+    console.log(`📊 Displaying ${books?.length || 0} search results`);
+    
+    const resultsContainer = DOMUtils.query('#search-results');
+    if (!resultsContainer) {
+        console.error('❌ Search results container not found');
+        return;
+    }
 
-        if (books.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="empty-state">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
-                    <h3>No books found</h3>
-                    <p>Try different search terms or check your search criteria.</p>
-                </div>
-            `;
-            return;
-        }
+    // ✅ FIX: Check if books is an array and has length
+    if (!books || !Array.isArray(books) || books.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="empty-state">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
+                <h3>No books found</h3>
+                <p>Try different search terms or check your search criteria.</p>
+            </div>
+        `;
+        return;
+    }
 
-        // Use the existing SearchResultsRenderer
+    // ✅ FIX: Check if searchResultsRenderer exists before using it
+    if (this.searchResultsRenderer) {
         this.searchResultsRenderer.renderSearchResults(books, {
             targetContainer: '#search-results',
             showFilters: true,
             showSorting: true,
             showPagination: true
         });
-
-        // Setup event listeners for the new results
-        this.setupSearchResultListeners();
+    } else {
+        // Fallback: render basic results if renderer is not available
+        const bookCards = books.map(book => `
+            <div class="search-result-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">${book.title || 'Unknown Title'}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-style: italic;">${(book.authors || []).join(', ') || 'Unknown Author'}</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4; margin-bottom: 1rem;">${(book.description || '').substring(0, 200)}${book.description && book.description.length > 200 ? '...' : ''}</p>
+                <button class="btn btn-primary btn-add-book" 
+                        data-book-info='${JSON.stringify(book).replace(/'/g, "&apos;")}'>
+                    📚 Add to Library
+                </button>
+            </div>
+        `).join('');
+        
+        resultsContainer.innerHTML = bookCards;
     }
+
+    // Setup event listeners for the new results
+    this.setupSearchResultListeners();
+}
 
     // ✅ NEW: Setup event listeners for search results
     setupSearchResultListeners() {
