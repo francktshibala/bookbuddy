@@ -122,8 +122,8 @@ export default class AdvancedSearchInterface {
             });
         });
 
-        // Form submission
-        const searchForm = DOMUtils.query('.search-form', this.containerElement);
+        // Form submission  
+        const searchForm = DOMUtils.query('#advanced-search-form', this.containerElement);
         if (searchForm) {
             searchForm.addEventListener('submit', this.handleFormSubmit);
         }
@@ -143,6 +143,11 @@ export default class AdvancedSearchInterface {
 
         // Filter and option changes
         this.setupFilterChangeListeners();
+        // Error close button
+        const closeErrorBtn = DOMUtils.query('#close-error', this.containerElement);
+        if (closeErrorBtn) {
+            closeErrorBtn.addEventListener('click', () => this.hideSearchError());
+        }
 
         // Keyboard shortcuts
         this.setupKeyboardShortcuts();
@@ -231,7 +236,7 @@ export default class AdvancedSearchInterface {
                             Basic Search
                         </h4>
                         <div class="section-actions">
-                            <button class="section-toggle" data-toggle="basic-search">
+                            <button type="button" class="section-toggle" data-toggle="basic-search">
                                 <span class="toggle-icon">${this.stateManager.expandedSections.has('basic-search') ? '▼' : '▶'}</span>
                             </button>
                         </div>
@@ -276,7 +281,7 @@ export default class AdvancedSearchInterface {
                             Search Fields
                         </h4>
                         <div class="section-actions">
-                            <button class="section-toggle" data-toggle="advanced-fields">
+                            <button type="button" class="section-toggle" data-toggle="advanced-fields">
                                 <span class="toggle-icon">${this.stateManager.expandedSections.has('advanced-fields') ? '▼' : '▶'}</span>
                             </button>
                         </div>
@@ -385,7 +390,7 @@ export default class AdvancedSearchInterface {
                             Expert Query Builder
                         </h4>
                         <div class="section-actions">
-                            <button class="section-toggle" data-toggle="expert-query">
+                            <button type="button" class="section-toggle" data-toggle="expert-query">
                                 <span class="toggle-icon">${this.stateManager.expandedSections.has('expert-query') ? '▼' : '▶'}</span>
                             </button>
                         </div>
@@ -511,8 +516,10 @@ export default class AdvancedSearchInterface {
             
             // Emit search completion event
             eventBus.emit('search:completed', {
-                query: result.query,
+                query: result.query || query,
                 totalResults: result.books.length,
+                results: result.books,
+                books: result.books,
                 source: result.source,
                 timestamp: new Date().toISOString()
             });
@@ -982,7 +989,7 @@ export default class AdvancedSearchInterface {
                         Search Filters
                     </h4>
                     <div class="section-actions">
-                        <button class="section-toggle" data-toggle="advanced-filters">
+                        <button type="button" class="section-toggle" data-toggle="advanced-filters">
                             <span class="toggle-icon">${this.stateManager.expandedSections.has('advanced-filters') ? '▼' : '▶'}</span>
                         </button>
                     </div>
