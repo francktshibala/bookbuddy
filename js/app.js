@@ -16,6 +16,7 @@ import NavigationController from './modules/ui/NavigationController.js';
 import ModalManager from './modules/ui/ModalManager.js';
 import BookListRenderer from './modules/ui/BookListRenderer.js';
 import ReadingInterface from './modules/ui/ReadingInterface.js';
+import AdvancedSearchInterface from './modules/ui/AdvancedSearchInterface.js';
 
 // ✅ NEW: Import Step 9 components
 import ErrorNotificationManager from './modules/ui/ErrorNotificationManager.js';
@@ -35,6 +36,11 @@ class BookBuddyApp {
         this.fileProcessor = new FileProcessor();
         this.navigationController = new NavigationController();
         this.modalManager = new ModalManager();
+        this.advancedSearchInterface = new AdvancedSearchInterface(
+            null, // Will be set after googleBooksAPI is initialized
+            this.storage,
+            null  // Will be set after modalManager is available
+        );
         this.bookListRenderer = new BookListRenderer();
         this.readingInterface = new ReadingInterface();
         this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
@@ -53,6 +59,9 @@ class BookBuddyApp {
         
         // Initialize API services
         this.googleBooksAPI = new GoogleBooksAPI();
+        // ✅ Setup AdvancedSearchInterface with dependencies
+        this.advancedSearchInterface.googleBooksAPI = this.googleBooksAPI;
+        this.advancedSearchInterface.modalManager = this.modalManager;
         
         this.currentBook = null;
         this.appState = {
@@ -81,6 +90,9 @@ class BookBuddyApp {
             
             // ✅ NEW: Setup Step 9 event listeners FIRST
             this.setupStep9EventListeners();
+
+            // ✅ Initialize Advanced Search Interface
+            await this.initializeAdvancedSearch();
             
             // Setup event listeners
             this.setupEventListeners();
@@ -124,6 +136,8 @@ class BookBuddyApp {
             this.errorNotificationManager.handleAPIError(data);
         });
 
+        
+
         // Listen for API loading states
         eventBus.on(EVENTS.API_REQUEST_STARTED, (data) => {
             if (data.isLoading !== undefined) {
@@ -139,6 +153,73 @@ class BookBuddyApp {
         });
 
         console.log('✅ Step 9 event listeners configured');
+    }
+
+    // ✅ NEW: Initialize Advanced Search Interface
+    async initializeAdvancedSearch() {
+        try {
+            console.log('🔍 Initializing Advanced Search Interface...');
+            
+            const result = await this.advancedSearchInterface.initialize('#advanced-search-container');
+            
+            if (result.success) {
+                console.log('✅ Advanced Search Interface initialized successfully');
+                
+                // Setup integration event listeners
+                this.setupAdvancedSearchEventListeners();
+            } else {
+                console.error('❌ Failed to initialize Advanced Search Interface:', result.message);
+            }
+            
+        } catch (error) {
+            console.error('❌ Advanced Search Interface initialization error:', error);
+        }
+    }
+
+    // ✅ NEW: Setup Advanced Search Event Listeners
+    setupAdvancedSearchEventListeners() {
+        // Listen for search completion to display results
+        eventBus.on('search:completed', (data) => {
+            console.log(`🎯 Search completed: ${data.totalResults} results`);
+            this.displaySearchResults(data.results);
+        });
+
+        // Listen for add to library requests from search results
+        eventBus.on('search:addToLibrary', async (data) => {
+            await this.addBookFromSearch(data.book);
+        });
+
+        // Listen for search errors
+        eventBus.on('search:error', (data) => {
+            console.error('🚨 Search error:', data.error);
+            // The AdvancedSearchInterface handles its own error display
+        });
+
+        // Listen for interface state changes
+        eventBus.on('search:tabChanged', (data) => {
+            console.log(`📑 Search tab changed from ${data.from} to ${data.to}`);
+        });
+
+        // Listen for search cleared
+        eventBus.on('search:cleared', () => {
+            console.log('🧹 Search interface cleared');
+            // Clear search results display
+            const resultsContainer = DOMUtils.query('#search-results');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                        <h3>Search for Books Online</h3>
+                        <p>Use the advanced search interface above to find books from Google Books and other sources.</p>
+                        <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            ✨ Powered by Component 10.4 - Advanced Search Interface
+                        </p>
+                    </div>
+                `;
+            }
+        });
+
+        console.log('🔗 Advanced Search event listeners configured');
     }
 
     // ✅ NEW: Test the complete API foundation
@@ -341,12 +422,35 @@ class BookBuddyApp {
     // ✅ NEW: Display search results in the UI
     // Update the displaySearchResults method
     displaySearchResults(books) {
+        console.log(`📊 Displaying ${books.length} search results`);
+        
+        const resultsContainer = DOMUtils.query('#search-results');
+        if (!resultsContainer) {
+            console.error('❌ Search results container not found');
+            return;
+        }
+
+        if (books.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
+                    <h3>No books found</h3>
+                    <p>Try different search terms or check your search criteria.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Use the existing SearchResultsRenderer
         this.searchResultsRenderer.renderSearchResults(books, {
             targetContainer: '#search-results',
             showFilters: true,
             showSorting: true,
             showPagination: true
         });
+
+        // Setup event listeners for the new results
+        this.setupSearchResultListeners();
     }
 
     // ✅ NEW: Setup event listeners for search results
@@ -473,25 +577,6 @@ class BookBuddyApp {
             });
         }
 
-        // ✅ NEW: Online search functionality
-        const onlineSearchInput = DOMUtils.query('#online-search');
-        const searchBtn = DOMUtils.query('#search-btn');
-        
-        if (onlineSearchInput && searchBtn) {
-            const performSearch = () => {
-                const query = onlineSearchInput.value.trim();
-                if (query) {
-                    this.searchOnlineBooks(query);
-                }
-            };
-            
-            searchBtn.addEventListener('click', performSearch);
-            onlineSearchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
-            });
-        }
 
         // Library search
         const searchInput = DOMUtils.query('#library-search');
@@ -1076,6 +1161,13 @@ class BookBuddyApp {
                         searchBtn.addEventListener('click', () => {
                             this.modalManager.closeAllModals();
                             this.navigationController.navigateToView('search');
+                            // Focus on the advanced search interface
+                            setTimeout(() => {
+                                const searchInput = DOMUtils.query('#basic-query');
+                                if (searchInput) {
+                                    searchInput.focus();
+                                }
+                            }, 300);
                         });
                     }
                 }, 100);
@@ -1103,6 +1195,21 @@ class BookBuddyApp {
                 stats: this.googleBooksAPI?.getStats?.() || {}
             }
         };
+    }
+
+    // ✅ NEW: Cleanup method for proper resource management
+    destroy() {
+        console.log('🗑️ Cleaning up BookBuddyApp...');
+        
+        // Clean up advanced search interface
+        if (this.advancedSearchInterface) {
+            this.advancedSearchInterface.destroy();
+        }
+        
+        // Remove global event listeners
+        eventBus.clear();
+        
+        console.log('✅ BookBuddyApp cleanup completed');
     }
 }
 
