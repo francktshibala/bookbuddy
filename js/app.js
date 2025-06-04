@@ -176,16 +176,19 @@ class BookBuddyApp {
         }
     }
 
-    // ✅ NEW: Setup Advanced Search Event Listeners
+    // ✅ FIXED: Setup Advanced Search Event Listeners
     setupAdvancedSearchEventListeners() {
         // Listen for search completion to display results
         eventBus.on('search:completed', (data) => {
             console.log(`🎯 Search completed: ${data.totalResults} results`);
             console.log('🔍 Search data received:', data); // Debug log
             
-            // ✅ FIX: Handle different data structures
+            // ✅ FIX: Handle different data structures correctly
             const books = data.results || data.books || [];
             console.log('📚 Books to display:', books.length, books);
+            
+            // Clear any existing error states
+            this.hideSearchError();
             
             this.displaySearchResults(books);
         });
@@ -198,7 +201,7 @@ class BookBuddyApp {
         // Listen for search errors
         eventBus.on('search:error', (data) => {
             console.error('🚨 Search error:', data.error);
-            // The AdvancedSearchInterface handles its own error display
+            this.showSearchError(data.userMessage || 'Search failed. Please try again.');
         });
 
         // Listen for interface state changes
@@ -426,56 +429,52 @@ class BookBuddyApp {
     }
 
     // ✅ NEW: Display search results in the UI
-    // Update the displaySearchResults method
+    // ✅ FIXED: Display search results in the UI
     displaySearchResults(books) {
-    console.log(`📊 Displaying ${books?.length || 0} search results`);
-    
-    const resultsContainer = DOMUtils.query('#search-results');
-    if (!resultsContainer) {
-        console.error('❌ Search results container not found');
-        return;
-    }
-
-    // ✅ FIX: Check if books is an array and has length
-    if (!books || !Array.isArray(books) || books.length === 0) {
-        resultsContainer.innerHTML = `
-            <div class="empty-state">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
-                <h3>No books found</h3>
-                <p>Try different search terms or check your search criteria.</p>
-            </div>
-        `;
-        return;
-    }
-
-    // ✅ FIX: Check if searchResultsRenderer exists before using it
-    if (this.searchResultsRenderer) {
-        this.searchResultsRenderer.renderSearchResults(books, {
-            targetContainer: '#search-results',
-            showFilters: true,
-            showSorting: true,
-            showPagination: true
-        });
-    } else {
-        // Fallback: render basic results if renderer is not available
-        const bookCards = books.map(book => `
-            <div class="search-result-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem;">
-                <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">${book.title || 'Unknown Title'}</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-style: italic;">${(book.authors || []).join(', ') || 'Unknown Author'}</p>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4; margin-bottom: 1rem;">${(book.description || '').substring(0, 200)}${book.description && book.description.length > 200 ? '...' : ''}</p>
-                <button class="btn btn-primary btn-add-book" 
-                        data-book-info='${JSON.stringify(book).replace(/'/g, "&apos;")}'>
-                    📚 Add to Library
-                </button>
-            </div>
-        `).join('');
+        console.log(`📊 Displaying ${books?.length || 0} search results`);
         
-        resultsContainer.innerHTML = bookCards;
-    }
+        const resultsContainer = DOMUtils.query('#search-results');
+        if (!resultsContainer) {
+            console.error('❌ Search results container not found');
+            return;
+        }
 
-    // Setup event listeners for the new results
-    this.setupSearchResultListeners();
-}
+        // ✅ FIX: Better validation and error handling
+        if (!books || !Array.isArray(books) || books.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
+                    <h3>No books found</h3>
+                    <p>Try different search terms or check your search criteria.</p>
+                    <button class="btn btn-outline" onclick="document.querySelector('.tab-btn[data-tab=basic]')?.click()">
+                        🔍 Try Basic Search
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // ✅ FIX: Use SearchResultsRenderer if available, fallback to basic rendering
+        if (this.searchResultsRenderer && typeof this.searchResultsRenderer.renderSearchResults === 'function') {
+            try {
+                this.searchResultsRenderer.renderSearchResults(books, {
+                    targetContainer: '#search-results',
+                    showFilters: true,
+                    showSorting: true,
+                    showPagination: true
+                });
+            } catch (error) {
+                console.error('❌ SearchResultsRenderer failed:', error);
+                this.renderBasicSearchResults(books, resultsContainer);
+            }
+        } else {
+            console.warn('⚠️ SearchResultsRenderer not available, using fallback');
+            this.renderBasicSearchResults(books, resultsContainer);
+        }
+
+        // Setup event listeners for the new results
+        this.setupSearchResultListeners();
+    }
 
     // ✅ NEW: Setup event listeners for search results
     setupSearchResultListeners() {
@@ -488,14 +487,66 @@ class BookBuddyApp {
         });
     }
 
-    // Enhanced addBookFromSearch method - ADD THIS TO app.js
+    // ✅ NEW: Fallback method for basic search result rendering
+    renderBasicSearchResults(books, container) {
+        const bookCards = books.map(book => `
+            <div class="search-result-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); transition: var(--transition);">
+                <div style="display: flex; gap: 1rem;">
+                    ${book.thumbnail ? `
+                        <div style="flex-shrink: 0;">
+                            <img src="${book.thumbnail}" alt="${book.title}" style="width: 80px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color);">
+                        </div>
+                    ` : ''}
+                    <div style="flex: 1; min-width: 0;">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--text-primary); font-size: 1.1rem; line-height: 1.3;">${book.title || 'Unknown Title'}</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-style: italic; font-size: 0.9rem;">${(book.authors || []).join(', ') || 'Unknown Author'}</p>
+                        ${book.publishedDate ? `<p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">Published: ${book.publishedDate}</p>` : ''}
+                        ${book.pageCount ? `<p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">Pages: ${book.pageCount}</p>` : ''}
+                        ${book.categories && book.categories.length > 0 ? `<p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.75rem;">Category: ${book.categories.slice(0, 2).join(', ')}</p>` : ''}
+                        ${book.description ? `
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4; margin-bottom: 1rem;">
+                                ${book.description.length > 200 ? book.description.substring(0, 200) + '...' : book.description}
+                            </p>
+                        ` : ''}
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary btn-add-book" 
+                                    data-book-info='${JSON.stringify(book).replace(/'/g, "&apos;")}'>
+                                📚 Add to Library
+                            </button>
+                            ${book.previewLink ? `
+                                <a href="${book.previewLink}" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+                                    👁️ Preview
+                                </a>
+                            ` : ''}
+                            ${book.infoLink ? `
+                                <a href="${book.infoLink}" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+                                    ℹ️ More Info
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = `
+            <div style="margin-bottom: 1rem; padding: 1rem; background: var(--background-color); border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">📚 Search Results</h3>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">Found ${books.length} books. Click "Add to Library" to save any book to your collection.</p>
+            </div>
+            ${bookCards}
+        `;
+    }
+    // ✅ FIXED: Enhanced addBookFromSearch method
     async addBookFromSearch(bookInfo) {
         try {
             console.log(`📚 Adding book to library: ${bookInfo.title}`);
             
-            // Show loading on the specific button
-            const button = event.target;
-            this.loadingStateManager.showButtonLoading(button, 'Add to Library');
+            // Show loading on the specific button if available
+            const button = event?.target;
+            if (button && this.loadingStateManager) {
+                this.loadingStateManager.showButtonLoading(button, 'Add to Library');
+            }
             
             // Create book data from search result
             const bookData = {
@@ -521,35 +572,80 @@ class BookBuddyApp {
             
             const result = await this.library.addBook(bookData);
             
-            this.loadingStateManager.hideButtonLoading(button);
+            if (button && this.loadingStateManager) {
+                this.loadingStateManager.hideButtonLoading(button);
+            }
             
             if (result.success) {
-                this.modalManager.showAlert(
-                    'Book Added! 📚',
-                    `"${bookInfo.title}" has been added to your library!`
-                );
+                // Show success message
+                if (this.modalManager) {
+                    this.modalManager.showAlert(
+                        'Book Added! 📚',
+                        `"${bookInfo.title}" has been added to your library!`
+                    );
+                } else {
+                    alert(`"${bookInfo.title}" has been added to your library!`);
+                }
                 
                 // Update button to show success
-                button.textContent = '✅ Added!';
-                button.disabled = true;
-                button.style.background = 'var(--success-color)';
-                button.style.cursor = 'default';
+                if (button) {
+                    button.textContent = '✅ Added!';
+                    button.disabled = true;
+                    button.style.background = 'var(--success-color)';
+                    button.style.cursor = 'default';
+                }
                 
                 // Refresh library view if we're on that view
                 if (this.navigationController.getCurrentView() === 'library') {
                     this.refreshLibraryView();
                 }
             } else {
-                this.modalManager.showAlert('Error', `Failed to add book: ${result.message}`);
+                const errorMsg = `Failed to add book: ${result.message}`;
+                if (this.modalManager) {
+                    this.modalManager.showAlert('Error', errorMsg);
+                } else {
+                    alert(errorMsg);
+                }
             }
             
         } catch (error) {
             console.error('❌ Error adding book from search:', error);
-            this.loadingStateManager.hideButtonLoading(event.target);
-            this.modalManager.showAlert('Error', `Failed to add book: ${error.message}`);
+            
+            if (event?.target && this.loadingStateManager) {
+                this.loadingStateManager.hideButtonLoading(event.target);
+            }
+            
+            const errorMsg = `Failed to add book: ${error.message}`;
+            if (this.modalManager) {
+                this.modalManager.showAlert('Error', errorMsg);
+            } else {
+                alert(errorMsg);
+            }
         }
     }
 
+    // ✅ NEW: Show search error in the interface
+    showSearchError(message) {
+        const resultsContainer = DOMUtils.query('#search-results');
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="empty-state" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                    <h3>Search Error</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-outline" onclick="document.querySelector('#clear-search')?.click()" style="margin-top: 1rem;">
+                        🔄 Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    // ✅ NEW: Hide search error
+    hideSearchError() {
+        // This will be called when a successful search completes
+        console.log('🔧 Hiding search errors');
+    }
     // Helper method to create book content from search results - ADD THIS TO app.js
     createBookContentFromSearch(bookInfo) {
         const authorsText = bookInfo.authors && bookInfo.authors.length > 0 

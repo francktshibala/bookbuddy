@@ -1079,3 +1079,321 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* Add these additional styles to your main CSS or create a new file */
+
+/* Missing Button Styles */
+.btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+}
+
+.btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.btn-icon {
+    margin-right: 0.25rem;
+}
+
+.btn-text {
+    /* No additional styles needed, just a semantic class */
+}
+
+/* Search Result Cards for fallback rendering */
+.search-result-card {
+    transition: var(--transition);
+}
+
+.search-result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Progress Bar Active State */
+.progress-bar.active .progress-fill {
+    animation: progress-loading 2s ease-in-out infinite;
+}
+
+/* Form Input Focus States */
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Success Color Variable */
+:root {
+    --success-color: #10b981;
+}
+
+/* Search Interface Specific Overrides */
+.advanced-search-interface .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.advanced-search-interface .btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Section Content Animation Fix */
+.section-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.section-content.expanded {
+    max-height: 2000px; /* Large enough for content */
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+/* Tab Content Animation */
+.tab-panel {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+}
+
+.tab-panel.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Search Status and Progress */
+.progress-text {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.search-btn:disabled .btn-text {
+    opacity: 0.7;
+}
+
+/* Error State Improvements */
+.search-error {
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    animation: slideDown 0.3s ease;
+}
+
+.error-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.error-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.error-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+.error-close {
+    background: none;
+    border: none;
+    color: #dc2626;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: var(--transition);
+    font-size: 1.2rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-close:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+/* Empty State Enhancements */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-secondary);
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+/* Quick Suggestions Styling */
+.quick-suggestions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.suggestions-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 500;
+}
+
+.suggestion-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.suggestion-tag {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.suggestion-tag:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+/* Field Help Text */
+.field-help {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.field-help code {
+    background: var(--background-color);
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-color);
+    font-size: 0.7rem;
+}
+
+/* Search Result Card Specific Styles */
+.search-result-card .btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.search-result-card img {
+    transition: var(--transition);
+}
+
+.search-result-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Loading States */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+    color: inherit;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+    .search-result-card {
+        padding: 1rem;
+    }
+    
+    .search-result-card > div {
+        flex-direction: column;
+    }
+    
+    .search-result-card img {
+        align-self: center;
+        margin-bottom: 1rem;
+    }
+    
+    .suggestion-tags {
+        justify-content: center;
+    }
+    
+    .search-header-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .search-header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Dark mode support for new elements */
+@media (prefers-color-scheme: dark) {
+    .error-content {
+        background: #450a0a;
+        border-color: #7f1d1d;
+        color: #fca5a5;
+    }
+    
+    .error-close:hover {
+        background: rgba(252, 165, 165, 0.1);
+    }
+    
+    .field-help code {
+        background: #1f2937;
+        color: #60a5fa;
+    }
+}

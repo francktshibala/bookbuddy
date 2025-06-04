@@ -10,7 +10,7 @@ export default class SearchStateManager {
         };
         
         this.activeTab = 'basic';
-        this.expandedSections = new Set(['basic-search']);
+        this.expandedSections = new Set(['basic-search', 'advanced-fields']); // Ensure sections are expanded by default
     }
 
     getDefaultCriteria() {
@@ -51,5 +51,20 @@ export default class SearchStateManager {
         this.currentSearch.criteria = this.getDefaultCriteria();
         this.currentSearch.filters = this.getDefaultFilters();
         this.currentSearch.results = [];
+        this.activeTab = 'basic';
+        this.expandedSections = new Set(['basic-search', 'advanced-fields']);
+    }
+
+    // Helper methods for the main component
+    isExpanded(sectionId) {
+        return this.expandedSections.has(sectionId);
+    }
+
+    toggleSection(sectionId) {
+        if (this.expandedSections.has(sectionId)) {
+            this.expandedSections.delete(sectionId);
+        } else {
+            this.expandedSections.add(sectionId);
+        }
     }
 }

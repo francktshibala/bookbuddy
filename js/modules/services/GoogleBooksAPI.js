@@ -450,6 +450,26 @@ export default class GoogleBooksAPI extends APIService {
     }
 
     /**
+     * Process Google Books API response into standardized format
+     * This method is specifically needed by AdvancedSearchInterface
+     * ADD THIS METHOD after the formatBookData method (around line 244)
+     */
+    processGoogleBooksResponse(data) {
+        if (!data.items || !Array.isArray(data.items)) {
+            console.warn('⚠️ No items found in Google Books response');
+            return [];
+        }
+
+        return data.items.map(item => this.formatBookData(item))
+            .filter(book => {
+                // Filter out books without essential information
+                return book.title && 
+                       book.title !== 'Unknown Title' && 
+                       book.authors.length > 0;
+            });
+    }
+
+    /**
      * Extract ISBN from industry identifiers
      */
     extractISBN(identifiers, type) {
@@ -621,3 +641,4 @@ export default class GoogleBooksAPI extends APIService {
         return 'Not implemented';
     }
 }
+
