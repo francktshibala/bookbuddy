@@ -254,7 +254,7 @@ export default class ModalManager {
         });
     }
 
-    // ✅ Replace the existing showBookUpload method in ModalManager.js with this:
+    // ✅ REPLACE your showBookUpload method with this complete version:
 
 showBookUpload(onUpload) {
     console.log('📤 Showing enhanced book upload modal...');
@@ -312,15 +312,18 @@ showBookUpload(onUpload) {
         }
     });
 
-    // Setup file handling after modal is shown
-    setTimeout(() => {
-        this.setupUploadModalHandlers(onUpload);
-    }, 100);
+    // ✅ FIXED: Use requestAnimationFrame for proper timing
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            console.log('🔧 Setting up upload modal handlers with proper timing...');
+            this.setupUploadModalHandlers(onUpload);
+        });
+    });
 
     return modalResult;
 }
 
-// ✅ ADD this new method to ModalManager.js as well:
+// ✅ ALSO REPLACE your setupUploadModalHandlers method with this enhanced version:
 setupUploadModalHandlers(onUpload) {
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('book-file-input');
@@ -328,54 +331,80 @@ setupUploadModalHandlers(onUpload) {
     const fileInfo = document.getElementById('file-info');
     const uploadBtn = document.querySelector('.modal-footer .btn-primary');
 
+    // ✅ BETTER ERROR CHECKING
+    console.log('🔍 Checking modal elements...');
+    console.log('Upload area found:', !!uploadArea);
+    console.log('File input found:', !!fileInput);
+    console.log('Browse button found:', !!browseBtn);
+    console.log('Upload button found:', !!uploadBtn);
+
     if (!uploadArea || !fileInput || !browseBtn) {
         console.error('❌ Upload modal elements not found');
+        // ✅ RETRY MECHANISM
+        setTimeout(() => {
+            console.log('🔄 Retrying to setup upload handlers...');
+            this.setupUploadModalHandlers(onUpload);
+        }, 500);
         return;
     }
 
     console.log('🔧 Setting up upload modal handlers...');
 
-    // Browse files button
+    // ✅ FIXED: Browse files button
     browseBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        console.log('📁 Browse button clicked');
+        e.stopPropagation();
+        console.log('📁 Browse button clicked - triggering file input');
         fileInput.click();
     });
 
-    // Click upload area to browse
+    // ✅ FIXED: Click upload area to browse
     uploadArea.addEventListener('click', (e) => {
-        if (e.target === uploadArea || e.target.closest('.upload-area')) {
-            console.log('📁 Upload area clicked');
-            fileInput.click();
+        if (e.target.id === 'browse-files-btn' || e.target.closest('#browse-files-btn')) {
+            return; // Let button handle its own click
         }
+        console.log('📁 Upload area clicked - triggering file input');
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
     });
 
-    // File selection
+    // ✅ ENHANCED: File selection
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            console.log('📄 File selected:', file.name, file.type, file.size);
+            console.log('📄 File selected:', {
+                name: file.name,
+                type: file.type,
+                size: `${(file.size / 1024 / 1024).toFixed(2)} MB`
+            });
             this.displayFileInfo(file);
             if (uploadBtn) {
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = 'Upload Book';
+                console.log('✅ Upload button enabled');
             }
+        } else {
+            console.log('❌ No file selected');
         }
     });
 
-    // Drag and drop
+    // Drag and drop handlers
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         uploadArea.classList.add('drag-over');
     });
 
     uploadArea.addEventListener('dragleave', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         uploadArea.classList.remove('drag-over');
     });
 
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         uploadArea.classList.remove('drag-over');
         
         const files = e.dataTransfer.files;
@@ -390,6 +419,8 @@ setupUploadModalHandlers(onUpload) {
             }
         }
     });
+
+    console.log('✅ All upload modal handlers set up successfully');
 }
 
 // ✅ ADD this method to ModalManager.js as well:
