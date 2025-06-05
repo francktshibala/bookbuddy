@@ -430,51 +430,41 @@ class BookBuddyApp {
 
     // ✅ NEW: Display search results in the UI
     // ✅ FIXED: Display search results in the UI
-    displaySearchResults(books) {
-        console.log(`📊 Displaying ${books?.length || 0} search results`);
-        
-        const resultsContainer = DOMUtils.query('#search-results');
-        if (!resultsContainer) {
-            console.error('❌ Search results container not found');
-            return;
-        }
+    // Replace your displaySearchResults method (around line 421) with this version:
 
-        // ✅ FIX: Better validation and error handling
-        if (!books || !Array.isArray(books) || books.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="empty-state">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
-                    <h3>No books found</h3>
-                    <p>Try different search terms or check your search criteria.</p>
-                    <button class="btn btn-outline" onclick="document.querySelector('.tab-btn[data-tab=basic]')?.click()">
-                        🔍 Try Basic Search
-                    </button>
-                </div>
-            `;
-            return;
-        }
-
-        // ✅ FIX: Use SearchResultsRenderer if available, fallback to basic rendering
-        if (this.searchResultsRenderer && typeof this.searchResultsRenderer.renderSearchResults === 'function') {
-            try {
-                this.searchResultsRenderer.renderSearchResults(books, {
-                    targetContainer: '#search-results',
-                    showFilters: true,
-                    showSorting: true,
-                    showPagination: true
-                });
-            } catch (error) {
-                console.error('❌ SearchResultsRenderer failed:', error);
-                this.renderBasicSearchResults(books, resultsContainer);
-            }
-        } else {
-            console.warn('⚠️ SearchResultsRenderer not available, using fallback');
-            this.renderBasicSearchResults(books, resultsContainer);
-        }
-
-        // Setup event listeners for the new results
-        this.setupSearchResultListeners();
+displaySearchResults(books) {
+    console.log(`📊 Displaying ${books?.length || 0} search results`);
+    
+    const resultsContainer = DOMUtils.query('#search-results');
+    if (!resultsContainer) {
+        console.error('❌ Search results container not found');
+        return;
     }
+
+    if (!books || !Array.isArray(books) || books.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="empty-state">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
+                <h3>No books found</h3>
+                <p>Try different search terms or check your search criteria.</p>
+                <button class="btn btn-outline" onclick="document.querySelector('.tab-btn[data-tab=basic]')?.click()">
+                    🔍 Try Basic Search
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ FORCE fallback rendering for now to debug
+    console.log('🎨 Using FORCED fallback rendering for debugging');
+    this.renderBasicSearchResults(books, resultsContainer);
+
+    // Setup event listeners for the new results
+    this.setupSearchResultListeners();
+    
+    console.log('✅ displaySearchResults completed - check the page!');
+}
+    
 
     // ✅ NEW: Setup event listeners for search results
     setupSearchResultListeners() {
@@ -645,6 +635,23 @@ class BookBuddyApp {
     hideSearchError() {
         // This will be called when a successful search completes
         console.log('🔧 Hiding search errors');
+    }
+
+    // ✅ ADD THIS METHOD after line 487 (after hideSearchError method)
+    clearSearchResults() {
+        const resultsContainer = DOMUtils.query('#search-results');
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                    <h3>Search for Books Online</h3>
+                    <p>Use the advanced search interface above to find books from Google Books and other sources.</p>
+                    <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        ✨ Powered by Component 10.4 - Advanced Search Interface
+                    </p>
+                </div>
+            `;
+        }
     }
     // Helper method to create book content from search results - ADD THIS TO app.js
     createBookContentFromSearch(bookInfo) {
