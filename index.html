@@ -447,6 +447,22 @@
                 font-size: 0.7rem;
             }
         }
+
+                /* Quick fix for modal visibility - add this to your index.html */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            z-index: 1000;
+        }
+
+        /* Ensure modal shows when backdrop has show class */
+        .modal-backdrop.show .modal {
+            opacity: 1;
+            pointer-events: all;
+        }
     </style>
 </head>
 <body>

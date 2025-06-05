@@ -82,9 +82,16 @@ export default class ModalManager {
         // Track active modal
         this.activeModals.add(id);
         
-        // Show modal with animation
+                // Show modal with animation
         requestAnimationFrame(() => {
             DOMUtils.addClass(modalElement, 'show');
+            // Also ensure the modal itself gets the show class
+            const modal = modalElement.querySelector('.modal');
+            if (modal) {
+                requestAnimationFrame(() => {
+                    DOMUtils.addClass(modal, 'show');
+                });
+            }
         });
 
         // Emit event
@@ -127,8 +134,14 @@ export default class ModalManager {
         const modalElement = DOMUtils.query(`[data-modal-id="${modalId}"]`);
         if (!modalElement) return;
 
-        // Add closing animation
+        // Remove show class from both backdrop and modal
+        const modal = modalElement.querySelector('.modal');
         DOMUtils.removeClass(modalElement, 'show');
+        if (modal) {
+            DOMUtils.removeClass(modal, 'show');
+        }
+        
+        // Add closing animation
         DOMUtils.addClass(modalElement, 'hiding');
 
         // Remove from DOM after animation
