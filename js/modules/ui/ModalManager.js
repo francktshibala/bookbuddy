@@ -333,7 +333,7 @@ showBookUpload(onUpload) {
     return modalResult;
 }
 
-// ✅ ALSO REPLACE your setupUploadModalHandlers method with this enhanced version:
+// ✅ FIXED setupUploadModalHandlers method
 setupUploadModalHandlers(onUpload) {
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('book-file-input');
@@ -358,19 +358,19 @@ setupUploadModalHandlers(onUpload) {
 
     console.log('🔧 Setting up upload modal handlers...');
 
-    // ✅ FIXED: Click upload area to browse (but not the label which handles itself)
+    // ✅ FIXED: Click upload area to trigger file input
     uploadArea.addEventListener('click', (e) => {
-        // Don't trigger if clicking on the label or inside it
-        if (e.target.tagName === 'LABEL' || e.target.closest('label')) {
-            return; // Let label handle the click naturally
+        // If clicking on the label itself, let it handle naturally
+        if (e.target.tagName === 'LABEL' || e.target.closest('label[for="book-file-input"]')) {
+            console.log('📁 Label clicked - letting it handle naturally');
+            return; // Let label handle the click
         }
-        console.log('📁 Upload area clicked');
+        
+        // If clicking elsewhere in upload area, trigger the file input
+        console.log('📁 Upload area clicked - triggering file input');
         e.preventDefault();
-        // Find the label and trigger a click on it instead
-        const label = uploadArea.querySelector('label[for="book-file-input"]');
-        if (label) {
-            label.click();
-        }
+        e.stopPropagation();
+        fileInput.click();
     });
 
     // ✅ ENHANCED: File selection
