@@ -363,15 +363,14 @@ setupUploadModalHandlers(onUpload) {
         // If clicking on the label itself, let it handle naturally
         if (e.target.tagName === 'LABEL' || e.target.closest('label[for="book-file-input"]')) {
             console.log('📁 Label clicked - letting it handle naturally');
-            return; // Let label handle the click
+            // Don't do anything else - the label will handle it
+            return;
         }
         
         // If clicking elsewhere in upload area, trigger the file input
         console.log('📁 Upload area clicked - triggering file input');
-        e.preventDefault();
-        e.stopPropagation();
         fileInput.click();
-    });
+    }, true); // Use capture phase to handle before label
 
     // ✅ ENHANCED: File selection
     fileInput.addEventListener('change', (e) => {
