@@ -82,15 +82,13 @@ export default class ModalManager {
         // Track active modal
         this.activeModals.add(id);
         
-                // Show modal with animation
+              // Show modal with animation
         requestAnimationFrame(() => {
             DOMUtils.addClass(modalElement, 'show');
-            // Also ensure the modal itself gets the show class
+            // Also add show class to the modal itself
             const modal = modalElement.querySelector('.modal');
             if (modal) {
-                requestAnimationFrame(() => {
-                    DOMUtils.addClass(modal, 'show');
-                });
+                DOMUtils.addClass(modal, 'show');
             }
         });
 
@@ -153,7 +151,6 @@ export default class ModalManager {
             eventBus.emit(EVENTS.UI_MODAL_CLOSED, { id: modalId });
         }, 300);
     }
-
     closeTopModal() {
         if (this.activeModals.size > 0) {
             const topModalId = Array.from(this.activeModals).pop();
@@ -282,10 +279,10 @@ showBookUpload(onUpload) {
                 <p class="upload-formats" style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
                     Supported formats: TXT files only
                 </p>
-                <input type="file" id="book-file-input" accept=".txt" style="display: none;">
-                <button class="btn btn-outline" id="browse-files-btn">
+                <input type="file" id="book-file-input" accept=".txt" style="position: absolute; width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; z-index: -1;">
+                <label for="book-file-input" class="btn btn-outline" style="cursor: pointer;">
                     📁 Choose File
-                </button>
+                </label>
             </div>
             <div id="file-info" class="file-info" style="display: none;">
                 <h5>Selected File:</h5>
@@ -340,7 +337,6 @@ showBookUpload(onUpload) {
 setupUploadModalHandlers(onUpload) {
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('book-file-input');
-    const browseBtn = document.getElementById('browse-files-btn');
     const fileInfo = document.getElementById('file-info');
     const uploadBtn = document.querySelector('.modal-footer .btn-primary');
 
@@ -348,10 +344,9 @@ setupUploadModalHandlers(onUpload) {
     console.log('🔍 Checking modal elements...');
     console.log('Upload area found:', !!uploadArea);
     console.log('File input found:', !!fileInput);
-    console.log('Browse button found:', !!browseBtn);
     console.log('Upload button found:', !!uploadBtn);
 
-    if (!uploadArea || !fileInput || !browseBtn) {
+    if (!uploadArea || !fileInput) {
         console.error('❌ Upload modal elements not found');
         // ✅ RETRY MECHANISM
         setTimeout(() => {
@@ -363,23 +358,19 @@ setupUploadModalHandlers(onUpload) {
 
     console.log('🔧 Setting up upload modal handlers...');
 
-    // ✅ FIXED: Browse files button
-    browseBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('📁 Browse button clicked - triggering file input');
-        fileInput.click();
-    });
-
-    // ✅ FIXED: Click upload area to browse
+    // ✅ FIXED: Click upload area to browse (but not the label which handles itself)
     uploadArea.addEventListener('click', (e) => {
-        if (e.target.id === 'browse-files-btn' || e.target.closest('#browse-files-btn')) {
-            return; // Let button handle its own click
+        // Don't trigger if clicking on the label or inside it
+        if (e.target.tagName === 'LABEL' || e.target.closest('label')) {
+            return; // Let label handle the click naturally
         }
-        console.log('📁 Upload area clicked - triggering file input');
+        console.log('📁 Upload area clicked');
         e.preventDefault();
-        e.stopPropagation();
-        fileInput.click();
+        // Find the label and trigger a click on it instead
+        const label = uploadArea.querySelector('label[for="book-file-input"]');
+        if (label) {
+            label.click();
+        }
     });
 
     // ✅ ENHANCED: File selection
