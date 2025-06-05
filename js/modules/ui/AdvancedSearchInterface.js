@@ -101,48 +101,102 @@ export default class AdvancedSearchInterface {
         console.log('🎨 Advanced search interface rendered (FIXED)');
     }
 
+    
     /**
-     * Setup event listeners
-     */
-    setupEventListeners() {
-        if (!this.containerElement) return;
-
-        // Tab switching
-        const tabButtons = DOMUtils.queryAll('.tab-btn', this.containerElement);
-        tabButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const tabId = e.target.closest('.tab-btn').dataset.tab;
-                this.handleTabSwitch(tabId);
-            });
-        });
-
-        // Form submission  
-        const searchForm = DOMUtils.query('#advanced-search-form', this.containerElement);
-        if (searchForm) {
-            searchForm.addEventListener('submit', this.handleFormSubmit);
-        }
-
-        // Input changes for auto-save
-        const inputs = DOMUtils.queryAll('input, select, textarea', this.containerElement);
-        inputs.forEach(input => {
-            input.addEventListener('input', this.handleInputChange);
-            input.addEventListener('change', this.handleInputChange);
-        });
-
-        // Header action buttons
-        this.setupHeaderActionListeners();
-
-        // Section toggle buttons
-        this.setupSectionToggleListeners();
-
-        // Error close button
-        const closeErrorBtn = DOMUtils.query('#close-error', this.containerElement);
-        if (closeErrorBtn) {
-            closeErrorBtn.addEventListener('click', () => this.hideSearchError());
-        }
-
-        console.log('🎯 All event listeners configured (FIXED)');
+ * Setup event listeners - ENHANCED DEBUG VERSION
+ */
+setupEventListeners() {
+    if (!this.containerElement) {
+        console.error('❌ Cannot setup event listeners: container element not found');
+        return;
     }
+
+    console.log('🔧 Setting up event listeners...');
+
+    // Tab switching
+    const tabButtons = DOMUtils.queryAll('.tab-btn', this.containerElement);
+    console.log(`📑 Found ${tabButtons.length} tab buttons`);
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tabId = e.target.closest('.tab-btn').dataset.tab;
+            console.log(`🔄 Tab clicked: ${tabId}`);
+            this.handleTabSwitch(tabId);
+        });
+    });
+
+    // Form submission - ENHANCED WITH MULTIPLE LISTENERS
+    const searchForm = DOMUtils.query('#advanced-search-form', this.containerElement);
+    const submitButton = DOMUtils.query('#perform-search', this.containerElement);
+    
+    console.log('📝 Form found:', !!searchForm);
+    console.log('🔘 Submit button found:', !!submitButton);
+    
+    if (searchForm) {
+        console.log('✅ Adding form submit listener');
+        searchForm.addEventListener('submit', (e) => {
+            console.log('📝 FORM SUBMIT EVENT TRIGGERED!', e);
+            this.handleFormSubmit(e);
+        });
+    } else {
+        console.error('❌ Form #advanced-search-form not found!');
+    }
+
+    // CRITICAL FIX: Add direct button click listener
+    if (submitButton) {
+        console.log('✅ Adding button click listener');
+        submitButton.addEventListener('click', (e) => {
+            console.log('🔘 SUBMIT BUTTON CLICKED!', e);
+            e.preventDefault(); // Prevent default button behavior
+            
+            // If button is inside form, it should trigger form submit
+            // But let's also call handleFormSubmit directly as backup
+            const form = submitButton.closest('form');
+            if (form) {
+                console.log('📝 Button is inside form, triggering form submit');
+                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                form.dispatchEvent(submitEvent);
+            } else {
+                console.log('🔘 Button not in form, calling handleFormSubmit directly');
+                this.handleFormSubmit(e);
+            }
+        });
+    } else {
+        console.error('❌ Submit button #perform-search not found!');
+        // Let's also check for any button with type="submit"
+        const anySubmitBtn = DOMUtils.query('button[type="submit"]', this.containerElement);
+        console.log('🔍 Any submit button found:', !!anySubmitBtn);
+        if (anySubmitBtn) {
+            console.log('📍 Found submit button:', anySubmitBtn.id, anySubmitBtn.className);
+            anySubmitBtn.addEventListener('click', (e) => {
+                console.log('🎯 Alternative submit button clicked!');
+                e.preventDefault();
+                this.handleFormSubmit(e);
+            });
+        }
+    }
+
+    // Input changes for auto-save
+    const inputs = DOMUtils.queryAll('input, select, textarea', this.containerElement);
+    console.log(`📝 Found ${inputs.length} form inputs`);
+    inputs.forEach(input => {
+        input.addEventListener('input', this.handleInputChange);
+        input.addEventListener('change', this.handleInputChange);
+    });
+
+    // Header action buttons
+    this.setupHeaderActionListeners();
+
+    // Section toggle buttons
+    this.setupSectionToggleListeners();
+
+    // Error close button
+    const closeErrorBtn = DOMUtils.query('#close-error', this.containerElement);
+    if (closeErrorBtn) {
+        closeErrorBtn.addEventListener('click', () => this.hideSearchError());
+    }
+
+    console.log('✅ All event listeners configured (ENHANCED DEBUG VERSION)');
+}
 
     /**
      * Execute search with loading states

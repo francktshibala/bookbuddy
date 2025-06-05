@@ -690,20 +690,26 @@ displaySearchResults(books) {
 
     // ✅ ENHANCED: Enhanced search online button handler
     setupEventListeners() {
-        // Upload book button
-        const uploadBtn = DOMUtils.query('#upload-book-btn');
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', () => this.showUploadModal());
-        }
+        // ✅ CRITICAL FIX: Upload book button (ADD THIS FIRST)
+    const uploadBtn = DOMUtils.query('#upload-book-btn');
+    if (uploadBtn) {
+        console.log('✅ Upload button found, adding event listener');
+        uploadBtn.addEventListener('click', (e) => {
+            console.log('📤 Upload button clicked!');
+            e.preventDefault();
+            this.showUploadModal();
+        });
+    } else {
+        console.error('❌ Upload button #upload-book-btn not found!');
+    }
 
-        // ✅ ENHANCED: Search online button with API integration
-        const searchOnlineBtn = DOMUtils.query('#search-online-btn');
-        if (searchOnlineBtn) {
-            searchOnlineBtn.addEventListener('click', () => {
-                this.navigationController.navigateToView('search');
-            });
-        }
-
+    // ✅ ENHANCED: Search online button with API integration
+    const searchOnlineBtn = DOMUtils.query('#search-online-btn');
+    if (searchOnlineBtn) {
+        searchOnlineBtn.addEventListener('click', () => {
+            this.navigationController.navigateToView('search');
+        });
+    }
 
         // Library search
         const searchInput = DOMUtils.query('#library-search');

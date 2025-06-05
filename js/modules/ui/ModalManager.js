@@ -254,48 +254,157 @@ export default class ModalManager {
         });
     }
 
-    showBookUpload(onUpload) {
-        return this.showModal({
-            title: '📤 Upload Book',
-            content: `
-                <div class="upload-area" id="upload-area">
-                    <div class="upload-icon">📁</div>
-                    <h4>Drop your book file here</h4>
-                    <p>Or click to select a file</p>
-                    <input type="file" id="file-input" accept=".txt" style="display: none;">
-                    <button class="btn btn-outline" onclick="document.getElementById('file-input').click()">
-                        Choose File
-                    </button>
-                </div>
-                <div class="file-info" id="file-info" style="display: none;">
-                    <h5>Selected File:</h5>
-                    <p id="file-name"></p>
-                    <p id="file-size"></p>
-                </div>
-            `,
-            buttons: [
-                {
-                    text: 'Cancel',
-                    action: 'cancel',
-                    className: 'btn-secondary'
-                },
-                {
-                    text: 'Upload',
-                    action: 'upload',
-                    className: 'btn-primary',
-                    disabled: true
-                }
-            ],
-            className: 'upload-modal',
-            onAction: (action, modalId) => {
-                if (action === 'upload') {
-                    const fileInput = document.getElementById('file-input');
-                    if (fileInput && fileInput.files[0]) {
-                        onUpload(fileInput.files[0]);
-                    }
-                }
-                return true;
+    // ✅ Replace the existing showBookUpload method in ModalManager.js with this:
+
+showBookUpload(onUpload) {
+    console.log('📤 Showing enhanced book upload modal...');
+    
+    const modalResult = this.showModal({
+        title: '📤 Upload Book',
+        content: `
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📚</div>
+                <h4>Upload Your Book File</h4>
+                <p>Drag and drop your book file here, or click to browse</p>
+                <p class="upload-formats" style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    Supported formats: TXT files only
+                </p>
+                <input type="file" id="book-file-input" accept=".txt" style="display: none;">
+                <button class="btn btn-outline" id="browse-files-btn">
+                    📁 Choose File
+                </button>
+            </div>
+            <div id="file-info" class="file-info" style="display: none;">
+                <h5>Selected File:</h5>
+                <p id="file-name"></p>
+                <p id="file-size"></p>
+                <p id="file-type"></p>
+            </div>
+        `,
+        buttons: [
+            {
+                text: 'Cancel',
+                action: 'cancel',
+                className: 'btn-outline'
+            },
+            {
+                text: 'Upload Book',
+                action: 'upload',
+                className: 'btn-primary',
+                disabled: true
             }
-        });
+        ],
+        className: 'upload-modal',
+        onAction: (action, modalId) => {
+            if (action === 'upload') {
+                const fileInput = document.getElementById('book-file-input');
+                const file = fileInput?.files[0];
+                if (file && onUpload) {
+                    console.log('📁 File selected for upload:', file.name);
+                    onUpload(file);
+                    return true; // Close modal
+                } else {
+                    console.warn('⚠️ No file selected');
+                    return false; // Keep modal open
+                }
+            }
+            return true; // Close modal for other actions
+        }
+    });
+
+    // Setup file handling after modal is shown
+    setTimeout(() => {
+        this.setupUploadModalHandlers(onUpload);
+    }, 100);
+
+    return modalResult;
+}
+
+// ✅ ADD this new method to ModalManager.js as well:
+setupUploadModalHandlers(onUpload) {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('book-file-input');
+    const browseBtn = document.getElementById('browse-files-btn');
+    const fileInfo = document.getElementById('file-info');
+    const uploadBtn = document.querySelector('.modal-footer .btn-primary');
+
+    if (!uploadArea || !fileInput || !browseBtn) {
+        console.error('❌ Upload modal elements not found');
+        return;
     }
+
+    console.log('🔧 Setting up upload modal handlers...');
+
+    // Browse files button
+    browseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('📁 Browse button clicked');
+        fileInput.click();
+    });
+
+    // Click upload area to browse
+    uploadArea.addEventListener('click', (e) => {
+        if (e.target === uploadArea || e.target.closest('.upload-area')) {
+            console.log('📁 Upload area clicked');
+            fileInput.click();
+        }
+    });
+
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            console.log('📄 File selected:', file.name, file.type, file.size);
+            this.displayFileInfo(file);
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload Book';
+            }
+        }
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            console.log('📄 File dropped:', file.name);
+            fileInput.files = files;
+            this.displayFileInfo(file);
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload Book';
+            }
+        }
+    });
+}
+
+// ✅ ADD this method to ModalManager.js as well:
+displayFileInfo(file) {
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const fileType = document.getElementById('file-type');
+
+    if (fileInfo && fileName && fileSize && fileType) {
+        fileName.textContent = file.name;
+        fileSize.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        fileType.textContent = `Type: ${file.type || 'text/plain'}`;
+        fileInfo.style.display = 'block';
+        console.log('📋 File info displayed:', file.name);
+    }
+}
 }
