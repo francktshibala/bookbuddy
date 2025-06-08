@@ -626,3 +626,53 @@
         transform: none;
     }
 }
+
+.ai-analysis-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.ai-analysis-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.ai-prompt-display {
+    max-width: 800px;
+}
+
+.prompt-text {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.book-info, .analysis-type {
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: #e3f2fd;
+    border-radius: 4px;
+    border-left: 4px solid #2196f3;
+}
+
+.ai-note {
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    color: #856404;
+}

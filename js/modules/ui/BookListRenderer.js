@@ -2,12 +2,14 @@
  * BookListRenderer - Handles rendering of book lists and cards
  */
 import { DateUtils, StringUtils } from '../../utils/Helpers.js';
+import { eventBus, EVENTS } from '../../utils/EventBus.js';
 
 export default class BookListRenderer {
-    constructor() {
-        this.renderMode = 'cards'; // 'cards' or 'list'
-        this.sortBy = 'uploadDate'; // 'title', 'uploadDate', 'progress', 'wordCount'
-        this.sortOrder = 'desc'; // 'asc' or 'desc'
+    constructor(library) {  
+        this.library = library;  
+        this.renderMode = 'cards';
+        this.sortBy = 'uploadDate';
+        this.sortOrder = 'desc';
     }
 
     renderBookCards(books) {
@@ -62,6 +64,11 @@ export default class BookListRenderer {
                     </button>
                     <button class="btn btn-sm btn-outline btn-details" title="View details">
                         📋 Details
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary ai-analysis-btn" 
+                            data-book-id="${book.id}" 
+                            title="AI Analysis">
+                        🤖 AI Analysis
                     </button>
                     <button class="btn btn-sm btn-outline btn-delete" title="Delete book">
                         🗑️ Delete
@@ -442,5 +449,46 @@ renderEnrichedMetadata(book) {
             <div class="metadata-item">Enhanced: ${new Date(book.mergedAt).toLocaleDateString()}</div>
         </div>
     `;
+}
+
+// Add this method to setup AI analysis listeners
+setupAIAnalysisListeners() {
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('ai-analysis-btn')) {
+            const bookId = e.target.dataset.bookId;
+            this.requestAIAnalysis(bookId);
+        }
+    });
+}
+
+async requestAIAnalysis(bookId) {
+    try {
+        const book = this.library.getBook(bookId);
+        if (!book) return;
+
+        // Show loading state
+        eventBus.emit(EVENTS.LOADING_STATE_CHANGED, {
+            isLoading: true,
+            message: 'Generating AI analysis...'
+        });
+
+        // Request AI analysis
+        eventBus.emit('ai:analysis:requested', {
+            category: 'analysis',
+            name: 'summary',
+            bookData: book,
+            options: {
+                analysisDepth: 'detailed',
+                includeQuotes: true
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ AI analysis request failed:', error);
+        eventBus.emit(EVENTS.ERROR_OCCURRED, {
+            message: 'Failed to request AI analysis',
+            error: error.message
+        });
+    }
 }
 }

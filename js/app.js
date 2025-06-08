@@ -4,6 +4,8 @@
  */
 
 // Import all modules with CORRECTED PATHS
+import AIInsightsPanel from './modules/ui/AIInsightsPanel.js';
+import AIPromptTemplates from './modules/services/AIPromptTemplates.js';
 import AnalyticsDashboard from './modules/ui/analytics/AnalyticsDashboard.js';
 import ChartRenderer from './modules/ui/analytics/ChartRenderer.js';
 import AnalyticsDataCollector from './modules/services/AnalyticsDataCollector.js';
@@ -44,7 +46,13 @@ class BookBuddyApp {
         this.modalManager = new ModalManager();
         this.openLibraryAPI = new OpenLibraryAPI();
         this.bookDataMerger = new BookDataMerger();
+        this.aiInsightsPanel = new AIInsightsPanel();
         this.chartRenderer = new ChartRenderer();
+        this.aiPromptTemplates = new AIPromptTemplates({
+            cacheEnabled: true,
+            maxCacheSize: 50, // Reasonable for Book Buddy
+            validateSecurity: true
+        });
         this.analyticsDataCollector = new AnalyticsDataCollector(this.library);
         this.chartRenderer = new ChartRenderer();
         this.analyticsDashboard = new AnalyticsDashboard(
@@ -57,7 +65,7 @@ class BookBuddyApp {
             this.storage,
             null  // Will be set after modalManager is available
         );
-        this.bookListRenderer = new BookListRenderer();
+        this.bookListRenderer = new BookListRenderer(this.library);
         this.readingInterface = new ReadingInterface();
         this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
         
@@ -1491,4 +1499,5 @@ window.BookDataMerger = BookDataMerger;
 window.EnrichmentCoordinator = EnrichmentCoordinator;
 window.enrichmentCoordinator = this.enrichmentCoordinator; 
 window.AnalyticsDataCollector = AnalyticsDataCollector;
+window.AIPromptTemplates = AIPromptTemplates;
 
