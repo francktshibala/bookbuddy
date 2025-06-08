@@ -4,6 +4,12 @@
  */
 
 // Import all modules with CORRECTED PATHS
+import AnalyticsDashboard from './modules/ui/analytics/AnalyticsDashboard.js';
+import ChartRenderer from './modules/ui/analytics/ChartRenderer.js';
+import AnalyticsDataCollector from './modules/services/AnalyticsDataCollector.js';
+import EnrichmentCoordinator from './modules/services/EnrichmentCoordinator.js';
+import BookDataMerger from './utils/BookDataMerger.js';
+import OpenLibraryAPI from './modules/services/OpenLibraryAPI.js';
 import SearchResultsRenderer from './modules/ui/SearchResultsRenderer.js';
 import BookCoverManager from './modules/ui/BookCoverManager.js';
 import StorageManager from './utils/StorageManager.js';
@@ -36,6 +42,16 @@ class BookBuddyApp {
         this.fileProcessor = new FileProcessor();
         this.navigationController = new NavigationController();
         this.modalManager = new ModalManager();
+        this.openLibraryAPI = new OpenLibraryAPI();
+        this.bookDataMerger = new BookDataMerger();
+        this.chartRenderer = new ChartRenderer();
+        this.analyticsDataCollector = new AnalyticsDataCollector(this.library);
+        this.chartRenderer = new ChartRenderer();
+        this.analyticsDashboard = new AnalyticsDashboard(
+            this.library, 
+            this.chartRenderer, 
+            this.analyticsDataCollector
+        );
         this.advancedSearchInterface = new AdvancedSearchInterface(
             null, // Will be set after googleBooksAPI is initialized
             this.storage,
@@ -59,6 +75,13 @@ class BookBuddyApp {
         
         // Initialize API services
         this.googleBooksAPI = new GoogleBooksAPI();
+
+         // Create enrichment coordinator
+        this.enrichmentCoordinator = new EnrichmentCoordinator(
+            this.googleBooksAPI,
+            this.openLibraryAPI,
+            this.bookDataMerger
+        );
         // ✅ Setup AdvancedSearchInterface with dependencies
         this.advancedSearchInterface.googleBooksAPI = this.googleBooksAPI;
         this.advancedSearchInterface.modalManager = this.modalManager;
@@ -921,6 +944,15 @@ displaySearchResults(books) {
                 });
             }
             
+            // ✅ NEW: Add enrichment button handler
+            const enrichBtn = card.querySelector('.btn-enrich');
+            if (enrichBtn) {
+                enrichBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await this.enrichBook(bookId);
+                });
+            }
+            
             // Delete book
             const deleteBtn = card.querySelector('.btn-delete');
             if (deleteBtn) {
@@ -1308,6 +1340,104 @@ displaySearchResults(books) {
         }
     }
 
+    
+// ✅ NEW: Enrich a book by ID
+async enrichBook(bookId) {
+   const book = this.library.getBook(bookId);
+   if (!book) {
+       console.error('Book not found:', bookId);
+       return;
+   }
+   
+   console.log(`🔍 Starting enrichment for: "${book.title}"`);
+   
+   // Show loading
+   this.loadingStateManager.startLoading('book-enrichment', {
+       message: `Enriching "${book.title}"...`,
+       showGlobal: true
+   });
+   
+   try {
+       // Try ISBN first if available
+       let result;
+       if (book.metadata?.isbn13 || book.metadata?.isbn10) {
+           const isbn = book.metadata.isbn13 || book.metadata.isbn10;
+           console.log(`🔍 Using ISBN: ${isbn}`);
+           result = await this.enrichmentCoordinator.enrichByISBN(isbn);
+       } else {
+           console.log(`🔍 Using title search: ${book.title}`);
+           // Fall back to title search
+           const titleResult = await this.enrichmentCoordinator.enrichByTitle(book.title);
+           if (titleResult.success && titleResult.enrichedBooks.length > 0) {
+               result = {
+                   success: true,
+                   enrichedBook: titleResult.enrichedBooks[0]
+               };
+           } else {
+               result = titleResult;
+           }
+       }
+       
+       this.loadingStateManager.stopLoading('book-enrichment');
+       
+       if (result.success && result.enrichedBook) {
+           // Update the book with enriched data
+           const enrichedData = {
+               ...result.enrichedBook,
+               id: book.id, // Keep original ID
+               content: book.content, // Keep original content
+               currentPosition: book.currentPosition, // Keep reading progress
+               notes: book.notes,
+               highlights: book.highlights
+           };
+           
+           const updateResult = this.library.updateBook(bookId, enrichedData);
+           
+           if (updateResult.success) {
+               this.modalManager.showAlert(
+                   'Book Enriched! ✨',
+                   `"${book.title}" has been enhanced with data from ${result.enrichedBook.sources.join(' and ')}`
+               );
+               this.refreshLibraryView();
+               
+               // ✅ NEW: Update UI to show Enhanced badge
+               setTimeout(() => {
+                   const bookCard = document.querySelector(`[data-book-id="${bookId}"]`);
+                   if (bookCard) {
+                       // Remove enrich button
+                       const enrichBtn = bookCard.querySelector('.btn-enrich');
+                       if (enrichBtn) enrichBtn.remove();
+                       
+                       // Add Enhanced badge
+                       const actionsDiv = bookCard.querySelector('.book-actions');
+                       const deleteBtn = actionsDiv.querySelector('.btn-delete');
+                       
+                       const enhancedBadge = document.createElement('div');
+                       enhancedBadge.className = 'enriched-badge';
+                       enhancedBadge.innerHTML = '✨ Enhanced';
+                       enhancedBadge.title = `Enhanced with data from ${result.enrichedBook.sources.join(' and ')}`;
+                       enhancedBadge.style.cssText = 'display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border-radius: 4px; font-size: 0.75rem; font-weight: 500; margin-right: 0.5rem;';
+                       
+                       actionsDiv.insertBefore(enhancedBadge, deleteBtn);
+                   }
+               }, 100);
+               
+           } else {
+               this.modalManager.showAlert('Error', 'Failed to save enriched book data');
+           }
+       } else {
+           this.modalManager.showAlert(
+               'Enrichment Failed',
+               result.message || 'Could not find additional data for this book'
+           );
+       }
+       
+   } catch (error) {
+       this.loadingStateManager.stopLoading('book-enrichment');
+       console.error('Enrichment error:', error);
+       this.modalManager.showAlert('Error', `Enrichment failed: ${error.message}`);
+   }
+}
     // ✅ NEW: Get API Foundation statistics
     getAPIFoundationStats() {
         return {
@@ -1350,8 +1480,15 @@ displaySearchResults(books) {
 document.addEventListener('DOMContentLoaded', () => {
     window.bookBuddyApp = new BookBuddyApp();
 });
-
+const app = new BookBuddyApp();
+window.app = app;
 
 
 // Export the main app class for use in other modules
 export default BookBuddyApp;
+window.OpenLibraryAPI = OpenLibraryAPI;
+window.BookDataMerger = BookDataMerger;
+window.EnrichmentCoordinator = EnrichmentCoordinator;
+window.enrichmentCoordinator = this.enrichmentCoordinator; 
+window.AnalyticsDataCollector = AnalyticsDataCollector;
+

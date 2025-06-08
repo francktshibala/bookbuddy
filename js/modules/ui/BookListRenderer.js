@@ -333,4 +333,114 @@ export default class BookListRenderer {
     renderLoadingState(count = 6) {
         return Array(count).fill(0).map(() => this.renderBookCardSkeleton()).join('');
     }
+    createEnhancedBookCard(book) {
+    const card = document.createElement('div');
+    card.className = `book-card ${book.enriched ? 'enriched-book' : 'standard-book'}`;
+    card.dataset.bookId = book.id;
+    
+    card.innerHTML = `
+        <div class="book-card-header">
+            ${this.renderEnrichmentBadge(book)}
+            ${this.renderDataQualityBadge(book)}
+        </div>
+        
+        <div class="book-cover-container">
+            <img class="book-cover" 
+                 src="${book.thumbnail || '/assets/default-book-cover.svg'}" 
+                 alt="${book.title}"
+                 onerror="this.src='/assets/default-book-cover.svg'">
+            ${book.enriched ? '<div class="enriched-overlay">✨</div>' : ''}
+        </div>
+        
+        <div class="book-info">
+            <h3 class="book-title">${this.escapeHtml(book.title)}</h3>
+            <p class="book-authors">${this.formatAuthors(book.authors)}</p>
+            
+            ${book.enriched ? this.renderEnrichedMetadata(book) : ''}
+            ${this.renderSourceBadges(book)}
+        </div>  
+        <div class="book-actions">
+            <button class="btn btn-sm btn-primary btn-read" title="Continue reading">
+                ${progress > 0 ? '📖 Continue' : '📖 Start Reading'}
+            </button>
+            <button class="btn btn-sm btn-outline btn-details" title="View details">
+                📋 Details
+            </button>
+            ${!book.enriched ? `
+                <button class="btn btn-sm btn-secondary btn-enrich" title="Enhance with online data">
+                    ✨ Enrich
+                </button>
+            ` : `
+                <div class="enriched-badge" title="Enhanced with data from ${(book.sources || []).join(' and ')}">
+                    ✨ Enhanced
+                </div>
+            `}
+            <button class="btn btn-sm btn-outline btn-delete" title="Delete book">
+                🗑️ Delete
+            </button>
+
+        </div>
+    `;
+    
+    return card;
+}
+
+renderEnrichmentBadge(book) {
+    if (!book.enriched) return '';
+    
+    const badgeClass = book.sources && book.sources.length > 1 ? 
+        'enriched-multiple' : 'enriched-single';
+    
+    return `
+        <div class="enriched-indicator ${badgeClass}" title="Enhanced with data from multiple sources">
+            <span class="enriched-icon">✨</span>
+            <span class="enriched-text">Enhanced</span>
+        </div>
+    `;
+}
+
+renderDataQualityBadge(book) {
+    if (!book.dataQuality) return '';
+    
+    const quality = book.dataQuality.completeness || 'Unknown';
+    const percentage = book.dataQuality.percentage || 0;
+    
+    const qualityClass = {
+        'Good': 'quality-good', 
+        'Fair': 'quality-fair',
+        'Poor': 'quality-poor'
+    }[quality] || 'quality-unknown';
+    
+    return `
+        <div class="data-quality-badge ${qualityClass}" 
+             title="Data quality: ${quality} (${percentage}%)">
+            <span class="quality-text">${quality}</span>
+        </div>
+    `;
+}
+
+renderSourceBadges(book) {
+    if (!book.sources || book.sources.length === 0) return '';
+    
+    const badges = book.sources.map(source => {
+        const sourceIcon = {
+            'Google Books': '📚',
+            'OpenLibrary': '📖'
+        }[source] || '📄';
+        
+        return `<span class="source-badge">${sourceIcon} ${source}</span>`;
+    }).join('');
+    
+    return `<div class="source-badges">${badges}</div>`;
+}
+
+renderEnrichedMetadata(book) {
+    if (!book.enriched) return '';
+    
+    return `
+        <div class="enriched-metadata">
+            <div class="metadata-item">Enhanced: ${new Date(book.mergedAt).toLocaleDateString()}</div>
+        </div>
+    `;
+}
 }

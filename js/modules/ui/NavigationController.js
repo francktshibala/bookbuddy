@@ -20,53 +20,61 @@ export default class NavigationController {
     }
 
     createNavigationHTML() {
-        const navHTML = `
-            <nav class="main-nav">
-                <div class="nav-container">
-                    <div class="nav-brand">
-                        <div class="nav-logo">📚</div>
-                        <h2>Book Buddy</h2>
-                    </div>
-                    <button class="nav-toggle" aria-label="Toggle navigation">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                    <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active" data-view="library">
-                                📚 Library
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-view="search">
-                                🔍 Search Books
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-view="reading">
-                                📖 Reading
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-view="statistics">
-                                📊 Statistics
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-view="settings">
-                                ⚙️ Settings
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        `;
-
-        // Insert navigation at the beginning of body
-        document.body.insertAdjacentHTML('afterbegin', navHTML);
-        this.navigationElement = DOMUtils.query('.main-nav');
+    // ✅ CHECK IF NAVIGATION ALREADY EXISTS
+    if (document.querySelector('.main-nav')) {
+        console.log('Navigation already exists, skipping creation');
+        this.navigationElement = document.querySelector('.main-nav');
+        return;
     }
+
+    const navHTML = `
+        <nav class="main-nav">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <div class="nav-logo">📚</div>
+                    <h2>Book Buddy</h2>
+                </div>
+                <button class="nav-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-view="library">
+                            📚 Library
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-view="search">
+                            🔍 Search Books
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-view="reading">
+                            📖 Reading
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-view="statistics">
+                            📊 Statistics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-view="settings">
+                            ⚙️ Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    `;
+
+    // Insert navigation at the beginning of body
+    document.body.insertAdjacentHTML('afterbegin', navHTML);
+    this.navigationElement = DOMUtils.query('.main-nav');
+    console.log('Navigation created successfully');
+}
 
     setupMobileMenu() {
         const toggleButton = DOMUtils.query('.nav-toggle');

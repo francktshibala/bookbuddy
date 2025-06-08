@@ -14,6 +14,12 @@ export default class Book {
         this.readingTime = data.readingTime || 0;
         this.notes = data.notes || [];
         this.highlights = data.highlights || [];
+        this.enriched = data.enriched || false;
+        this.sources = data.sources || [];
+        this.dataQuality = data.dataQuality || null;
+        this.mergedAt = data.mergedAt || null;
+        this.originalData = data.originalData || null;
+        this.enrichmentMetadata = data.enrichmentMetadata || null;
     }
 
     generateId() {
@@ -86,8 +92,14 @@ export default class Book {
             currentPosition: this.currentPosition,
             readingTime: this.readingTime,
             notes: this.notes,
-            highlights: this.highlights
-        };
+            highlights: this.highlights,
+            enriched: this.enriched,
+            sources: this.sources,
+            dataQuality: this.dataQuality,
+            mergedAt: this.mergedAt,
+            originalData: this.originalData,
+            enrichmentMetadata: this.enrichmentMetadata
+                    };
     }
 
     static fromJSON(data) {
