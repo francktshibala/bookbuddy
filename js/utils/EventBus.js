@@ -98,5 +98,12 @@ export const EVENTS = {
     // API events
     API_REQUEST_STARTED: 'api:requestStarted',
     API_REQUEST_COMPLETED: 'api:requestCompleted',
-    API_REQUEST_FAILED: 'api:requestFailed'
+    API_REQUEST_FAILED: 'api:requestFailed',
+
+    // AI analysis events
+    AI_ANALYSIS_STARTED: 'AI_ANALYSIS_STARTED',
+    AI_ANALYSIS_COMPLETED: 'AI_ANALYSIS_COMPLETED', 
+    AI_ANALYSIS_PROGRESS: 'AI_ANALYSIS_PROGRESS',
+    AI_ANALYSIS_ERROR: 'AI_ANALYSIS_ERROR',
+    BOOK_ANALYSIS_REQUESTED: 'BOOK_ANALYSIS_REQUESTED'
 };

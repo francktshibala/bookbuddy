@@ -20,6 +20,19 @@ export default class Book {
         this.mergedAt = data.mergedAt || null;
         this.originalData = data.originalData || null;
         this.enrichmentMetadata = data.enrichmentMetadata || null;
+            // ✅ NEW: AI Analysis Properties
+        this.aiAnalysis = data.aiAnalysis || {};
+        this.analysisMetadata = data.analysisMetadata || {
+            hasAnalysis: false,
+            analysisCount: 0,
+            lastAnalyzed: null,
+            analysisTypes: [],
+            totalTokensUsed: 0,
+            averageConfidence: null,
+            analysisVersion: '1.0'
+        };
+            // ✅ NEW: Analysis timestamps for caching
+        this.analysisTimestamp = data.analysisTimestamp || null;
     }
 
     generateId() {
@@ -101,6 +114,239 @@ export default class Book {
             enrichmentMetadata: this.enrichmentMetadata
                     };
     }
+
+    /**
+ * Store AI analysis result
+ */
+addAnalysis(analysisType, analysisResult) {
+    if (!this.aiAnalysis) {
+        this.aiAnalysis = {};
+    }
+    
+    this.aiAnalysis[analysisType] = {
+        ...analysisResult,
+        storedAt: new Date().toISOString()
+    };
+    
+    this.updateAnalysisMetadata();
+    return this;
+}
+
+/**
+ * Get specific analysis result
+ */
+getAnalysis(analysisType) {
+    return this.aiAnalysis?.[analysisType] || null;
+}
+
+/**
+ * Check if book has specific analysis
+ */
+hasAnalysis(analysisType) {
+    return !!(this.aiAnalysis?.[analysisType]);
+}
+
+/**
+ * Get all available analysis types for this book
+ */
+getAvailableAnalysisTypes() {
+    return Object.keys(this.aiAnalysis || {});
+}
+
+/**
+ * Remove specific analysis
+ */
+removeAnalysis(analysisType) {
+    if (this.aiAnalysis?.[analysisType]) {
+        delete this.aiAnalysis[analysisType];
+        this.updateAnalysisMetadata();
+    }
+    return this;
+}
+
+/**
+ * Clear all AI analyses
+ */
+clearAllAnalyses() {
+    this.aiAnalysis = {};
+    this.analysisMetadata = {
+        hasAnalysis: false,
+        analysisCount: 0,
+        lastAnalyzed: null,
+        analysisTypes: [],
+        totalTokensUsed: 0,
+        averageConfidence: null,
+        analysisVersion: '1.0'
+    };
+    return this;
+}
+
+/**
+ * Update analysis metadata based on current analyses
+ */
+updateAnalysisMetadata() {
+    const analyses = this.aiAnalysis || {};
+    const analysisTypes = Object.keys(analyses);
+    
+    // Calculate metadata
+    const confidences = Object.values(analyses)
+        .map(a => a.confidence)
+        .filter(c => typeof c === 'number');
+    
+    const totalTokens = Object.values(analyses)
+        .reduce((sum, a) => sum + (a.metadata?.tokens || 0), 0);
+    
+    const dates = Object.values(analyses)
+        .map(a => a.generatedAt || a.storedAt)
+        .filter(d => d)
+        .sort()
+        .reverse();
+    
+    this.analysisMetadata = {
+        hasAnalysis: analysisTypes.length > 0,
+        analysisCount: analysisTypes.length,
+        lastAnalyzed: dates[0] || null,
+        analysisTypes: analysisTypes.sort(),
+        totalTokensUsed: totalTokens,
+        averageConfidence: confidences.length > 0 
+            ? confidences.reduce((sum, c) => sum + c, 0) / confidences.length 
+            : null,
+        analysisVersion: '1.0',
+        updatedAt: new Date().toISOString()
+    };
+    
+    this.analysisTimestamp = Date.now();
+}
+
+/**
+ * Get analysis summary for display
+ */
+getAnalysisSummary() {
+    if (!this.analysisMetadata.hasAnalysis) {
+        return {
+            hasAnalysis: false,
+            message: 'No AI analysis available'
+        };
+    }
+    
+    const { analysisCount, analysisTypes, lastAnalyzed, averageConfidence } = this.analysisMetadata;
+    
+    return {
+        hasAnalysis: true,
+        count: analysisCount,
+        types: analysisTypes,
+        lastAnalyzed,
+        confidence: averageConfidence ? `${Math.round(averageConfidence * 100)}%` : 'Unknown',
+        message: `${analysisCount} analysis${analysisCount > 1 ? 'es' : ''} available: ${analysisTypes.join(', ')}`
+    };
+}
+
+/**
+ * Check if analyses need refresh (older than 24 hours)
+ */
+needsAnalysisRefresh(maxAgeHours = 24) {
+    if (!this.analysisMetadata.lastAnalyzed) return true;
+    
+    const lastAnalyzed = new Date(this.analysisMetadata.lastAnalyzed);
+    const ageHours = (Date.now() - lastAnalyzed.getTime()) / (1000 * 60 * 60);
+    
+    return ageHours > maxAgeHours;
+}
+
+/**
+ * Validate analysis data structure
+ */
+validateAnalysisData() {
+    const errors = [];
+    
+    if (this.aiAnalysis && typeof this.aiAnalysis !== 'object') {
+        errors.push('aiAnalysis must be an object');
+    }
+    
+    if (this.analysisMetadata && typeof this.analysisMetadata !== 'object') {
+        errors.push('analysisMetadata must be an object');
+    }
+    
+    // Validate each analysis
+    Object.entries(this.aiAnalysis || {}).forEach(([type, analysis]) => {
+        if (!analysis.content) {
+            errors.push(`Analysis ${type} missing content`);
+        }
+        if (!analysis.analysisType || analysis.analysisType !== type) {
+            errors.push(`Analysis ${type} has incorrect analysisType`);
+        }
+    });
+    
+    return {
+        valid: errors.length === 0,
+        errors
+    };
+}
+
+/**
+ * Export analysis data for backup/sharing
+ */
+exportAnalysisData() {
+    return {
+        bookId: this.id,
+        bookTitle: this.title,
+        analyses: this.aiAnalysis || {},
+        metadata: this.analysisMetadata,
+        exportedAt: new Date().toISOString(),
+        version: '1.0'
+    };
+}
+
+/**
+ * Import analysis data from backup
+ */
+importAnalysisData(analysisData, options = {}) {
+    if (!analysisData || typeof analysisData !== 'object') {
+        throw new Error('Invalid analysis data');
+    }
+    
+    const merge = options.merge !== false;
+    
+    if (!merge) {
+        this.clearAllAnalyses();
+    }
+    
+    // Import analyses
+    Object.entries(analysisData.analyses || {}).forEach(([type, analysis]) => {
+        if (merge && this.hasAnalysis(type) && !options.overwrite) {
+            return; // Skip existing analyses if not overwriting
+        }
+        
+        this.addAnalysis(type, analysis);
+    });
+    
+    return this;
+}
+
+// ✅ UPDATE EXISTING toJSON METHOD: Add these properties to your existing toJSON method
+toJSON() {
+    return {
+        // ... existing properties ...
+        
+        // ✅ NEW: Include AI analysis data
+        aiAnalysis: this.aiAnalysis,
+        analysisMetadata: this.analysisMetadata,
+        analysisTimestamp: this.analysisTimestamp
+    };
+}
+
+// ✅ UPDATE EXISTING fromJSON METHOD: Handle AI analysis data
+static fromJSON(data) {
+    const book = new Book(data);
+    
+    // ✅ NEW: Ensure analysis metadata is up to date
+    if (book.aiAnalysis && Object.keys(book.aiAnalysis).length > 0) {
+        book.updateAnalysisMetadata();
+    }
+    
+    return book;
+}
+
 
     static fromJSON(data) {
         return new Book(data);

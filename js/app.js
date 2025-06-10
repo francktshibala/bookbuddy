@@ -35,6 +35,7 @@ import { DOMUtils, DateUtils, StringUtils } from './utils/Helpers.js';
 import OpenAIService from './modules/services/OpenAIService.js';
 import AITokenManager from './modules/services/AITokenManager.js';
 import AIRateLimiter from './modules/services/AIRateLimiter.js';
+
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
