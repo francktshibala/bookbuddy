@@ -1544,7 +1544,7 @@ export default BookBuddyApp;
 window.OpenLibraryAPI = OpenLibraryAPI;
 window.BookDataMerger = BookDataMerger;
 window.EnrichmentCoordinator = EnrichmentCoordinator;
-window.enrichmentCoordinator = this.enrichmentCoordinator; 
+window.enrichmentCoordinator = app.enrichmentCoordinator;
 window.AnalyticsDataCollector = AnalyticsDataCollector;
 window.AIPromptTemplates = AIPromptTemplates;
 window.OpenAIService = OpenAIService;
