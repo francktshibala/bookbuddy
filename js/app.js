@@ -32,7 +32,9 @@ import LoadingStateManager from './modules/ui/LoadingStateManager.js';
 import APITestUtils from './utils/APITestUtils.js';
 import { eventBus, EVENTS } from './utils/EventBus.js';
 import { DOMUtils, DateUtils, StringUtils } from './utils/Helpers.js';
-
+import OpenAIService from './modules/services/OpenAIService.js';
+import AITokenManager from './modules/services/AITokenManager.js';
+import AIRateLimiter from './modules/services/AIRateLimiter.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -46,6 +48,11 @@ class BookBuddyApp {
         this.modalManager = new ModalManager();
         this.openLibraryAPI = new OpenLibraryAPI();
         this.bookDataMerger = new BookDataMerger();
+        this.aiTokenManager = new AITokenManager();
+        this.aiRateLimiter = new AIRateLimiter();
+        this.openAIService = new OpenAIService({
+            apiKey: this.getOpenAIKey()
+        });
         this.aiInsightsPanel = new AIInsightsPanel();
         this.chartRenderer = new ChartRenderer();
         this.aiPromptTemplates = new AIPromptTemplates({
@@ -113,6 +120,12 @@ class BookBuddyApp {
         try {
             console.log('🚀 Initializing Book Buddy (Step 9.5 - API Foundation - CORRECTED)...');
             
+            // Initialize AI services
+            await this.openAIService.initialize(
+                this.aiTokenManager,
+                this.aiRateLimiter,
+                this.aiPromptTemplates
+            );
             // Load app settings
             await this.loadAppSettings();
             
@@ -184,6 +197,29 @@ class BookBuddyApp {
         });
 
         console.log('✅ Step 9 event listeners configured');
+    }
+
+        /**
+     * Get OpenAI API key from environment or user input
+     */
+    getOpenAIKey() {
+        // Check for environment variable (if using build tools)
+        if (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY) {
+            return process.env.OPENAI_API_KEY;
+        }
+        
+        // Check localStorage (user can set via settings)
+        const savedKey = localStorage.getItem('book-buddy-openai-key');
+        if (savedKey) {
+            return savedKey;
+        }
+        
+        // Development fallback
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'sk-development-key-placeholder';
+        }
+        
+        return null; // Will prompt user to add key
     }
 
     // ✅ NEW: Initialize Advanced Search Interface
@@ -839,6 +875,7 @@ displaySearchResults(books) {
         // Initialize other views
         this.initializeStatisticsView();
         this.initializeSettingsView();
+        
     }
 
     setupFileUpload() {
@@ -1163,6 +1200,16 @@ displaySearchResults(books) {
                         <button class="btn btn-outline" id="export-library">Export Library</button>
                         <button class="btn btn-outline" id="import-library">Import Library</button>
                         <button class="btn btn-outline" id="clear-library">Clear Library</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="openai-api-key">OpenAI API Key (optional)</label>
+                        <input type="password" 
+                            id="openai-api-key" 
+                            class="form-input"
+                            placeholder="sk-..." 
+                            value="">
+                        <small>Required for AI analysis features. Your key is stored locally and never shared.</small>
                     </div>
                 </div>
             `;
@@ -1500,4 +1547,7 @@ window.EnrichmentCoordinator = EnrichmentCoordinator;
 window.enrichmentCoordinator = this.enrichmentCoordinator; 
 window.AnalyticsDataCollector = AnalyticsDataCollector;
 window.AIPromptTemplates = AIPromptTemplates;
+window.OpenAIService = OpenAIService;
+window.AITokenManager = AITokenManager;
+window.AIRateLimiter = AIRateLimiter;
 
