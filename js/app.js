@@ -36,7 +36,7 @@ import OpenAIService from './modules/services/OpenAIService.js';
 import AITokenManager from './modules/services/AITokenManager.js';
 import AIRateLimiter from './modules/services/AIRateLimiter.js';
 // ✅ CORRECT - Use this path in app.js:
-import BookAnalysisService from './js/modules/services/BookAnalysisService.js';
+import BookAnalysisService from './modules/services/BookAnalysisService.js';
 
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
@@ -75,6 +75,17 @@ class BookBuddyApp {
             null, // Will be set after googleBooksAPI is initialized
             this.storage,
             null  // Will be set after modalManager is available
+        );
+                // ADD this line in the constructor after the other services:
+        this.bookAnalysisService = new BookAnalysisService(
+            this.openAIService,
+            this.storage,
+            eventBus,
+            {
+                maxCacheSize: 50,
+                enableProgressTracking: true,
+                enableCaching: true
+            }
         );
         this.bookListRenderer = new BookListRenderer(this.library);
         this.readingInterface = new ReadingInterface();
@@ -131,8 +142,7 @@ class BookBuddyApp {
                 this.aiPromptTemplates
             );
 
-            // Add this line in your initialize() method:
-            await this.initializeBookAnalysisService();
+            
             // Load app settings
             await this.loadAppSettings();
             
@@ -177,34 +187,6 @@ class BookBuddyApp {
         }
     }
 
-
-    /**
- * Initialize BookAnalysisService dynamically
- */
-async initializeBookAnalysisService() {
-    try {
-        console.log('🔄 Loading BookAnalysisService...');
-        const module = await import('./js/modules/services/BookAnalysisService.js');
-        const BookAnalysisService = module.default;
-        
-        this.bookAnalysisService = new BookAnalysisService(
-            this.openAIService,
-            this.storage,
-            eventBus,
-            {
-                maxCacheSize: 50,
-                enableProgressTracking: true,
-                enableCaching: true
-            }
-        );
-        
-        console.log('✅ BookAnalysisService loaded successfully!');
-        return true;
-    } catch (error) {
-        console.error('❌ BookAnalysisService loading failed:', error);
-        return false;
-    }
-}
 
     // ✅ NEW: Setup Step 9 specific event listeners
     setupStep9EventListeners() {
