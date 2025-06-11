@@ -1,15 +1,28 @@
 README.md
 *.md
-# API Keys and Secrets
+
+# ===================================
+# 🔒 API Keys and Secrets (CRITICAL!)
+# ===================================
 .env
 .env.local
 .env.production
 .env.development
-config.local.js
-secrets.js
+*.key
+*.pem
+config/secrets.js
+secrets/
+private/
 
-# Node modules (if you add them later)
+# Environment-specific configs
+config.local.js
+dev-config.js
+prod-config.js
+
+# Node modules (if you add them)
 node_modules/
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -27,12 +40,37 @@ Thumbs.db
 # Build outputs
 dist/
 build/
-*.min.js
-
-# Logs
-logs/
-*.log
 
 # Temporary files
-*.tmp
+.tmp
 *.temp
+
+# ===================================
+# Additional Security
+# ===================================
+
+# Backup files that might contain sensitive data
+*.backup
+*.bak
+*~
+
+# Database files that might contain API keys
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive files that might contain secrets
+*.zip
+*.tar.gz
+*.rar
+
+# Any file with "secret" or "key" in the name
+*secret*
+*key*
+*token*
+*password*
+
+# Don't commit real API keys accidentally named
+api-keys.txt
+openai-key.txt
+config-with-keys.js

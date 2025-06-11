@@ -37,7 +37,7 @@ import AITokenManager from './modules/services/AITokenManager.js';
 import AIRateLimiter from './modules/services/AIRateLimiter.js';
 // ✅ CORRECT - Use this path in app.js:
 import BookAnalysisService from './modules/services/BookAnalysisService.js';
-
+import environmentConfig from './config/environment.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -217,29 +217,95 @@ class BookBuddyApp {
         console.log('✅ Step 9 event listeners configured');
     }
 
-        /**
-     * Get OpenAI API key from environment or user input
-     */
+    /**
+ * Get OpenAI API key from environment or user input
+ */
     getOpenAIKey() {
-        // Check for environment variable (if using build tools)
-        if (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY) {
-            return process.env.OPENAI_API_KEY;
-        }
-        
-        // Check localStorage (user can set via settings)
-        const savedKey = localStorage.getItem('book-buddy-openai-key');
-        if (savedKey) {
-            return savedKey;
-        }
-        
-        // Development fallback
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return 'sk-development-key-placeholder';
-        }
-        
-        return null; // Will prompt user to add key
+        return environmentConfig.getOpenAIKey();
     }
 
+
+            /**
+         * Get API key configuration status
+         */
+        getAPIKeyStatus() {
+            return environmentConfig.getAPIKeyStatus();
+        }
+
+        /**
+         * Test OpenAI API key
+         */
+        async testOpenAIKey(apiKey = null) {
+            try {
+                console.log('🧪 Testing OpenAI API key...');
+                
+                // Show loading
+                this.loadingStateManager.startLoading('api-key-test', {
+                    message: 'Testing API key...',
+                    showGlobal: true
+                });
+
+                const result = await environmentConfig.testAPIKey(apiKey);
+                
+                this.loadingStateManager.stopLoading('api-key-test');
+                
+                if (result.success) {
+                    this.modalManager.showAlert(
+                        'API Key Valid! ✅',
+                        `Your OpenAI API key is working correctly!\n\nModels available: ${result.modelCount || 'Unknown'}`
+                    );
+                } else {
+                    this.modalManager.showAlert(
+                        'API Key Invalid ❌',
+                        `API key test failed:\n\n${result.message}\n\n${result.isDevelopmentPlaceholder ? 'Please add your real OpenAI API key from https://platform.openai.com/api-keys' : ''}`
+                    );
+                }
+                
+                return result;
+                
+            } catch (error) {
+                this.loadingStateManager.stopLoading('api-key-test');
+                console.error('❌ API key test error:', error);
+                
+                this.modalManager.showAlert(
+                    'Test Failed ❌',
+                    `Failed to test API key: ${error.message}`
+                );
+                
+                return { success: false, error: error.message };
+            }
+        }
+
+        /**
+         * Clear stored API key
+         */
+        clearAPIKey() {
+            const result = environmentConfig.clearUserAPIKey();
+            
+            if (result.success) {
+                this.modalManager.showAlert(
+                    'API Key Cleared 🗑️',
+                    'Your API key has been removed. The app will refresh.',
+                    () => {
+                        window.location.reload();
+                    }
+                );
+            } else {
+                this.modalManager.showAlert('Error', 'Failed to clear API key');
+            }
+        }
+
+        /**
+         * Get environment information for debugging
+         */
+        getEnvironmentInfo() {
+            return {
+                environment: environmentConfig.getEnvironmentInfo(),
+                apiKeyStatus: this.getAPIKeyStatus(),
+                deploymentConfig: environmentConfig.getDeploymentConfig(),
+                setupInstructions: environmentConfig.getSetupInstructions()
+            };
+        }
     // ✅ NEW: Initialize Advanced Search Interface
     async initializeAdvancedSearch() {
         try {
@@ -973,6 +1039,17 @@ displaySearchResults(books) {
         }
     }
 
+    initializeStatisticsView() {
+    const content = DOMUtils.query('#statistics-content');
+    if (content) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <h3>📊 Reading Statistics</h3>
+                <p>Detailed statistics will be available in Week 2 Phase 3!</p>
+            </div>
+        `;
+    }
+}
     renderBooks(books = null) {
         const booksToRender = books || this.library.getAllBooks();
         const gridElement = DOMUtils.query('#books-grid');
@@ -1153,17 +1230,147 @@ displaySearchResults(books) {
         }
     }
 
-    initializeStatisticsView() {
-        const content = DOMUtils.query('#statistics-content');
-        if (content) {
-            content.innerHTML = `
-                <div class="empty-state">
-                    <h3>📊 Reading Statistics</h3>
-                    <p>Detailed statistics will be available in Week 2 Phase 3!</p>
+    initializeSettingsView() {
+    const content = DOMUtils.query('#settings-content');
+    if (content) {
+        // Get current API key status
+        const apiStatus = this.getAPIKeyStatus();
+        
+        content.innerHTML = `
+            <div class="settings-form">
+                <!-- AI Analysis Settings Section -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">🤖 AI Analysis Settings</h3>
+                    <div class="settings-section-content">
+                        
+                        <!-- OpenAI API Key Status -->
+                        <div class="form-group">
+                            <label>API Key Status</label>
+                            <div class="api-status-card" style="background: ${apiStatus.hasKey ? (apiStatus.isValid ? '#f0f9ff' : '#fef2f2') : '#fefce8'}; border: 1px solid ${apiStatus.hasKey ? (apiStatus.isValid ? '#3b82f6' : '#ef4444') : '#f59e0b'}; border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <span style="font-size: 1.2rem;">${apiStatus.hasKey ? (apiStatus.isValid ? '✅' : '❌') : '⚠️'}</span>
+                                    <strong>${apiStatus.hasKey ? (apiStatus.isValid ? 'API Key Configured' : 'Invalid API Key') : 'No API Key'}</strong>
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                    ${apiStatus.message}
+                                    ${apiStatus.keyPreview ? `<br>Key: ${apiStatus.keyPreview}` : ''}
+                                    <br>Source: ${apiStatus.source}
+                                    ${apiStatus.isDevelopmentPlaceholder ? '<br><strong>⚠️ Development placeholder - add your real API key</strong>' : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OpenAI API Key Input -->
+                        <div class="form-group">
+                            <label for="openai-api-key">OpenAI API Key</label>
+                            <div class="api-key-input-container" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="password" 
+                                       id="openai-api-key" 
+                                       class="form-input"
+                                       placeholder="sk-..." 
+                                       value=""
+                                       autocomplete="off"
+                                       style="flex: 1;">
+                                <button type="button" id="toggle-key-visibility" class="btn btn-outline btn-sm">
+                                    👁️
+                                </button>
+                                <button type="button" id="test-api-key" class="btn btn-outline btn-sm">
+                                    🧪 Test
+                                </button>
+                            </div>
+                            <small class="form-help">
+                                Required for AI analysis features. Your key is stored locally and never shared.
+                                <br><a href="https://platform.openai.com/api-keys" target="_blank">Get your API key here</a>
+                                <br>Environment: ${environmentConfig.environment} | Features: ${Object.keys(environmentConfig.getConfig('features')).join(', ')}
+                            </small>
+                        </div>
+
+                        <!-- Available Analysis Types -->
+                        ${apiStatus.hasKey && apiStatus.isValid ? `
+                        <div class="form-group">
+                            <label>Available Analysis Types</label>
+                            <div class="analysis-types-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
+                                <div class="analysis-type-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📝</div>
+                                    <div style="font-size: 0.8rem; font-weight: 500;">Summary</div>
+                                </div>
+                                <div class="analysis-type-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🎭</div>
+                                    <div style="font-size: 0.8rem; font-weight: 500;">Themes</div>
+                                </div>
+                                <div class="analysis-type-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">👤</div>
+                                    <div style="font-size: 0.8rem; font-weight: 500;">Characters</div>
+                                </div>
+                                <div class="analysis-type-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📊</div>
+                                    <div style="font-size: 0.8rem; font-weight: 500;">Difficulty</div>
+                                </div>
+                                <div class="analysis-type-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">💭</div>
+                                    <div style="font-size: 0.8rem; font-weight: 500;">Sentiment</div>
+                                </div>
+                                <div class="analysis-type-card" style="background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">✍️</div>
+                                    <div style="font-size: 0.8rem; font-weight: 500;">Style</div>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
                 </div>
-            `;
-        }
+
+                <!-- Reading Settings Section -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">📚 Reading Settings</h3>
+                    <div class="settings-section-content">
+                        <div class="form-group">
+                            <label for="reading-speed">Reading Speed (words per minute)</label>
+                            <input type="number" 
+                                   id="reading-speed" 
+                                   class="form-input"
+                                   value="${this.appState.settings.readingSpeed}" 
+                                   min="100" 
+                                   max="1000">
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-checkbox">
+                                <input type="checkbox" 
+                                       id="auto-save" 
+                                       ${this.appState.settings.autoSave ? 'checked' : ''}>
+                                <label for="auto-save">Auto-save reading progress</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-checkbox">
+                                <input type="checkbox" 
+                                       id="notifications" 
+                                       ${this.appState.settings.notifications ? 'checked' : ''}>
+                                <label for="notifications">Enable notifications</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="settings-section">
+                    <div class="settings-section-content">
+                        <div class="form-group">
+                            <button class="btn btn-primary" id="save-settings">💾 Save All Settings</button>
+                            <button class="btn btn-outline" id="export-library">📤 Export Library</button>
+                            <button class="btn btn-outline" id="import-library">📥 Import Library</button>
+                            <button class="btn btn-outline" id="clear-library">🗑️ Clear Library</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.setupSettingsListeners();
     }
+}
 
     updateStatisticsView() {
         const stats = this.library.getLibraryStats();
@@ -1241,46 +1448,113 @@ displaySearchResults(books) {
     }
 
     setupSettingsListeners() {
-        const saveBtn = DOMUtils.query('#save-settings');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveSettings());
-        }
-
-        const exportBtn = DOMUtils.query('#export-library');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => this.exportLibrary());
-        }
-
-        const importBtn = DOMUtils.query('#import-library');
-        if (importBtn) {
-            importBtn.addEventListener('click', () => this.importLibrary());
-        }
-
-        const clearBtn = DOMUtils.query('#clear-library');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => this.clearLibrary());
-        }
+    // Existing listeners
+    const saveBtn = DOMUtils.query('#save-settings');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => this.saveSettings());
     }
+
+    const exportBtn = DOMUtils.query('#export-library');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => this.exportLibrary());
+    }
+
+    const importBtn = DOMUtils.query('#import-library');
+    if (importBtn) {
+        importBtn.addEventListener('click', () => this.importLibrary());
+    }
+
+    const clearBtn = DOMUtils.query('#clear-library');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => this.clearLibrary());
+    }
+
+    // NEW: OpenAI API Key listeners
+    const apiKeyInput = DOMUtils.query('#openai-api-key');
+    const toggleVisibilityBtn = DOMUtils.query('#toggle-key-visibility');
+    const testKeyBtn = DOMUtils.query('#test-api-key');
+
+    // Toggle password visibility
+    if (toggleVisibilityBtn && apiKeyInput) {
+        toggleVisibilityBtn.addEventListener('click', () => {
+            const isPassword = apiKeyInput.type === 'password';
+            apiKeyInput.type = isPassword ? 'text' : 'password';
+            toggleVisibilityBtn.textContent = isPassword ? '🙈' : '👁️';
+        });
+    }
+
+    // Enable/disable test button based on input
+    if (apiKeyInput && testKeyBtn) {
+        apiKeyInput.addEventListener('input', (e) => {
+            const hasValue = e.target.value.trim().length > 0;
+            testKeyBtn.disabled = !hasValue;
+        });
+    }
+
+    // Test API key
+    if (testKeyBtn) {
+        testKeyBtn.addEventListener('click', async () => {
+            const apiKeyInput = DOMUtils.query('#openai-api-key');
+            const key = apiKeyInput.value.trim();
+            
+            if (!key) {
+                this.modalManager.showAlert('Error', 'Please enter an API key first');
+                return;
+            }
+
+            await this.testOpenAIKey(key);
+        });
+    }
+}
 
     saveSettings() {
-        const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
-        const autoSave = DOMUtils.query('#auto-save')?.checked || false;
-        const notifications = DOMUtils.query('#notifications')?.checked || false;
+    // Save regular settings
+    const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
+    const autoSave = DOMUtils.query('#auto-save')?.checked || false;
+    const notifications = DOMUtils.query('#notifications')?.checked || false;
 
-        this.appState.settings = {
-            readingSpeed,
-            autoSave,
-            notifications
-        };
+    this.appState.settings = {
+        readingSpeed,
+        autoSave,
+        notifications
+    };
 
-        const result = this.storage.save('app_settings', this.appState.settings);
+    // Save OpenAI API key
+    const apiKeyInput = DOMUtils.query('#openai-api-key');
+    const newKey = apiKeyInput?.value.trim();
+    
+    if (newKey && newKey.length > 0) {
+        const result = environmentConfig.setUserAPIKey(newKey);
         
-        if (result.success) {
-            this.modalManager.showAlert('Settings Saved', 'Your settings have been saved successfully!');
-        } else {
-            this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
+        if (!result.success) {
+            this.modalManager.showAlert(
+                'Invalid API Key', 
+                result.message + (result.isDevelopmentPlaceholder ? 
+                    '\n\nPlease get your real API key from https://platform.openai.com/api-keys' : '')
+            );
+            return;
         }
     }
+
+    // Save regular settings to storage
+    const result = this.storage.save('app_settings', this.appState.settings);
+    
+    if (result.success) {
+        this.modalManager.showAlert(
+            'Settings Saved! 🎉', 
+            'Your settings have been saved successfully!' + 
+            (newKey ? '\n\nAI analysis features are now available. The app will refresh to apply changes.' : ''),
+            () => {
+                if (newKey) {
+                    // Refresh to reinitialize services with new key
+                    window.location.reload();
+                }
+            }
+        );
+    } else {
+        this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
+    }
+}
 
     exportLibrary() {
         try {
