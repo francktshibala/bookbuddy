@@ -38,6 +38,7 @@ import AIRateLimiter from './modules/services/AIRateLimiter.js';
 // ✅ CORRECT - Use this path in app.js:
 import BookAnalysisService from './modules/services/BookAnalysisService.js';
 import environmentConfig from './config/environment.js';
+import AIAnalysisPanel from './modules/ui/AIAnalysisPanel.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -86,6 +87,12 @@ class BookBuddyApp {
                 enableProgressTracking: true,
                 enableCaching: true
             }
+        );
+        this.aiAnalysisPanel = new AIAnalysisPanel(
+            this.modalManager,
+            this.bookAnalysisService,
+            eventBus,
+            this.loadingStateManager
         );
         this.bookListRenderer = new BookListRenderer(this.library);
         this.readingInterface = new ReadingInterface();
@@ -1855,4 +1862,4 @@ window.AIPromptTemplates = AIPromptTemplates;
 window.OpenAIService = OpenAIService;
 window.AITokenManager = AITokenManager;
 window.AIRateLimiter = AIRateLimiter;
-
+window.AIAnalysisPanel = AIAnalysisPanel;
