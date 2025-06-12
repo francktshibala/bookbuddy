@@ -842,9 +842,78 @@ export default class BookAnalysisService {
         this.state.stats.cacheSize = 0;
         this.startTime = Date.now();
     }
+
+    // ADD THESE METHODS to your existing BookAnalysisService.js file:
+
+/**
+ * ✅ ANALYSIS HANDLER 1: Summary Generation
+ */
+async generateSummary(book, options = {}) {
+    return await this.analyzeBook(book, 'summary', {
+        length: options.length || 'medium',
+        includeKeyPoints: options.includeKeyPoints !== false,
+        ...options
+    });
+}
+
+/**
+ * ✅ ANALYSIS HANDLER 2: Theme Extraction  
+ */
+async extractThemes(book, options = {}) {
+    return await this.analyzeBook(book, 'themes', {
+        maxThemes: options.maxThemes || 5,
+        includeAnalysis: options.includeAnalysis !== false,
+        ...options
+    });
+}
+
+/**
+ * ✅ ANALYSIS HANDLER 3: Character Analysis
+ */
+async analyzeCharacters(book, options = {}) {
+    return await this.analyzeBook(book, 'characters', {
+        includeTraits: options.includeTraits !== false,
+        includeRelationships: options.includeRelationships !== false,
+        ...options
+    });
+}
+
+/**
+ * ✅ ANALYSIS HANDLER 4: Difficulty Assessment
+ */
+async assessDifficulty(book, options = {}) {
+    return await this.analyzeBook(book, 'difficulty', {
+        includeAgeRecommendation: options.includeAgeRecommendation !== false,
+        includeReadingTime: options.includeReadingTime !== false,
+        ...options
+    });
+}
+
+/**
+ * ✅ ANALYSIS HANDLER 5: Sentiment Analysis
+ */
+async analyzeSentiment(book, options = {}) {
+    return await this.analyzeBook(book, 'sentiment', {
+        includeEmotionalTone: options.includeEmotionalTone !== false,
+        includeMoodProgression: options.includeMoodProgression !== false,
+        ...options
+    });
+}
+
+/**
+ * ✅ ANALYSIS HANDLER 6: Style Analysis
+ */
+async analyzeStyle(book, options = {}) {
+    return await this.analyzeBook(book, 'style', {
+        includeLiteraryDevices: options.includeLiteraryDevices !== false,
+        includeProseStyle: options.includeProseStyle !== false,
+        ...options
+    });
+}
 }
 
 // Global export for development/testing
 if (typeof window !== 'undefined') {
     window.BookAnalysisService = BookAnalysisService;
 }
+

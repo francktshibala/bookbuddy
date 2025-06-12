@@ -101,7 +101,7 @@ class BookBuddyApp {
         // ✅ NEW: Initialize Step 9 components in correct order
         this.errorNotificationManager = new ErrorNotificationManager(this.modalManager);
         this.loadingStateManager = new LoadingStateManager();
-        this.apiTestUtils = new APITestUtils();
+        // this.apiTestUtils = new APITestUtils();
         
         // Initialize API services
         this.googleBooksAPI = new GoogleBooksAPI();
@@ -1122,6 +1122,19 @@ displaySearchResults(books) {
                     const book = this.library.getBook(bookId);
                     if (book) {
                         this.showBookDetails(book);
+                    }
+                });
+            }
+
+            // Add this inside setupBookCardListeners() method in app.js:
+            const aiBtn = card.querySelector('.ai-analysis-btn');
+            if (aiBtn) {
+                aiBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const bookId = e.target.dataset.bookId;
+                    const book = this.library.getBook(bookId);
+                    if (book) {
+                        alert(`AI Analysis for "${book.title}"\n\nFeature connected! Analysis handlers ready.`);
                     }
                 });
             }
