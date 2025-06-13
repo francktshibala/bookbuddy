@@ -786,26 +786,26 @@ export default class OpenAIService extends APIService {
     /**
      * Rate limiting integration
      */
-    async checkRateLimit(request) {
-        if (!this.rateLimiter) {
-            return { allowed: true };
-        }
-
-        try {
-            const rateLimitRequest = {
-                model: request.model,
-                tokens: await this.tokenManager?.countTokens(request.prompt) || 0,
-                estimatedCost: (await this.estimateRequestCost(request)).cost,
-                priority: request.priority || 'normal'
-            };
-
-            return await this.rateLimiter.checkRequest(rateLimitRequest);
-
-        } catch (error) {
-            console.error('❌ Rate limit check error:', error);
-            return { allowed: true }; // Allow on error to avoid blocking
-        }
+    async checkRateLimit(options) {  // ← FIX: parameter name
+    if (!this.rateLimiter) {
+        return { allowed: true };
     }
+
+    try {
+        const rateLimitRequest = {
+            model: options.model || this.config.defaultModel.name,  // ← FIX: use options.model
+            tokens: await this.tokenManager?.countTokens(options.prompt || '') || 0,  // ← FIX: use options.prompt
+            estimatedCost: (await this.estimateRequestCost(options)).cost,
+            priority: options.priority || 'normal'
+        };
+
+        return await this.rateLimiter.checkRequest(rateLimitRequest);
+
+    } catch (error) {
+        console.error('❌ Rate limit check error:', error);
+        return { allowed: true }; // Allow on error to avoid blocking
+    }
+}
 
     async recordUsage(usage, model) {
         try {

@@ -88,6 +88,10 @@ class BookBuddyApp {
                 enableCaching: true
             }
         );
+
+        // ✅ NEW: Initialize Step 9 components in correct order
+        this.errorNotificationManager = new ErrorNotificationManager(this.modalManager);
+        this.loadingStateManager = new LoadingStateManager();
         this.aiAnalysisPanel = new AIAnalysisPanel(
             this.modalManager,
             this.bookAnalysisService,
@@ -105,9 +109,7 @@ class BookBuddyApp {
     console.error('❌ BookCoverManager initialization failed:', error);
     this.bookCoverManager = null;
     }
-        // ✅ NEW: Initialize Step 9 components in correct order
-        this.errorNotificationManager = new ErrorNotificationManager(this.modalManager);
-        this.loadingStateManager = new LoadingStateManager();
+        
         // this.apiTestUtils = new APITestUtils();
         
         // Initialize API services
@@ -1141,12 +1143,25 @@ displaySearchResults(books) {
                     const bookId = e.target.dataset.bookId;
                     const book = this.library.getBook(bookId);
                     if (book) {
-                        alert(`AI Analysis for "${book.title}"\n\nFeature connected! Analysis handlers ready.`);
+                        console.log(`🤖 Opening AI Analysis panel for: ${book.title}`);
+                        
+                        // Show the AI Analysis Panel
+                        const result = this.aiAnalysisPanel.showAnalysisPanel(book);
+                        
+                        if (result.success) {
+                            console.log('✅ AI Analysis panel opened successfully');
+                        } else {
+                            console.error('❌ Failed to open AI Analysis panel:', result.error);
+                            this.modalManager.showAlert(
+                                'Error',
+                                `Failed to open AI Analysis: ${result.error}`
+                            );
+                        }
                     }
                 });
             }
-        });
-    }
+        });  // ← This closes the forEach loop
+    }  // ← ADD THIS CLOSING BRACE - this closes setupBookCardListeners() method
 
     showBookDetails(book) {
         const stats = book.getReadingStats();
