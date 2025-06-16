@@ -786,17 +786,17 @@ export default class OpenAIService extends APIService {
     /**
      * Rate limiting integration
      */
-    async checkRateLimit(request) {  // ← FIX: parameter name
+    async checkRateLimit(request) {  
     if (!this.rateLimiter) {
         return { allowed: true };
     }
 
     try {
         const rateLimitRequest = {
-            model: options.model || this.config.defaultModel.name,  // ← FIX: use options.model
-            tokens: await this.tokenManager?.countTokens(options.prompt || '') || 0,  // ← FIX: use options.prompt
-            estimatedCost: (await this.estimateRequestCost(options)).cost,
-            priority: options.priority || 'normal'
+            model: request.model || this.config.defaultModel.name,  // ← FIXED: use request.model
+            tokens: await this.tokenManager?.countTokens(request.prompt || '') || 0,  // ← FIXED: use request.prompt
+            estimatedCost: (await this.estimateRequestCost(request)).cost,  // ← FIXED: use request
+            priority: request.priority || 'normal'  // ← FIXED: use request.priority
         };
 
         return await this.rateLimiter.checkRequest(rateLimitRequest);

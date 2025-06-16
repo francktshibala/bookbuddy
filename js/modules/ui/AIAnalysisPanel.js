@@ -526,6 +526,74 @@ export default class AIAnalysisPanel {
         
         return html;
     }
+
+    /**
+ * Enhanced format analysis result that handles missing content
+ * @param {Object} result - Analysis result
+ * @returns {string} Formatted HTML
+ */
+formatAnalysisResult(result) {
+    if (!result || !result.success) {
+        return `<div class="analysis-error">❌ Analysis failed: ${result?.error || 'Unknown error'}</div>`;
+    }
+    
+    // Handle different result structures
+    const content = result.content || result.analysis || result.text || '';
+    const type = result.analysisType || result.type || 'unknown';
+    const confidence = result.confidence || result.metadata?.confidence;
+    
+    let html = `<div class="analysis-result" data-type="${type}">`;
+    html += `<h5>${this.getAnalysisTypeIcon(type)} ${this.getAnalysisTypeName(type)} Analysis</h5>`;
+    
+    // Main content
+    if (content) {
+        html += `<div class="analysis-content">
+            <div class="content-text">${this.escapeHtml(content)}</div>
+        </div>`;
+    }
+    
+    // Confidence score if available
+    if (confidence !== undefined) {
+        html += `<div class="confidence-score">
+            <strong>🎯 Confidence:</strong> ${Math.round(confidence * 100)}%
+        </div>`;
+    }
+    
+    // Add metadata
+    html += this.formatResultMetadata(result);
+    html += '</div>';
+    
+    return html;
+}
+
+/**
+ * Get icon for analysis type
+ * @param {string} type - Analysis type
+ * @returns {string} Icon
+ */
+getAnalysisTypeIcon(type) {
+    const iconMap = {
+        'summary': '📝',
+        'themes': '🎭', 
+        'characters': '👤',
+        'difficulty': '📊',
+        'sentiment': '💭',
+        'style': '✍️'
+    };
+    return iconMap[type] || '📊';
+}
+
+/**
+ * Escape HTML for safe display
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
     
     /**
      * Format summary analysis result
