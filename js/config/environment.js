@@ -124,23 +124,22 @@ class EnvironmentConfig {
         }
 
         // 5. No key available
-        console.warn('⚠️ No OpenAI API key configured');
-        return null;
+        console.log('🔑 Using dev-config API key');
     }
 
     /**
      * Get development key from secure local sources
      */
     getDevelopmentKey() {
-        // Check for development config file (not committed)
-        if (typeof window !== 'undefined' && window.DEV_CONFIG?.OPENAI_API_KEY) {
-            return window.DEV_CONFIG.OPENAI_API_KEY;
-        }
-
-        // Check for development placeholder
-        const placeholder = 'sk-development-key-placeholder';
-        return placeholder;
+    // Check for development config file (not committed)
+    if (typeof window !== 'undefined' && window.DEV_CONFIG?.OPENAI_API_KEY) {
+        console.log('🔑 Found API key in dev-config');
+        return window.DEV_CONFIG.OPENAI_KEY;
     }
+
+    console.warn('⚠️ No dev-config API key found');
+    return null;  // ← Changed from placeholder to null
+}
 
     /**
      * Validate API key format
