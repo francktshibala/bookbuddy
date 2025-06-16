@@ -121,11 +121,13 @@ export default class OpenAIService extends APIService {
             console.log('✅ OpenAIService initialized successfully');
 
             // Emit initialization event
-            this.eventBus.emit('ai:service:initialized', {
-                service: 'OpenAI',
-                models: Object.keys(this.config.models),
-                features: this.config.features
-            });
+            if (this.eventBus && this.eventBus.emit) {
+                this.eventBus.emit('ai:service:initialized', {
+                    service: 'OpenAI',
+                    models: Object.keys(this.config.models),
+                    features: this.config.features
+                });
+            }
 
             return { success: true, message: 'OpenAI service initialized successfully' };
 
@@ -346,13 +348,15 @@ export default class OpenAIService extends APIService {
                 result.generatedAt = new Date().toISOString();
 
                 // Emit analysis completed event
-                this.eventBus.emit('ai:analysis:completed', {
-                    bookId: bookData.id,
-                    analysisType,
-                    success: true,
-                    cost: result.cost,
-                    usage: result.usage
-                });
+                if (this.eventBus && this.eventBus.emit) {
+                    this.eventBus.emit('ai:analysis:completed', {
+                        bookId: bookData.id,
+                        analysisType,
+                        success: true,
+                        cost: result.cost,
+                        usage: result.usage
+                    });
+                }
 
                 console.log(`✅ Book analysis completed: ${analysisType} for ${bookData.title}`);
             }
@@ -363,11 +367,13 @@ export default class OpenAIService extends APIService {
             console.error('❌ Book analysis error:', error);
             
             // Emit analysis error event
-            this.eventBus.emit('ai:analysis:error', {
-                bookId: bookData.id,
-                analysisType,
-                error: error.message
-            });
+            if (this.eventBus && this.eventBus.emit) {
+                this.eventBus.emit('ai:analysis:error', {
+                    bookId: bookData.id,
+                    analysisType,
+                    error: error.message
+                });
+            }
 
             return this.createErrorResponse(`Book analysis failed: ${error.message}`);
         }
