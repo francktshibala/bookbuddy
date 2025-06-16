@@ -786,7 +786,7 @@ export default class OpenAIService extends APIService {
     /**
      * Rate limiting integration
      */
-    async checkRateLimit(options) {  // ← FIX: parameter name
+    async checkRateLimit(request) {  // ← FIX: parameter name
     if (!this.rateLimiter) {
         return { allowed: true };
     }
