@@ -3,6 +3,7 @@
  */
 import { eventBus, EVENTS } from '../../utils/EventBus.js';
 import { DOMUtils } from '../../utils/Helpers.js';
+import { TouchEventHandler } from '../../utils/TouchEventHandler.js';
 
 export default class NavigationController {
     constructor() {
@@ -126,6 +127,22 @@ export default class NavigationController {
         window.addEventListener('popstate', (e) => {
             const view = e.state?.view || 'library';
             this.navigateToView(view, false);
+        });
+
+            // NEW: Optimize all navigation elements for touch
+        TouchEventHandler.optimizeButtons();
+        
+        // NEW: Add touch handlers for nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('touchstart', (e) => {
+                link.style.transform = 'scale(0.98)';
+            }, { passive: true });
+            
+            link.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    link.style.transform = '';
+                }, 100);
+            }, { passive: true });
         });
     }
 
