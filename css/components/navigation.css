@@ -13,7 +13,13 @@
 
 .main-nav.scrolled {
     background: rgba(37, 99, 235, 0.95);
-    backdrop-filter: blur(10px);
+    /* backdrop-filter: blur(10px); */
+}
+
+.nav-link, .nav-toggle {
+    touch-action: manipulation;
+    user-select: none;
+    min-height: 44px; /* Touch target size */
 }
 
 .nav-container {
@@ -127,6 +133,9 @@
     padding: 0.5rem;
     border-radius: var(--border-radius);
     transition: var(--transition);
+    min-height: 44px;          
+    align-items: center;        
+    justify-content: center;
 }
 
 .nav-toggle:hover {
@@ -462,5 +471,14 @@
     .nav-slide-in,
     .nav-slide-out {
         animation: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: flex !important;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
     }
 }

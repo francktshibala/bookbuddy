@@ -86,6 +86,23 @@ export default class NavigationController {
                 DOMUtils.toggleClass(toggleButton, 'active');
             });
         }
+
+
+    if (toggleButton && navMenu) {
+        // Add touch support
+        toggleButton.addEventListener('touchstart', (e) => {
+            toggleButton.classList.add('touch-active');
+            setTimeout(() => toggleButton.classList.remove('touch-active'), 150);
+        }, { passive: true });
+        
+        // Enhanced click handler
+        toggleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            DOMUtils.toggleClass(navMenu, 'active');
+            DOMUtils.toggleClass(toggleButton, 'active');
+        });
+    }
     }
 
     setupEventListeners() {
