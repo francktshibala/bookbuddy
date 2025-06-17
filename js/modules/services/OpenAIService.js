@@ -808,11 +808,22 @@ export default class OpenAIService extends APIService {
     }
 
     try {
+        // FIX: Handle different request formats
+        let prompt = '';
+        if (request.prompt) {
+            prompt = request.prompt;
+        } else if (request.messages && Array.isArray(request.messages)) {
+            // Extract content from messages array
+            prompt = request.messages.map(msg => msg.content || '').join(' ');
+        } else if (typeof request === 'string') {
+            prompt = request;
+        }
+
         const rateLimitRequest = {
-            model: (request && request.model) || this.config.defaultModel.name,  // ← FIXED: use request.model
-            tokens: await this.tokenManager?.countTokens(request.prompt || '') || 0,  // ← FIXED: use request.prompt
-            estimatedCost: (await this.estimateRequestCost(request)).cost,  // ← FIXED: use request
-            priority: request.priority || 'normal'  // ← FIXED: use request.priority
+            model: request.model || this.config.defaultModel.name,
+            tokens: await this.tokenManager?.countTokens(prompt) || 0,
+            estimatedCost: (await this.estimateRequestCost(request)).cost,
+            priority: request.priority || 'normal'
         };
 
         return await this.rateLimiter.checkRequest(rateLimitRequest);
@@ -899,51 +910,57 @@ export default class OpenAIService extends APIService {
     /**
      * Response processing
      */
-    async processSuccessResponse(data, request, costEstimate, responseTime, requestId) {
-        try {
-            const choice = data.choices?.[0];
-            if (!choice) {
-                throw new Error('No choices in response');
-            }
-
-            const content = choice.message?.content || choice.text || '';
-            const finishReason = choice.finish_reason;
-
-            // Calculate actual usage and cost
-            const usage = {
-                promptTokens: data.usage?.prompt_tokens || costEstimate.promptTokens,
-                completionTokens: data.usage?.completion_tokens || 0,
-                totalTokens: data.usage?.total_tokens || costEstimate.totalTokens
-            };
-
-            const modelConfig = this.config.models[request.model];
-            const actualCost = usage.totalTokens * modelConfig.costPerToken;
-
-            return {
-                success: true,
-                content: content.trim(),
-                model: request.model,
-                finishReason,
-                usage: {
-                    ...usage,
-                    cost: parseFloat(actualCost.toFixed(6))
-                },
-                performance: {
-                    responseTime,
-                    requestId
-                },
-                metadata: {
-                    timestamp: new Date().toISOString(),
-                    requestId,
-                    analysisType: request.analysisType
-                }
-            };
-
-        } catch (error) {
-            console.error('❌ Response processing error:', error);
-            return this.createErrorResponse(`Response processing failed: ${error.message}`);
+    
+async processSuccessResponse(data, request, costEstimate, responseTime, requestId) {
+    try {
+        const choice = data.choices?.[0];
+        if (!choice) {
+            throw new Error('No choices in response');
         }
+
+        const content = choice.message?.content || choice.text || '';
+        const finishReason = choice.finish_reason;
+
+        // Calculate actual usage and cost
+        const usage = {
+            promptTokens: data.usage?.prompt_tokens || costEstimate.promptTokens,
+            completionTokens: data.usage?.completion_tokens || 0,
+            totalTokens: data.usage?.total_tokens || costEstimate.totalTokens
+        };
+
+        const modelConfig = this.config.models[request.model];
+        const actualCost = usage.totalTokens * modelConfig.costPerToken;
+
+        return {
+            success: true,
+            content: content.trim(),
+            model: request.model,
+            analysisType: request.analysisType, // ← FIX: Add this line
+            finishReason,
+            confidence: 0.85, // ← FIX: Add default confidence
+            usage: {
+                ...usage,
+                cost: parseFloat(actualCost.toFixed(6))
+            },
+            performance: {
+                responseTime,
+                requestId
+            },
+            metadata: {
+                timestamp: new Date().toISOString(),
+                requestId,
+                analysisType: request.analysisType, // ← FIX: Add this too
+                model: request.model,
+                tokens: usage.totalTokens,
+                cost: parseFloat(actualCost.toFixed(6))
+            }
+        };
+
+    } catch (error) {
+        console.error('❌ Response processing error:', error);
+        return this.createErrorResponse(`Response processing failed: ${error.message}`);
     }
+}
 
     async handleAPIError(apiResponse, request, requestId) {
         const error = apiResponse.error;

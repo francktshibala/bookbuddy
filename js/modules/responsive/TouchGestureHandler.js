@@ -976,8 +976,8 @@ export default class TouchGestureHandler {
     }
 
     // Public API methods
-    isEnabled() {
-        return this.isEnabled;
+    getTouchEnabled() {
+    return this.isEnabled;
     }
 
     getGestureThresholds() {

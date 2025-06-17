@@ -200,6 +200,14 @@ export default class BookAnalysisService {
                 );
             }
 
+            console.log('🔍 DEBUG: Analysis result structure:', {
+                result: analysisResult,
+                hasContent: !!analysisResult?.content,
+                hasAnalysisType: !!analysisResult?.analysisType,
+                hasMetadata: !!analysisResult?.metadata,
+                keys: Object.keys(analysisResult || {})
+            });
+
             // Validate and enhance result
             const resultValidation = this.validateAnalysisResult(analysisResult);
             if (!resultValidation.valid) {
@@ -620,24 +628,40 @@ export default class BookAnalysisService {
     /**
      * Result validation and enhancement
      */
-    validateAnalysisResult(result) {
-        const errors = [];
+    
+validateAnalysisResult(result) {
+    const errors = [];
 
-        if (!result) {
-            errors.push('Result is null or undefined');
-            return { valid: false, errors };
-        }
-
-        if (!result.content || typeof result.content !== 'string') {
-            errors.push('Missing or invalid content');
-        }
-
-        if (!result.analysisType || typeof result.analysisType !== 'string') {
-            errors.push('Missing or invalid analysis type');
-        }
-
-        return { valid: errors.length === 0, errors };
+    if (!result) {
+        errors.push('Result is null or undefined');
+        return { valid: false, errors };
     }
+
+    if (!result.content || typeof result.content !== 'string') {
+        errors.push('Missing or invalid content');
+    }
+
+    // FIX: More flexible analysis type validation
+    if (!result.analysisType) {
+        // Try to get it from metadata if not at root level
+        if (result.metadata && result.metadata.analysisType) {
+            result.analysisType = result.metadata.analysisType;
+        } else {
+            errors.push('Missing analysis type');
+        }
+    }
+
+    if (result.analysisType && typeof result.analysisType !== 'string') {
+        errors.push('Invalid analysis type format');
+    }
+
+    // FIX: Don't require success field in validation
+    if (result.success === false && result.error) {
+        errors.push(`Analysis error: ${result.error}`);
+    }
+
+    return { valid: errors.length === 0, errors };
+}
 
     enhanceAnalysisResult(result, bookData, additionalMetadata = {}) {
         return {
