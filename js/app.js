@@ -40,6 +40,10 @@ import BookAnalysisService from './modules/services/BookAnalysisService.js';
 import environmentConfig from './config/environment.js';
 import AIAnalysisPanel from './modules/ui/AIAnalysisPanel.js';
 import AnalysisResultRenderer from './modules/ui/renderers/AnalysisResultRenderer.js';
+import ResponsiveLayoutManager from './modules/responsive/ResponsiveLayoutManager.js';
+import BreakpointManager from './modules/responsive/BreakpointManager.js';
+import MobileNavigationController from './modules/responsive/MobileNavigationController.js';
+import TouchGestureHandler from './modules/responsive/TouchGestureHandler.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -104,6 +108,7 @@ class BookBuddyApp {
         this.bookListRenderer = new BookListRenderer(this.library);
         this.readingInterface = new ReadingInterface();
         this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
+        this.responsiveLayoutManager = null; // Will be initialized after navigationController and modalManager are ready
         
     try {
         this.bookCoverManager = new BookCoverManager();
@@ -160,6 +165,12 @@ class BookBuddyApp {
             
             // Setup UI
             this.setupUI();
+
+            // ✅ NEW: Initialize ResponsiveLayoutManager - ADD THIS SECTION
+            await this.initializeResponsiveLayoutManager();
+            
+            // ✅ NEW: Setup Step 9 event listeners FIRST
+            this.setupStep9EventListeners();
             
             // ✅ NEW: Setup Step 9 event listeners FIRST
             this.setupStep9EventListeners();
@@ -962,6 +973,143 @@ displaySearchResults(books) {
         this.navigationController.registerView('reading', DOMUtils.query('#reading-view'));
         this.navigationController.registerView('statistics', DOMUtils.query('#statistics-view'));
         this.navigationController.registerView('settings', DOMUtils.query('#settings-view'));
+    }
+
+    async initializeResponsiveLayoutManager() {
+        try {
+            console.log('📱 Initializing ResponsiveLayoutManager...');
+            
+            // Initialize ResponsiveLayoutManager with required dependencies
+            this.responsiveLayoutManager = new ResponsiveLayoutManager(
+                this.navigationController,
+                this.modalManager
+            );
+            
+            // Setup responsive-specific event listeners
+            this.setupResponsiveEventListeners();
+            
+            console.log('✅ ResponsiveLayoutManager initialized successfully');
+            
+        } catch (error) {
+            console.error('❌ ResponsiveLayoutManager initialization failed:', error);
+            // Don't let responsive failures break the app
+        }
+    }
+
+
+    setupResponsiveEventListeners() {
+        // Listen for breakpoint changes to update app behavior
+        eventBus.on('responsive:breakpointChanged', (data) => {
+            console.log(`📱 App responding to breakpoint change: ${data.from} → ${data.to}`);
+            
+            // Update app state for responsive behavior
+            this.handleResponsiveBreakpointChange(data.to);
+        });
+
+        // Listen for pull-to-refresh on library
+        eventBus.on('responsive:pullToRefresh', (data) => {
+            if (data.container === 'library-view') {
+                console.log('🔄 Pull-to-refresh triggered on library');
+                this.refreshLibraryView();
+            }
+        });
+
+        // Listen for gesture events
+        eventBus.on('responsive:longPress', (data) => {
+            this.handleLongPressGesture(data);
+        });
+
+        eventBus.on('responsive:doubleTap', (data) => {
+            this.handleDoubleTapGesture(data);
+        });
+
+        console.log('🔗 Responsive event listeners configured');
+    }
+
+    // ✅ ADD THIS NEW METHOD after setupResponsiveEventListeners()
+
+    handleResponsiveBreakpointChange(newBreakpoint) {
+        // Update app-specific behavior based on breakpoint
+        switch (newBreakpoint) {
+            case 'mobile':
+                this.optimizeForMobile();
+                break;
+            case 'tablet':
+                this.optimizeForTablet();
+                break;
+            case 'desktop':
+            case 'large':
+                this.optimizeForDesktop();
+                break;
+        }
+    }
+
+    // ✅ ADD THESE NEW METHODS after handleResponsiveBreakpointChange()
+
+    optimizeForMobile() {
+        console.log('📱 Optimizing app for mobile');
+        
+        // Hide library stats on very small screens to save space
+        const libraryStats = DOMUtils.query('#library-stats');
+        if (libraryStats && window.innerHeight < 600) {
+            libraryStats.classList.add('mobile-collapsed');
+        }
+        
+        // Make sure upload modal goes full-screen on mobile
+        document.body.setAttribute('data-mobile-optimized', 'true');
+    }
+
+    optimizeForTablet() {
+        console.log('📊 Optimizing app for tablet');
+        
+        // Restore normal layout
+        const libraryStats = DOMUtils.query('#library-stats');
+        if (libraryStats) {
+            libraryStats.classList.remove('mobile-collapsed');
+        }
+        
+        document.body.removeAttribute('data-mobile-optimized');
+    }
+
+    optimizeForDesktop() {
+        console.log('🖥️ Optimizing app for desktop');
+        
+        // Full desktop optimization
+        const libraryStats = DOMUtils.query('#library-stats');
+        if (libraryStats) {
+            libraryStats.classList.remove('mobile-collapsed');
+        }
+        
+        document.body.removeAttribute('data-mobile-optimized');
+    }
+
+    handleLongPressGesture(data) {
+        console.log('👆 Long press detected on:', data.element);
+        
+        // Handle long press on book cards
+        const bookCard = data.element.closest('.book-card');
+        if (bookCard) {
+            const bookId = bookCard.dataset.bookId;
+            const book = this.library.getBook(bookId);
+            if (book) {
+                // Show book details on long press
+                this.showBookDetails(book);
+            }
+        }
+    }
+
+    handleDoubleTapGesture(data) {
+        console.log('👆 Double tap detected on:', data.element);
+        
+        // Handle double tap on book cards to start reading
+        const bookCard = data.element.closest('.book-card');
+        if (bookCard) {
+            const bookId = bookCard.dataset.bookId;
+            const book = this.library.getBook(bookId);
+            if (book) {
+                eventBus.emit(EVENTS.BOOK_OPENED, { book });
+            }
+        }
     }
 
     initializeViews() {
@@ -1841,6 +1989,13 @@ async enrichBook(bookId) {
             googleBooksAPI: {
                 available: !!this.googleBooksAPI,
                 stats: this.googleBooksAPI?.getStats?.() || {}
+            },
+            
+            // ✅ NEW: Add responsive layout manager stats
+            responsiveLayoutManager: {
+                available: !!this.responsiveLayoutManager,
+                currentBreakpoint: this.responsiveLayoutManager?.getCurrentBreakpoint?.() || 'unknown',
+                features: this.responsiveLayoutManager?.getAvailableFeatures?.() || {}
             }
         };
     }
@@ -1849,6 +2004,10 @@ async enrichBook(bookId) {
     destroy() {
         console.log('🗑️ Cleaning up BookBuddyApp...');
         
+        // ✅ NEW: Clean up responsive layout manager
+        if (this.responsiveLayoutManager) {
+            this.responsiveLayoutManager.destroy();
+        }
         // Clean up advanced search interface
         if (this.advancedSearchInterface) {
             this.advancedSearchInterface.destroy();
@@ -1858,6 +2017,23 @@ async enrichBook(bookId) {
         eventBus.clear();
         
         console.log('✅ BookBuddyApp cleanup completed');
+    }
+
+    // Public API for responsive features
+    getResponsiveInfo() {
+        if (!this.responsiveLayoutManager) {
+            return { available: false };
+        }
+
+        return {
+            available: true,
+            currentBreakpoint: this.responsiveLayoutManager.getCurrentBreakpoint(),
+            viewportInfo: this.responsiveLayoutManager.getViewportInfo(),
+            isMobile: this.responsiveLayoutManager.isMobileLayout(),
+            isTablet: this.responsiveLayoutManager.isTabletLayout(),
+            isDesktop: this.responsiveLayoutManager.isDesktopLayout(),
+            features: this.responsiveLayoutManager.getAvailableFeatures()
+        };
     }
 }
 
@@ -1882,3 +2058,7 @@ window.AITokenManager = AITokenManager;
 window.AIRateLimiter = AIRateLimiter;
 window.AIAnalysisPanel = AIAnalysisPanel;
 window.AnalysisResultRenderer = AnalysisResultRenderer;
+window.ResponsiveLayoutManager = ResponsiveLayoutManager;
+window.BreakpointManager = BreakpointManager;
+window.MobileNavigationController = MobileNavigationController;
+window.TouchGestureHandler = TouchGestureHandler;
