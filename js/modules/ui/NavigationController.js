@@ -12,7 +12,7 @@ export default class NavigationController {
         this.navigationElement = null;
         
         this.setupNavigation();
-        this.setupEventListeners();
+        this.setupEventListeners();       
     }
 
     setupNavigation() {
@@ -109,7 +109,6 @@ export default class NavigationController {
                 }
             }
         });
-
         // Close mobile menu when clicking outside
         document.addEventListener('click', (e) => {
             const navMenu = DOMUtils.query('.nav-menu');
