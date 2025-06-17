@@ -528,6 +528,25 @@ export default class AIAnalysisPanel {
     }
 
     /**
+ * Enhanced format analysis result using AnalysisResultRenderer
+ * @param {Object} result - Analysis result
+ * @returns {string} Formatted HTML
+ */
+formatAnalysisResultEnhanced(result) {
+    if (this.analysisResultRenderer) {
+        try {
+            return this.analysisResultRenderer.render(result);
+        } catch (error) {
+            console.error('❌ Enhanced renderer error, falling back:', error);
+            // Fall back to your existing method
+            return this.formatAnalysisResult(result);
+        }
+    }
+    // Fall back to your existing method if renderer not available
+    return this.formatAnalysisResult(result);
+}
+
+    /**
  * Enhanced format analysis result that handles missing content
  * @param {Object} result - Analysis result
  * @returns {string} Formatted HTML

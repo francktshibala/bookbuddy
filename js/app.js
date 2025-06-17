@@ -39,6 +39,7 @@ import AIRateLimiter from './modules/services/AIRateLimiter.js';
 import BookAnalysisService from './modules/services/BookAnalysisService.js';
 import environmentConfig from './config/environment.js';
 import AIAnalysisPanel from './modules/ui/AIAnalysisPanel.js';
+import AnalysisResultRenderer from './modules/ui/renderers/AnalysisResultRenderer.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -98,6 +99,8 @@ class BookBuddyApp {
             eventBus,
             this.loadingStateManager
         );
+        this.analysisResultRenderer = new AnalysisResultRenderer();
+        this.aiAnalysisPanel.analysisResultRenderer = this.analysisResultRenderer;
         this.bookListRenderer = new BookListRenderer(this.library);
         this.readingInterface = new ReadingInterface();
         this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
@@ -1878,3 +1881,4 @@ window.OpenAIService = OpenAIService;
 window.AITokenManager = AITokenManager;
 window.AIRateLimiter = AIRateLimiter;
 window.AIAnalysisPanel = AIAnalysisPanel;
+window.AnalysisResultRenderer = AnalysisResultRenderer;
