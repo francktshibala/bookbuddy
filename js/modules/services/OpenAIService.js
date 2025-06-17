@@ -164,7 +164,7 @@ export default class OpenAIService extends APIService {
      * Core completion method - main API interface
      */
     async completion(request) {
-        if (!this.state.initialized) {
+        if (!this.state || !this.state.initialized) {
             return this.createErrorResponse('Service not initialized');
         }
 
@@ -799,7 +799,7 @@ export default class OpenAIService extends APIService {
 
     try {
         const rateLimitRequest = {
-            model: request.model || this.config.defaultModel.name,  // ← FIXED: use request.model
+            model: (request && request.model) || this.config.defaultModel.name,  // ← FIXED: use request.model
             tokens: await this.tokenManager?.countTokens(request.prompt || '') || 0,  // ← FIXED: use request.prompt
             estimatedCost: (await this.estimateRequestCost(request)).cost,  // ← FIXED: use request
             priority: request.priority || 'normal'  // ← FIXED: use request.priority
