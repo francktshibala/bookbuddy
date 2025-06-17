@@ -441,5 +441,26 @@ button:hover {
         flex-direction: column;
         gap: 0.5rem;
     }
+
+     .mobile-performance-mode * {
+        box-shadow: none !important;
+        filter: none !important;
+        backdrop-filter: none !important;
+        text-shadow: none !important;
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    .mobile-performance-mode .btn:hover,
+    .mobile-performance-mode .book-card:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Simplify gradients */
+    .mobile-performance-mode .main-nav {
+        background: var(--primary-color) !important;
+    }
 }
 

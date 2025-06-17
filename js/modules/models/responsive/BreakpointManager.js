@@ -2,8 +2,8 @@
  * BreakpointManager - Core viewport detection and breakpoint management
  * Follows your established service patterns with EventBus integration
  */
-import { eventBus, EVENTS } from '../../utils/EventBus.js';
-import { AsyncUtils } from '../../utils/Helpers.js';
+import { eventBus, EVENTS } from '../../../utils/EventBus.js';
+import { AsyncUtils } from '../../../utils/Helpers.js';
 
 export default class BreakpointManager {
     constructor() {
@@ -13,19 +13,19 @@ export default class BreakpointManager {
             desktop: 1024,
             large: 1200
         };
-        
+
         this.currentBreakpoint = null;
         this.currentViewport = {
             width: window.innerWidth,
             height: window.innerHeight
         };
-        
+
         // Debounced resize handler
         this.resizeTimeout = null;
         this.resizeDebounce = 250;
-        
+
         this.initialized = false;
-        
+
         console.log('🎯 BreakpointManager initializing...');
         this.initialize();
     }
@@ -34,22 +34,22 @@ export default class BreakpointManager {
         try {
             // Set initial breakpoint
             this.detectBreakpoint();
-            
+
             // Setup resize listener with debouncing
             this.setupResizeListener();
-            
+
             // Setup orientation change listener
             this.setupOrientationListener();
-            
+
             this.initialized = true;
             console.log('✅ BreakpointManager initialized successfully');
-            
+
             // Emit initial state
             eventBus.emit('responsive:initialized', {
                 breakpoint: this.currentBreakpoint,
                 viewport: this.currentViewport
             });
-            
+
         } catch (error) {
             console.error('❌ BreakpointManager initialization failed:', error);
         }
@@ -61,7 +61,7 @@ export default class BreakpointManager {
             if (this.resizeTimeout) {
                 clearTimeout(this.resizeTimeout);
             }
-            
+
             // Debounce resize handling
             this.resizeTimeout = setTimeout(() => {
                 this.handleViewportChange();
@@ -80,27 +80,27 @@ export default class BreakpointManager {
                 this.handleViewportChange();
             }, 100);
         }, { passive: true });
-        
+
         console.log('🔄 Orientation change listener attached');
     }
 
     handleViewportChange() {
         const oldViewport = { ...this.currentViewport };
         const oldBreakpoint = this.currentBreakpoint;
-        
+
         // Update viewport dimensions
         this.currentViewport = {
             width: window.innerWidth,
             height: window.innerHeight
         };
-        
+
         // Detect new breakpoint
         const newBreakpoint = this.detectBreakpoint();
-        
+
         // Only emit events if something actually changed
         if (this.hasViewportChanged(oldViewport) || oldBreakpoint !== newBreakpoint) {
             console.log(`📱 Viewport changed: ${oldBreakpoint} → ${newBreakpoint} (${this.currentViewport.width}x${this.currentViewport.height})`);
-            
+
             // Emit breakpoint change event
             if (oldBreakpoint !== newBreakpoint) {
                 eventBus.emit('responsive:breakpointChanged', {
@@ -109,7 +109,7 @@ export default class BreakpointManager {
                     viewport: this.currentViewport
                 });
             }
-            
+
             // Emit general viewport change event
             eventBus.emit('responsive:viewportChanged', {
                 viewport: this.currentViewport,
@@ -122,7 +122,7 @@ export default class BreakpointManager {
     detectBreakpoint() {
         const width = this.currentViewport.width;
         let newBreakpoint;
-        
+
         if (width <= this.breakpoints.mobile) {
             newBreakpoint = 'mobile';
         } else if (width <= this.breakpoints.tablet) {
@@ -132,27 +132,27 @@ export default class BreakpointManager {
         } else {
             newBreakpoint = 'large';
         }
-        
+
         // Only update if changed
         if (this.currentBreakpoint !== newBreakpoint) {
             this.currentBreakpoint = newBreakpoint;
-            
+
             // Update CSS custom property for styling
             document.documentElement.setAttribute('data-breakpoint', newBreakpoint);
-            
+
             // Add breakpoint class to body for CSS targeting
             document.body.className = document.body.className
                 .replace(/\bbreakpoint-\w+\b/g, '')
                 .trim();
             document.body.classList.add(`breakpoint-${newBreakpoint}`);
         }
-        
+
         return newBreakpoint;
     }
 
     hasViewportChanged(oldViewport) {
-        return oldViewport.width !== this.currentViewport.width || 
-               oldViewport.height !== this.currentViewport.height;
+        return oldViewport.width !== this.currentViewport.width ||
+            oldViewport.height !== this.currentViewport.height;
     }
 
     // Public API methods
@@ -206,7 +206,7 @@ export default class BreakpointManager {
     setBreakpoints(newBreakpoints) {
         this.breakpoints = { ...this.breakpoints, ...newBreakpoints };
         console.log('📏 Breakpoints updated:', this.breakpoints);
-        
+
         // Re-detect current breakpoint
         this.detectBreakpoint();
     }
@@ -219,7 +219,7 @@ export default class BreakpointManager {
                 callback(data);
             }
         };
-        
+
         return eventBus.on('responsive:breakpointChanged', wrappedCallback);
     }
 
@@ -251,7 +251,7 @@ export default class BreakpointManager {
         if (this.resizeTimeout) {
             clearTimeout(this.resizeTimeout);
         }
-        
+
         // Remove event listeners would go here if we stored references
         console.log('🗑️ BreakpointManager destroyed');
     }

@@ -2,27 +2,27 @@
  * ResponsiveLayoutManager - Main orchestrator for responsive features
  * Enhances existing BookBuddy components with responsive behavior
  */
-import { eventBus, EVENTS } from '../../utils/EventBus.js';
-import { DOMUtils } from '../../utils/Helpers.js';
+import { eventBus, EVENTS } from '../../../utils/EventBus.js';
+import { DOMUtils } from '../../../utils/Helpers.js';
 import BreakpointManager from './BreakpointManager.js';
 import MobileNavigationController from './MobileNavigationController.js';
 import TouchGestureHandler from './TouchGestureHandler.js';
-
+import { MobilePerformanceOptimizer } from '../../../utils/MobilePerformanceOptimizer.js';
 export default class ResponsiveLayoutManager {
     constructor(navigationController, modalManager) {
         this.navigationController = navigationController;
         this.modalManager = modalManager;
-        
+
         // Responsive components
         this.breakpointManager = new BreakpointManager();
         this.mobileNavigationController = null;
         this.touchGestureHandler = null;
-        
+
         // State tracking
         this.currentBreakpoint = null;
         this.isInitialized = false;
         this.adaptationRules = new Map();
-        
+
         console.log('📱 ResponsiveLayoutManager initializing...');
         this.initialize();
     }
@@ -31,28 +31,28 @@ export default class ResponsiveLayoutManager {
         try {
             // Wait for DOM and breakpoint manager
             await this.waitForInitialization();
-            
+
             // Initialize responsive components
             await this.initializeResponsiveComponents();
-            
+
             // Setup event listeners
             this.setupEventListeners();
-            
+
             // Apply initial responsive adaptations
             this.applyResponsiveAdaptations();
-            
+
             // Register adaptation rules for existing components
             this.registerBookBuddyAdaptations();
-            
+
             this.isInitialized = true;
             console.log('✅ ResponsiveLayoutManager initialized successfully');
-            
+
             // Emit ready event
             eventBus.emit('responsive:ready', {
                 breakpoint: this.currentBreakpoint,
                 features: this.getAvailableFeatures()
             });
-            
+
         } catch (error) {
             console.error('❌ ResponsiveLayoutManager initialization failed:', error);
         }
@@ -65,7 +65,7 @@ export default class ResponsiveLayoutManager {
                 window.addEventListener('load', resolve, { once: true });
             });
         }
-        
+
         // Wait for BreakpointManager to be ready
         await new Promise(resolve => {
             if (this.breakpointManager.initialized) {
@@ -74,7 +74,7 @@ export default class ResponsiveLayoutManager {
                 eventBus.once('responsive:initialized', resolve);
             }
         });
-        
+
         this.currentBreakpoint = this.breakpointManager.getCurrentBreakpoint();
     }
 
@@ -86,10 +86,10 @@ export default class ResponsiveLayoutManager {
                 this.breakpointManager
             );
         }
-        
+
         // Initialize touch gesture handling
         this.touchGestureHandler = new TouchGestureHandler(this.breakpointManager);
-        
+
         console.log('📱 Responsive components initialized');
     }
 
@@ -98,31 +98,31 @@ export default class ResponsiveLayoutManager {
         eventBus.on('responsive:breakpointChanged', (data) => {
             this.handleBreakpointChange(data.from, data.to);
         });
-        
+
         // Listen for viewport changes
         eventBus.on('responsive:viewportChanged', (data) => {
             this.handleViewportChange(data);
         });
-        
+
         // Listen for view changes to apply responsive adaptations
         eventBus.on(EVENTS.UI_VIEW_CHANGED, (data) => {
             this.applyViewSpecificAdaptations(data.to);
         });
-        
+
         console.log('🔗 ResponsiveLayoutManager event listeners setup complete');
     }
 
     handleBreakpointChange(fromBreakpoint, toBreakpoint) {
         console.log(`📱 Breakpoint changed: ${fromBreakpoint} → ${toBreakpoint}`);
-        
+
         this.currentBreakpoint = toBreakpoint;
-        
+
         // Apply breakpoint-specific adaptations
         this.applyBreakpointAdaptations(toBreakpoint);
-        
+
         // Notify components of breakpoint change
         this.notifyComponentsOfBreakpointChange(fromBreakpoint, toBreakpoint);
-        
+
         // Update modal behavior for new breakpoint
         this.adaptModalBehavior(toBreakpoint);
     }
@@ -136,28 +136,28 @@ export default class ResponsiveLayoutManager {
 
     registerBookBuddyAdaptations() {
         // Register adaptations for existing BookBuddy components
-        
+
         // Library grid adaptations
         this.registerAdaptation('library-grid', {
             mobile: () => this.adaptLibraryForMobile(),
             tablet: () => this.adaptLibraryForTablet(),
             desktop: () => this.adaptLibraryForDesktop()
         });
-        
+
         // Search interface adaptations
         this.registerAdaptation('search-interface', {
             mobile: () => this.adaptSearchForMobile(),
             tablet: () => this.adaptSearchForTablet(),
             desktop: () => this.adaptSearchForDesktop()
         });
-        
+
         // Reading interface adaptations
         this.registerAdaptation('reading-interface', {
             mobile: () => this.adaptReadingForMobile(),
             tablet: () => this.adaptReadingForTablet(),
             desktop: () => this.adaptReadingForDesktop()
         });
-        
+
         // Modal adaptations
         this.registerAdaptation('modals', {
             mobile: () => this.adaptModalsForMobile(),
@@ -172,7 +172,7 @@ export default class ResponsiveLayoutManager {
 
     applyResponsiveAdaptations() {
         const breakpoint = this.currentBreakpoint;
-        
+
         // Apply all registered adaptations for current breakpoint
         this.adaptationRules.forEach((rules, name) => {
             if (rules[breakpoint]) {
@@ -188,7 +188,7 @@ export default class ResponsiveLayoutManager {
     applyBreakpointAdaptations(breakpoint) {
         // Apply responsive CSS classes
         document.body.setAttribute('data-responsive-mode', breakpoint);
-        
+
         // Apply specific adaptations
         this.applyResponsiveAdaptations();
     }
@@ -213,13 +213,29 @@ export default class ResponsiveLayoutManager {
     // Specific adaptation methods for BookBuddy components
 
     adaptLibraryForMobile() {
+        this.optimizeForMobile(); // Add this line first
+
         const booksGrid = DOMUtils.query('#books-grid');
         if (booksGrid) {
             // Force single column layout
             booksGrid.style.gridTemplateColumns = '1fr';
             booksGrid.style.gap = '1rem';
-            
+
             // Enhance book cards for mobile
+            this.enhanceBookCardsForMobile();
+        }
+    }
+    optimizeForMobile() {
+        console.log('📱 Optimizing for mobile performance...');
+
+        // Apply performance optimizations
+        MobilePerformanceOptimizer.optimizeForMobile();
+
+        // Existing mobile optimizations
+        const booksGrid = DOMUtils.query('#books-grid');
+        if (booksGrid) {
+            booksGrid.style.gridTemplateColumns = '1fr';
+            booksGrid.style.gap = '1rem';
             this.enhanceBookCardsForMobile();
         }
     }
@@ -245,13 +261,13 @@ export default class ResponsiveLayoutManager {
         bookCards.forEach(card => {
             // Add mobile-specific classes
             card.classList.add('mobile-enhanced');
-            
+
             // Optimize action buttons for touch
             const actions = card.querySelector('.book-actions');
             if (actions) {
                 actions.style.flexDirection = 'column';
                 actions.style.gap = '0.5rem';
-                
+
                 // Make buttons full width and touch-friendly
                 const buttons = actions.querySelectorAll('.btn');
                 buttons.forEach(btn => {
@@ -267,7 +283,7 @@ export default class ResponsiveLayoutManager {
         if (searchContainer) {
             // Enhance search interface for mobile
             searchContainer.classList.add('mobile-optimized');
-            
+
             // Stack search elements vertically
             const searchFilters = DOMUtils.query('.search-filters', searchContainer);
             if (searchFilters) {
@@ -297,7 +313,7 @@ export default class ResponsiveLayoutManager {
         if (readingInterface) {
             // Optimize reading interface for mobile
             readingInterface.classList.add('mobile-reading');
-            
+
             // Adjust font size and line height for mobile reading
             const bookContent = DOMUtils.query('.book-content', readingInterface);
             if (bookContent) {
@@ -366,7 +382,7 @@ export default class ResponsiveLayoutManager {
         const grids = DOMUtils.queryAll('.books-grid, .search-results-grid');
         grids.forEach(grid => {
             const viewportInfo = this.breakpointManager.getViewportInfo();
-            
+
             if (viewportInfo.isMobile) {
                 grid.style.gridTemplateColumns = '1fr';
             } else if (viewportInfo.isTablet) {
@@ -380,7 +396,7 @@ export default class ResponsiveLayoutManager {
     adjustTextSizes() {
         // Adjust text sizes for optimal readability
         const viewport = this.breakpointManager.getCurrentViewport();
-        
+
         if (this.breakpointManager.isMobile()) {
             document.documentElement.style.fontSize = '16px';
         } else if (this.breakpointManager.isTablet()) {
@@ -393,8 +409,8 @@ export default class ResponsiveLayoutManager {
     adjustSpacing() {
         // Adjust spacing based on screen size
         const spacing = this.breakpointManager.isMobile() ? '0.5rem' :
-                       this.breakpointManager.isTablet() ? '1rem' : '1.5rem';
-        
+            this.breakpointManager.isTablet() ? '1rem' : '1.5rem';
+
         document.documentElement.style.setProperty('--responsive-spacing', spacing);
     }
 
@@ -405,7 +421,7 @@ export default class ResponsiveLayoutManager {
         const libraryView = DOMUtils.query('#library-view');
         if (libraryView) {
             const viewInfo = this.breakpointManager.getViewportInfo();
-            
+
             if (viewInfo.isMobile) {
                 this.optimizeLibraryForMobile(libraryView);
             }
@@ -460,7 +476,7 @@ export default class ResponsiveLayoutManager {
         // Update future modal behavior based on breakpoint
         if (this.modalManager) {
             const isMobile = breakpoint === 'mobile';
-            
+
             // Store responsive preference for modal manager
             this.modalManager.responsiveMode = {
                 breakpoint,
@@ -532,15 +548,15 @@ export default class ResponsiveLayoutManager {
         if (this.breakpointManager) {
             this.breakpointManager.destroy();
         }
-        
+
         if (this.mobileNavigationController) {
             this.mobileNavigationController.destroy();
         }
-        
+
         if (this.touchGestureHandler) {
             this.touchGestureHandler.destroy();
         }
-        
+
         console.log('🗑️ ResponsiveLayoutManager destroyed');
     }
 }

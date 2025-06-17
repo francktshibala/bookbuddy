@@ -41,10 +41,10 @@ import BookAnalysisService from './modules/services/BookAnalysisService.js';
 import environmentConfig from './config/environment.js';
 import AIAnalysisPanel from './modules/ui/AIAnalysisPanel.js';
 import AnalysisResultRenderer from './modules/ui/renderers/AnalysisResultRenderer.js';
-import ResponsiveLayoutManager from './modules/responsive/ResponsiveLayoutManager.js';
-import BreakpointManager from './modules/responsive/BreakpointManager.js';
-import MobileNavigationController from './modules/responsive/MobileNavigationController.js';
-import TouchGestureHandler from './modules/responsive/TouchGestureHandler.js';
+import ResponsiveLayoutManager from './modules/models/responsive/ResponsiveLayoutManager.js';
+import BreakpointManager from './modules/models/responsive/BreakpointManager.js';
+import MobileNavigationController from './modules/models/responsive/MobileNavigationController.js';
+import TouchGestureHandler from './modules/models/responsive/TouchGestureHandler.js';
 import ProgressTracker from './modules/ui/ProgressTracker.js';
 import ErrorBoundary from './modules/ui/ErrorBoundary.js';
 // ✅ Make EventBus globally available for testing
@@ -76,8 +76,8 @@ class BookBuddyApp {
         this.analyticsDataCollector = new AnalyticsDataCollector(this.library);
         this.chartRenderer = new ChartRenderer();
         this.analyticsDashboard = new AnalyticsDashboard(
-            this.library, 
-            this.chartRenderer, 
+            this.library,
+            this.chartRenderer,
             this.analyticsDataCollector
         );
         this.advancedSearchInterface = new AdvancedSearchInterface(
@@ -85,7 +85,7 @@ class BookBuddyApp {
             this.storage,
             null  // Will be set after modalManager is available
         );
-                // ADD this line in the constructor after the other services:
+        // ADD this line in the constructor after the other services:
         this.bookAnalysisService = new BookAnalysisService(
             this.openAIService,
             this.storage,
@@ -114,21 +114,21 @@ class BookBuddyApp {
         this.responsiveLayoutManager = null; // Will be initialized after navigationController and modalManager are ready
         this.progressTracker = new ProgressTracker();
         this.errorBoundary = new ErrorBoundary({ showUserFriendlyMessages: true, catchGlobalErrors: true });
-        
-    try {
-        this.bookCoverManager = new BookCoverManager();
-        console.log('✅ BookCoverManager initialized successfully');
-    } catch (error) {
-    console.error('❌ BookCoverManager initialization failed:', error);
-    this.bookCoverManager = null;
-    }
-        
+
+        try {
+            this.bookCoverManager = new BookCoverManager();
+            console.log('✅ BookCoverManager initialized successfully');
+        } catch (error) {
+            console.error('❌ BookCoverManager initialization failed:', error);
+            this.bookCoverManager = null;
+        }
+
         // this.apiTestUtils = new APITestUtils();
-        
+
         // Initialize API services
         this.googleBooksAPI = new GoogleBooksAPI();
 
-         // Create enrichment coordinator
+        // Create enrichment coordinator
         this.enrichmentCoordinator = new EnrichmentCoordinator(
             this.googleBooksAPI,
             this.openLibraryAPI,
@@ -137,7 +137,7 @@ class BookBuddyApp {
         // ✅ Setup AdvancedSearchInterface with dependencies
         this.advancedSearchInterface.googleBooksAPI = this.googleBooksAPI;
         this.advancedSearchInterface.modalManager = this.modalManager;
-        
+
         this.currentBook = null;
         this.appState = {
             initialized: false,
@@ -149,14 +149,14 @@ class BookBuddyApp {
                 notifications: true
             }
         };
-        
+
         this.initialize();
     }
 
     async initialize() {
         try {
             console.log('🚀 Initializing Book Buddy (Step 9.5 - API Foundation - CORRECTED)...');
-            
+
             // Initialize AI services
             await this.openAIService.initialize(
                 this.aiTokenManager,
@@ -164,40 +164,40 @@ class BookBuddyApp {
                 this.aiPromptTemplates
             );
 
-            
+
             // Load app settings
             await this.loadAppSettings();
-            
+
             // Setup UI
             this.setupUI();
 
             // ✅ NEW: Initialize ResponsiveLayoutManager - ADD THIS SECTION
             await this.initializeResponsiveLayoutManager();
-            
+
             // ✅ NEW: Setup Step 9 event listeners FIRST
             this.setupStep9EventListeners();
-            
+
             // ✅ NEW: Setup Step 9 event listeners FIRST
             this.setupStep9EventListeners();
 
             // ✅ Initialize Advanced Search Interface
             await this.initializeAdvancedSearch();
-            
+
             // Setup event listeners
             this.setupEventListeners();
-            
+
             // Initialize views
             this.initializeViews();
-            
+
             // Setup file upload
             this.setupFileUpload();
-            
+
             this.appState.initialized = true;
             console.log('✅ Book Buddy initialized successfully with API Foundation!');
-            
+
             // Show welcome message if no books
             this.checkForFirstTimeUser();
-            
+
             // ✅ NEW: Auto-run API foundation tests in development
             if (this.isDevelopmentMode()) {
                 setTimeout(() => {
@@ -205,7 +205,7 @@ class BookBuddyApp {
                     this.runAPIFoundationTests();
                 }, 2000);
             }
-            
+
         } catch (error) {
             console.error('❌ Failed to initialize Book Buddy:', error);
             this.modalManager.showAlert(
@@ -219,14 +219,14 @@ class BookBuddyApp {
     // ✅ NEW: Setup Step 9 specific event listeners
     setupStep9EventListeners() {
         console.log('🔧 Setting up Step 9 event listeners...');
-        
+
         // Listen for API errors to show user notifications
         eventBus.on(EVENTS.API_REQUEST_FAILED, (data) => {
             console.log('🚨 API Request failed, showing user notification:', data);
             this.errorNotificationManager.handleAPIError(data);
         });
 
-        
+
 
         // Listen for API loading states
         eventBus.on(EVENTS.API_REQUEST_STARTED, (data) => {
@@ -253,103 +253,103 @@ class BookBuddyApp {
     }
 
 
-            /**
-         * Get API key configuration status
-         */
-        getAPIKeyStatus() {
-            return environmentConfig.getAPIKeyStatus();
-        }
+    /**
+ * Get API key configuration status
+ */
+    getAPIKeyStatus() {
+        return environmentConfig.getAPIKeyStatus();
+    }
 
-        /**
-         * Test OpenAI API key
-         */
-        async testOpenAIKey(apiKey = null) {
-            try {
-                console.log('🧪 Testing OpenAI API key...');
-                
-                // Show loading
-                this.loadingStateManager.startLoading('api-key-test', {
-                    message: 'Testing API key...',
-                    showGlobal: true
-                });
+    /**
+     * Test OpenAI API key
+     */
+    async testOpenAIKey(apiKey = null) {
+        try {
+            console.log('🧪 Testing OpenAI API key...');
 
-                const result = await environmentConfig.testAPIKey(apiKey);
-                
-                this.loadingStateManager.stopLoading('api-key-test');
-                
-                if (result.success) {
-                    this.modalManager.showAlert(
-                        'API Key Valid! ✅',
-                        `Your OpenAI API key is working correctly!\n\nModels available: ${result.modelCount || 'Unknown'}`
-                    );
-                } else {
-                    this.modalManager.showAlert(
-                        'API Key Invalid ❌',
-                        `API key test failed:\n\n${result.message}\n\n${result.isDevelopmentPlaceholder ? 'Please add your real OpenAI API key from https://platform.openai.com/api-keys' : ''}`
-                    );
-                }
-                
-                return result;
-                
-            } catch (error) {
-                this.loadingStateManager.stopLoading('api-key-test');
-                console.error('❌ API key test error:', error);
-                
-                this.modalManager.showAlert(
-                    'Test Failed ❌',
-                    `Failed to test API key: ${error.message}`
-                );
-                
-                return { success: false, error: error.message };
-            }
-        }
+            // Show loading
+            this.loadingStateManager.startLoading('api-key-test', {
+                message: 'Testing API key...',
+                showGlobal: true
+            });
 
-        /**
-         * Clear stored API key
-         */
-        clearAPIKey() {
-            const result = environmentConfig.clearUserAPIKey();
-            
+            const result = await environmentConfig.testAPIKey(apiKey);
+
+            this.loadingStateManager.stopLoading('api-key-test');
+
             if (result.success) {
                 this.modalManager.showAlert(
-                    'API Key Cleared 🗑️',
-                    'Your API key has been removed. The app will refresh.',
-                    () => {
-                        window.location.reload();
-                    }
+                    'API Key Valid! ✅',
+                    `Your OpenAI API key is working correctly!\n\nModels available: ${result.modelCount || 'Unknown'}`
                 );
             } else {
-                this.modalManager.showAlert('Error', 'Failed to clear API key');
+                this.modalManager.showAlert(
+                    'API Key Invalid ❌',
+                    `API key test failed:\n\n${result.message}\n\n${result.isDevelopmentPlaceholder ? 'Please add your real OpenAI API key from https://platform.openai.com/api-keys' : ''}`
+                );
             }
-        }
 
-        /**
-         * Get environment information for debugging
-         */
-        getEnvironmentInfo() {
-            return {
-                environment: environmentConfig.getEnvironmentInfo(),
-                apiKeyStatus: this.getAPIKeyStatus(),
-                deploymentConfig: environmentConfig.getDeploymentConfig(),
-                setupInstructions: environmentConfig.getSetupInstructions()
-            };
+            return result;
+
+        } catch (error) {
+            this.loadingStateManager.stopLoading('api-key-test');
+            console.error('❌ API key test error:', error);
+
+            this.modalManager.showAlert(
+                'Test Failed ❌',
+                `Failed to test API key: ${error.message}`
+            );
+
+            return { success: false, error: error.message };
         }
+    }
+
+    /**
+     * Clear stored API key
+     */
+    clearAPIKey() {
+        const result = environmentConfig.clearUserAPIKey();
+
+        if (result.success) {
+            this.modalManager.showAlert(
+                'API Key Cleared 🗑️',
+                'Your API key has been removed. The app will refresh.',
+                () => {
+                    window.location.reload();
+                }
+            );
+        } else {
+            this.modalManager.showAlert('Error', 'Failed to clear API key');
+        }
+    }
+
+    /**
+     * Get environment information for debugging
+     */
+    getEnvironmentInfo() {
+        return {
+            environment: environmentConfig.getEnvironmentInfo(),
+            apiKeyStatus: this.getAPIKeyStatus(),
+            deploymentConfig: environmentConfig.getDeploymentConfig(),
+            setupInstructions: environmentConfig.getSetupInstructions()
+        };
+    }
     // ✅ NEW: Initialize Advanced Search Interface
     async initializeAdvancedSearch() {
         try {
             console.log('🔍 Initializing Advanced Search Interface...');
-            
+
             const result = await this.advancedSearchInterface.initialize('#advanced-search-container');
-            
+
             if (result.success) {
                 console.log('✅ Advanced Search Interface initialized successfully');
-                
+
                 // Setup integration event listeners
                 this.setupAdvancedSearchEventListeners();
             } else {
                 console.error('❌ Failed to initialize Advanced Search Interface:', result.message);
             }
-            
+
         } catch (error) {
             console.error('❌ Advanced Search Interface initialization error:', error);
         }
@@ -361,14 +361,14 @@ class BookBuddyApp {
         eventBus.on('search:completed', (data) => {
             console.log(`🎯 Search completed: ${data.totalResults} results`);
             console.log('🔍 Search data received:', data); // Debug log
-            
+
             // ✅ FIX: Handle different data structures correctly
             const books = data.results || data.books || [];
             console.log('📚 Books to display:', books.length, books);
-            
+
             // Clear any existing error states
             this.hideSearchError();
-            
+
             this.displaySearchResults(books);
         });
 
@@ -413,22 +413,22 @@ class BookBuddyApp {
     // ✅ NEW: Test the complete API foundation
     async runAPIFoundationTests() {
         console.log('🧪 Running API Foundation Tests...');
-        
+
         try {
             // Test 1: Basic API Service functionality
             await this.testAPIService();
-            
+
             // Test 2: Error notification system
             await this.testErrorNotifications();
-            
+
             // Test 3: Loading state management  
             await this.testLoadingStates();
-            
+
             // Test 4: Google Books API integration
             await this.testGoogleBooksAPI();
-            
+
             console.log('✅ All API Foundation tests completed successfully!');
-            
+
         } catch (error) {
             console.error('❌ API Foundation tests failed:', error);
         }
@@ -437,17 +437,17 @@ class BookBuddyApp {
     // ✅ NEW: Test APIService with mock scenarios
     async testAPIService() {
         console.log('🔧 Testing APIService...');
-        
+
         try {
             // Use APITestUtils to run comprehensive tests
             const results = await this.apiTestUtils.testAPIService(this.googleBooksAPI);
-            
+
             console.log(`📊 APIService Test Results: ${results.passed} passed, ${results.failed} failed`);
-            
+
             if (results.failed > 0) {
                 console.warn('⚠️ Some API tests failed - check network connectivity');
             }
-            
+
             return results;
         } catch (error) {
             console.error('❌ APIService test error:', error);
@@ -458,7 +458,7 @@ class BookBuddyApp {
     // ✅ NEW: Test error notification system
     async testErrorNotifications() {
         console.log('🔔 Testing Error Notifications...');
-        
+
         try {
             // Simulate different types of errors
             const testErrors = [
@@ -482,17 +482,17 @@ class BookBuddyApp {
 
             for (const testError of testErrors) {
                 console.log(`🧪 Testing ${testError.type} error notification...`);
-                
+
                 if (testError.type === 'api') {
                     this.errorNotificationManager.handleAPIError(testError.data);
                 } else if (testError.type === 'storage') {
                     this.errorNotificationManager.handleStorageError(testError.data);
                 }
-                
+
                 // Wait to see the notification
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
-            
+
             console.log('✅ Error notification tests completed');
         } catch (error) {
             console.error('❌ Error notification test failed:', error);
@@ -502,17 +502,17 @@ class BookBuddyApp {
     // ✅ NEW: Test loading state management
     async testLoadingStates() {
         console.log('⏳ Testing Loading States...');
-        
+
         try {
             // Test global loading
             this.loadingStateManager.startLoading('test-global', {
                 message: 'Testing global loading state...',
                 showGlobal: true
             });
-            
+
             await new Promise(resolve => setTimeout(resolve, 2000));
             this.loadingStateManager.stopLoading('test-global');
-            
+
             // Test target loading on books grid
             const booksGrid = DOMUtils.query('#books-grid');
             if (booksGrid) {
@@ -521,11 +521,11 @@ class BookBuddyApp {
                     target: booksGrid,
                     showGlobal: false
                 });
-                
+
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 this.loadingStateManager.stopLoading('test-target');
             }
-            
+
             // Test button loading
             const uploadBtn = DOMUtils.query('#upload-book-btn');
             if (uploadBtn) {
@@ -533,7 +533,7 @@ class BookBuddyApp {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 this.loadingStateManager.hideButtonLoading(uploadBtn);
             }
-            
+
             console.log('✅ Loading state tests completed');
         } catch (error) {
             console.error('❌ Loading state test failed:', error);
@@ -543,20 +543,20 @@ class BookBuddyApp {
     // ✅ NEW: Test Google Books API integration
     async testGoogleBooksAPI() {
         console.log('📚 Testing Google Books API...');
-        
+
         try {
             // Test search functionality
             const searchResults = await this.googleBooksAPI.searchBooks('javascript programming', {
                 maxResults: 3
             });
-            
+
             if (searchResults.success && searchResults.books.length > 0) {
                 console.log(`✅ Google Books API working - found ${searchResults.books.length} books`);
                 console.log('📖 Sample book:', searchResults.books[0].title);
             } else {
                 console.warn('⚠️ Google Books API returned no results');
             }
-            
+
         } catch (error) {
             console.error('❌ Google Books API test failed:', error);
         }
@@ -564,10 +564,10 @@ class BookBuddyApp {
 
     // ✅ NEW: Check if in development mode
     isDevelopmentMode() {
-        return window.location.hostname === 'localhost' || 
-               window.location.hostname === '127.0.0.1' ||
-               window.location.search.includes('debug=true') ||
-               window.location.protocol === 'file:';
+        return window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.search.includes('debug=true') ||
+            window.location.protocol === 'file:';
     }
 
     // ✅ ENHANCED: Improved search functionality with API integration
@@ -577,7 +577,7 @@ class BookBuddyApp {
         }
 
         console.log(`🔍 Searching for books: "${query}"`);
-        
+
         // Show loading state
         this.loadingStateManager.startLoading('online-search', {
             message: `Searching for "${query}"...`,
@@ -588,9 +588,9 @@ class BookBuddyApp {
             const results = await this.googleBooksAPI.searchBooks(query, {
                 maxResults: 10
             });
-            
+
             this.loadingStateManager.stopLoading('online-search');
-            
+
             if (results.success) {
                 console.log(`✅ Found ${results.books.length} books`);
                 this.displaySearchResults(results.books);
@@ -599,7 +599,7 @@ class BookBuddyApp {
                 console.warn('⚠️ Search failed:', results.message);
                 return results;
             }
-            
+
         } catch (error) {
             this.loadingStateManager.stopLoading('online-search');
             console.error('❌ Search error:', error);
@@ -611,17 +611,17 @@ class BookBuddyApp {
     // ✅ FIXED: Display search results in the UI
     // Replace your displaySearchResults method (around line 421) with this version:
 
-displaySearchResults(books) {
-    console.log(`📊 Displaying ${books?.length || 0} search results`);
-    
-    const resultsContainer = DOMUtils.query('#search-results');
-    if (!resultsContainer) {
-        console.error('❌ Search results container not found');
-        return;
-    }
+    displaySearchResults(books) {
+        console.log(`📊 Displaying ${books?.length || 0} search results`);
 
-    if (!books || !Array.isArray(books) || books.length === 0) {
-        resultsContainer.innerHTML = `
+        const resultsContainer = DOMUtils.query('#search-results');
+        if (!resultsContainer) {
+            console.error('❌ Search results container not found');
+            return;
+        }
+
+        if (!books || !Array.isArray(books) || books.length === 0) {
+            resultsContainer.innerHTML = `
             <div class="empty-state">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
                 <h3>No books found</h3>
@@ -631,19 +631,19 @@ displaySearchResults(books) {
                 </button>
             </div>
         `;
-        return;
+            return;
+        }
+
+        // ✅ FORCE fallback rendering for now to debug
+        console.log('🎨 Using FORCED fallback rendering for debugging');
+        this.renderBasicSearchResults(books, resultsContainer);
+
+        // Setup event listeners for the new results
+        this.setupSearchResultListeners();
+
+        console.log('✅ displaySearchResults completed - check the page!');
     }
 
-    // ✅ FORCE fallback rendering for now to debug
-    console.log('🎨 Using FORCED fallback rendering for debugging');
-    this.renderBasicSearchResults(books, resultsContainer);
-
-    // Setup event listeners for the new results
-    this.setupSearchResultListeners();
-    
-    console.log('✅ displaySearchResults completed - check the page!');
-}
-    
 
     // ✅ NEW: Setup event listeners for search results
     setupSearchResultListeners() {
@@ -697,7 +697,7 @@ displaySearchResults(books) {
                 </div>
             </div>
         `).join('');
-        
+
         container.innerHTML = `
             <div style="margin-bottom: 1rem; padding: 1rem; background: var(--background-color); border-radius: var(--border-radius); border: 1px solid var(--border-color);">
                 <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">📚 Search Results</h3>
@@ -710,13 +710,13 @@ displaySearchResults(books) {
     async addBookFromSearch(bookInfo) {
         try {
             console.log(`📚 Adding book to library: ${bookInfo.title}`);
-            
+
             // Show loading on the specific button if available
             const button = event?.target;
             if (button && this.loadingStateManager) {
                 this.loadingStateManager.showButtonLoading(button, 'Add to Library');
             }
-            
+
             // Create book data from search result
             const bookData = {
                 title: bookInfo.title,
@@ -738,13 +738,13 @@ displaySearchResults(books) {
                     ratingsCount: bookInfo.ratingsCount || 0
                 }
             };
-            
+
             const result = await this.library.addBook(bookData);
-            
+
             if (button && this.loadingStateManager) {
                 this.loadingStateManager.hideButtonLoading(button);
             }
-            
+
             if (result.success) {
                 // Show success message
                 if (this.modalManager) {
@@ -755,7 +755,7 @@ displaySearchResults(books) {
                 } else {
                     alert(`"${bookInfo.title}" has been added to your library!`);
                 }
-                
+
                 // Update button to show success
                 if (button) {
                     button.textContent = '✅ Added!';
@@ -763,7 +763,7 @@ displaySearchResults(books) {
                     button.style.background = 'var(--success-color)';
                     button.style.cursor = 'default';
                 }
-                
+
                 // Refresh library view if we're on that view
                 if (this.navigationController.getCurrentView() === 'library') {
                     this.refreshLibraryView();
@@ -776,14 +776,14 @@ displaySearchResults(books) {
                     alert(errorMsg);
                 }
             }
-            
+
         } catch (error) {
             console.error('❌ Error adding book from search:', error);
-            
+
             if (event?.target && this.loadingStateManager) {
                 this.loadingStateManager.hideButtonLoading(event.target);
             }
-            
+
             const errorMsg = `Failed to add book: ${error.message}`;
             if (this.modalManager) {
                 this.modalManager.showAlert('Error', errorMsg);
@@ -834,20 +834,20 @@ displaySearchResults(books) {
     }
     // Helper method to create book content from search results - ADD THIS TO app.js
     createBookContentFromSearch(bookInfo) {
-        const authorsText = bookInfo.authors && bookInfo.authors.length > 0 
-            ? `by ${bookInfo.authors.join(', ')}` 
+        const authorsText = bookInfo.authors && bookInfo.authors.length > 0
+            ? `by ${bookInfo.authors.join(', ')}`
             : '';
-        
-        const publishedText = bookInfo.publishedDate 
-            ? `Published: ${bookInfo.publishedDate}` 
+
+        const publishedText = bookInfo.publishedDate
+            ? `Published: ${bookInfo.publishedDate}`
             : '';
-        
-        const pagesText = bookInfo.pageCount 
-            ? `Pages: ${bookInfo.pageCount}` 
+
+        const pagesText = bookInfo.pageCount
+            ? `Pages: ${bookInfo.pageCount}`
             : '';
-        
-        const categoriesText = bookInfo.categories && bookInfo.categories.length > 0 
-            ? `Categories: ${bookInfo.categories.join(', ')}` 
+
+        const categoriesText = bookInfo.categories && bookInfo.categories.length > 0
+            ? `Categories: ${bookInfo.categories.join(', ')}`
             : '';
 
         return `${bookInfo.title}
@@ -865,30 +865,30 @@ displaySearchResults(books) {
 
         ${bookInfo.previewLink ? `Preview: ${bookInfo.previewLink}` : ''}
         ${bookInfo.infoLink ? `More Info: ${bookInfo.infoLink}` : ''}`;
-            }
+    }
 
     // ✅ ENHANCED: Enhanced search online button handler
     setupEventListeners() {
         // ✅ CRITICAL FIX: Upload book button (ADD THIS FIRST)
-    const uploadBtn = DOMUtils.query('#upload-book-btn');
-    if (uploadBtn) {
-        console.log('✅ Upload button found, adding event listener');
-        uploadBtn.addEventListener('click', (e) => {
-            console.log('📤 Upload button clicked!');
-            e.preventDefault();
-            this.showUploadModal();
-        });
-    } else {
-        console.error('❌ Upload button #upload-book-btn not found!');
-    }
+        const uploadBtn = DOMUtils.query('#upload-book-btn');
+        if (uploadBtn) {
+            console.log('✅ Upload button found, adding event listener');
+            uploadBtn.addEventListener('click', (e) => {
+                console.log('📤 Upload button clicked!');
+                e.preventDefault();
+                this.showUploadModal();
+            });
+        } else {
+            console.error('❌ Upload button #upload-book-btn not found!');
+        }
 
-    // ✅ ENHANCED: Search online button with API integration
-    const searchOnlineBtn = DOMUtils.query('#search-online-btn');
-    if (searchOnlineBtn) {
-        searchOnlineBtn.addEventListener('click', () => {
-            this.navigationController.navigateToView('search');
-        });
-    }
+        // ✅ ENHANCED: Search online button with API integration
+        const searchOnlineBtn = DOMUtils.query('#search-online-btn');
+        if (searchOnlineBtn) {
+            searchOnlineBtn.addEventListener('click', () => {
+                this.navigationController.navigateToView('search');
+            });
+        }
 
         // Library search
         const searchInput = DOMUtils.query('#library-search');
@@ -909,7 +909,7 @@ displaySearchResults(books) {
                 // Update active filter
                 filterButtons.forEach(btn => DOMUtils.removeClass(btn, 'active'));
                 DOMUtils.addClass(e.target, 'active');
-                
+
                 // Filter books
                 this.filterBooks(e.target.dataset.filter);
             });
@@ -955,15 +955,15 @@ displaySearchResults(books) {
         eventBus.on('search:addToLibrary', async (data) => {
             await this.addBookFromSearch(data.book, data.button);
         });
-            }
+    }
 
     // Rest of your existing methods remain the same...
     async loadAppSettings() {
         const settingsResult = this.storage.load('app_settings', this.appState.settings);
-        
+
         if (settingsResult.success) {
             this.appState.settings = { ...this.appState.settings, ...settingsResult.data };
-            
+
             // Apply theme
             if (settingsResult.data.theme) {
                 document.body.classList.add(`theme-${settingsResult.data.theme}`);
@@ -983,18 +983,18 @@ displaySearchResults(books) {
     async initializeResponsiveLayoutManager() {
         try {
             console.log('📱 Initializing ResponsiveLayoutManager...');
-            
+
             // Initialize ResponsiveLayoutManager with required dependencies
             this.responsiveLayoutManager = new ResponsiveLayoutManager(
                 this.navigationController,
                 this.modalManager
             );
-            
+
             // Setup responsive-specific event listeners
             this.setupResponsiveEventListeners();
-            
+
             console.log('✅ ResponsiveLayoutManager initialized successfully');
-            
+
         } catch (error) {
             console.error('❌ ResponsiveLayoutManager initialization failed:', error);
             // Don't let responsive failures break the app
@@ -1006,7 +1006,7 @@ displaySearchResults(books) {
         // Listen for breakpoint changes to update app behavior
         eventBus.on('responsive:breakpointChanged', (data) => {
             console.log(`📱 App responding to breakpoint change: ${data.from} → ${data.to}`);
-            
+
             // Update app state for responsive behavior
             this.handleResponsiveBreakpointChange(data.to);
         });
@@ -1053,44 +1053,44 @@ displaySearchResults(books) {
 
     optimizeForMobile() {
         console.log('📱 Optimizing app for mobile');
-        
+
         // Hide library stats on very small screens to save space
         const libraryStats = DOMUtils.query('#library-stats');
         if (libraryStats && window.innerHeight < 600) {
             libraryStats.classList.add('mobile-collapsed');
         }
-        
+
         // Make sure upload modal goes full-screen on mobile
         document.body.setAttribute('data-mobile-optimized', 'true');
     }
 
     optimizeForTablet() {
         console.log('📊 Optimizing app for tablet');
-        
+
         // Restore normal layout
         const libraryStats = DOMUtils.query('#library-stats');
         if (libraryStats) {
             libraryStats.classList.remove('mobile-collapsed');
         }
-        
+
         document.body.removeAttribute('data-mobile-optimized');
     }
 
     optimizeForDesktop() {
         console.log('🖥️ Optimizing app for desktop');
-        
+
         // Full desktop optimization
         const libraryStats = DOMUtils.query('#library-stats');
         if (libraryStats) {
             libraryStats.classList.remove('mobile-collapsed');
         }
-        
+
         document.body.removeAttribute('data-mobile-optimized');
     }
 
     handleLongPressGesture(data) {
         console.log('👆 Long press detected on:', data.element);
-        
+
         // Handle long press on book cards
         const bookCard = data.element.closest('.book-card');
         if (bookCard) {
@@ -1105,7 +1105,7 @@ displaySearchResults(books) {
 
     handleDoubleTapGesture(data) {
         console.log('👆 Double tap detected on:', data.element);
-        
+
         // Handle double tap on book cards to start reading
         const bookCard = data.element.closest('.book-card');
         if (bookCard) {
@@ -1120,11 +1120,11 @@ displaySearchResults(books) {
     initializeViews() {
         // Initialize library view
         this.refreshLibraryView();
-        
+
         // Initialize other views
         this.initializeStatisticsView();
         this.initializeSettingsView();
-        
+
     }
 
     setupFileUpload() {
@@ -1152,14 +1152,14 @@ displaySearchResults(books) {
 
                 // Process file
                 const result = await this.fileProcessor.processFile(file);
-                
+
                 // Stop loading
                 this.loadingStateManager.stopLoading('file-processing');
 
                 if (result.success) {
                     // Add book to library
                     const addResult = await this.library.addBook(result.bookData);
-                    
+
                     if (!addResult.success) {
                         this.modalManager.showAlert('Error', addResult.message);
                     }
@@ -1181,7 +1181,7 @@ displaySearchResults(books) {
     updateLibraryStats() {
         const stats = this.library.getLibraryStats();
         const statsElement = DOMUtils.query('#library-stats');
-        
+
         if (statsElement) {
             statsElement.innerHTML = `
                 <div class="stat-card">
@@ -1205,20 +1205,20 @@ displaySearchResults(books) {
     }
 
     initializeStatisticsView() {
-    const content = DOMUtils.query('#statistics-content');
-    if (content) {
-        content.innerHTML = `
+        const content = DOMUtils.query('#statistics-content');
+        if (content) {
+            content.innerHTML = `
             <div class="empty-state">
                 <h3>📊 Reading Statistics</h3>
                 <p>Detailed statistics will be available in Week 2 Phase 3!</p>
             </div>
         `;
+        }
     }
-}
     renderBooks(books = null) {
         const booksToRender = books || this.library.getAllBooks();
         const gridElement = DOMUtils.query('#books-grid');
-        
+
         if (!gridElement) return;
 
         if (booksToRender.length === 0) {
@@ -1227,7 +1227,7 @@ displaySearchResults(books) {
         }
 
         gridElement.innerHTML = this.bookListRenderer.renderBookCards(booksToRender);
-        
+
         // Setup book card event listeners
         this.setupBookCardListeners();
     }
@@ -1236,7 +1236,7 @@ displaySearchResults(books) {
         const bookCards = DOMUtils.queryAll('.book-card');
         bookCards.forEach(card => {
             const bookId = card.dataset.bookId;
-            
+
             // Open book for reading
             const readBtn = card.querySelector('.btn-read');
             if (readBtn) {
@@ -1248,7 +1248,7 @@ displaySearchResults(books) {
                     }
                 });
             }
-            
+
             // ✅ NEW: Add enrichment button handler
             const enrichBtn = card.querySelector('.btn-enrich');
             if (enrichBtn) {
@@ -1257,7 +1257,7 @@ displaySearchResults(books) {
                     await this.enrichBook(bookId);
                 });
             }
-            
+
             // Delete book
             const deleteBtn = card.querySelector('.btn-delete');
             if (deleteBtn) {
@@ -1271,7 +1271,7 @@ displaySearchResults(books) {
                             'Delete',
                             'Cancel'
                         );
-                        
+
                         if (confirmed) {
                             this.library.removeBook(bookId);
                         }
@@ -1300,10 +1300,10 @@ displaySearchResults(books) {
                     const book = this.library.getBook(bookId);
                     if (book) {
                         console.log(`🤖 Opening AI Analysis panel for: ${book.title}`);
-                        
+
                         // Show the AI Analysis Panel
                         const result = this.aiAnalysisPanel.showAnalysisPanel(book);
-                        
+
                         if (result.success) {
                             console.log('✅ AI Analysis panel opened successfully');
                         } else {
@@ -1321,7 +1321,7 @@ displaySearchResults(books) {
 
     showBookDetails(book) {
         const stats = book.getReadingStats();
-        
+
         this.modalManager.showModal({
             title: `📖 ${book.title}`,
             content: `
@@ -1382,14 +1382,14 @@ displaySearchResults(books) {
             this.renderBooks();
             return;
         }
-        
+
         const results = this.library.searchBooks(query);
         this.renderBooks(results);
     }
 
     filterBooks(filter) {
         let books;
-        
+
         switch (filter) {
             case 'unread':
                 books = this.library.getBooksByStatus('unread');
@@ -1403,7 +1403,7 @@ displaySearchResults(books) {
             default:
                 books = this.library.getAllBooks();
         }
-        
+
         this.renderBooks(books);
     }
 
@@ -1422,12 +1422,12 @@ displaySearchResults(books) {
     }
 
     initializeSettingsView() {
-    const content = DOMUtils.query('#settings-content');
-    if (content) {
-        // Get current API key status
-        const apiStatus = this.getAPIKeyStatus();
-        
-        content.innerHTML = `
+        const content = DOMUtils.query('#settings-content');
+        if (content) {
+            // Get current API key status
+            const apiStatus = this.getAPIKeyStatus();
+
+            content.innerHTML = `
             <div class="settings-form">
                 <!-- AI Analysis Settings Section -->
                 <div class="settings-section">
@@ -1558,15 +1558,15 @@ displaySearchResults(books) {
                 </div>
             </div>
         `;
-        
-        this.setupSettingsListeners();
+
+            this.setupSettingsListeners();
+        }
     }
-}
 
     updateStatisticsView() {
         const stats = this.library.getLibraryStats();
         const content = DOMUtils.query('#statistics-content');
-        
+
         if (content) {
             content.innerHTML = `
                 <div class="stats-overview">
@@ -1629,7 +1629,7 @@ displaySearchResults(books) {
                     </div>
                 </div>
             `;
-            
+
             this.setupSettingsListeners();
         }
     }
@@ -1639,120 +1639,120 @@ displaySearchResults(books) {
     }
 
     setupSettingsListeners() {
-    // Existing listeners
-    const saveBtn = DOMUtils.query('#save-settings');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', () => this.saveSettings());
-    }
+        // Existing listeners
+        const saveBtn = DOMUtils.query('#save-settings');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveSettings());
+        }
 
-    const exportBtn = DOMUtils.query('#export-library');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', () => this.exportLibrary());
-    }
+        const exportBtn = DOMUtils.query('#export-library');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportLibrary());
+        }
 
-    const importBtn = DOMUtils.query('#import-library');
-    if (importBtn) {
-        importBtn.addEventListener('click', () => this.importLibrary());
-    }
+        const importBtn = DOMUtils.query('#import-library');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => this.importLibrary());
+        }
 
-    const clearBtn = DOMUtils.query('#clear-library');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => this.clearLibrary());
-    }
+        const clearBtn = DOMUtils.query('#clear-library');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearLibrary());
+        }
 
-    // NEW: OpenAI API Key listeners
-    const apiKeyInput = DOMUtils.query('#openai-api-key');
-    const toggleVisibilityBtn = DOMUtils.query('#toggle-key-visibility');
-    const testKeyBtn = DOMUtils.query('#test-api-key');
+        // NEW: OpenAI API Key listeners
+        const apiKeyInput = DOMUtils.query('#openai-api-key');
+        const toggleVisibilityBtn = DOMUtils.query('#toggle-key-visibility');
+        const testKeyBtn = DOMUtils.query('#test-api-key');
 
-    // Toggle password visibility
-    if (toggleVisibilityBtn && apiKeyInput) {
-        toggleVisibilityBtn.addEventListener('click', () => {
-            const isPassword = apiKeyInput.type === 'password';
-            apiKeyInput.type = isPassword ? 'text' : 'password';
-            toggleVisibilityBtn.textContent = isPassword ? '🙈' : '👁️';
-        });
-    }
+        // Toggle password visibility
+        if (toggleVisibilityBtn && apiKeyInput) {
+            toggleVisibilityBtn.addEventListener('click', () => {
+                const isPassword = apiKeyInput.type === 'password';
+                apiKeyInput.type = isPassword ? 'text' : 'password';
+                toggleVisibilityBtn.textContent = isPassword ? '🙈' : '👁️';
+            });
+        }
 
-    // Enable/disable test button based on input
-    if (apiKeyInput && testKeyBtn) {
-        apiKeyInput.addEventListener('input', (e) => {
-            const hasValue = e.target.value.trim().length > 0;
-            testKeyBtn.disabled = !hasValue;
-        });
-    }
+        // Enable/disable test button based on input
+        if (apiKeyInput && testKeyBtn) {
+            apiKeyInput.addEventListener('input', (e) => {
+                const hasValue = e.target.value.trim().length > 0;
+                testKeyBtn.disabled = !hasValue;
+            });
+        }
 
-    // Test API key
-    if (testKeyBtn) {
-        testKeyBtn.addEventListener('click', async () => {
-            const apiKeyInput = DOMUtils.query('#openai-api-key');
-            const key = apiKeyInput.value.trim();
-            
-            if (!key) {
-                this.modalManager.showAlert('Error', 'Please enter an API key first');
-                return;
-            }
+        // Test API key
+        if (testKeyBtn) {
+            testKeyBtn.addEventListener('click', async () => {
+                const apiKeyInput = DOMUtils.query('#openai-api-key');
+                const key = apiKeyInput.value.trim();
 
-            await this.testOpenAIKey(key);
-        });
-    }
-}
+                if (!key) {
+                    this.modalManager.showAlert('Error', 'Please enter an API key first');
+                    return;
+                }
 
-    saveSettings() {
-    // Save regular settings
-    const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
-    const autoSave = DOMUtils.query('#auto-save')?.checked || false;
-    const notifications = DOMUtils.query('#notifications')?.checked || false;
-
-    this.appState.settings = {
-        readingSpeed,
-        autoSave,
-        notifications
-    };
-
-    // Save OpenAI API key
-    const apiKeyInput = DOMUtils.query('#openai-api-key');
-    const newKey = apiKeyInput?.value.trim();
-    
-    if (newKey && newKey.length > 0) {
-        const result = environmentConfig.setUserAPIKey(newKey);
-        
-        if (!result.success) {
-            this.modalManager.showAlert(
-                'Invalid API Key', 
-                result.message + (result.isDevelopmentPlaceholder ? 
-                    '\n\nPlease get your real API key from https://platform.openai.com/api-keys' : '')
-            );
-            return;
+                await this.testOpenAIKey(key);
+            });
         }
     }
 
-    // Save regular settings to storage
-    const result = this.storage.save('app_settings', this.appState.settings);
-    
-    if (result.success) {
-        this.modalManager.showAlert(
-            'Settings Saved! 🎉', 
-            'Your settings have been saved successfully!' + 
-            (newKey ? '\n\nAI analysis features are now available. The app will refresh to apply changes.' : ''),
-            () => {
-                if (newKey) {
-                    // Refresh to reinitialize services with new key
-                    window.location.reload();
-                }
+    saveSettings() {
+        // Save regular settings
+        const readingSpeed = parseInt(DOMUtils.query('#reading-speed')?.value) || 250;
+        const autoSave = DOMUtils.query('#auto-save')?.checked || false;
+        const notifications = DOMUtils.query('#notifications')?.checked || false;
+
+        this.appState.settings = {
+            readingSpeed,
+            autoSave,
+            notifications
+        };
+
+        // Save OpenAI API key
+        const apiKeyInput = DOMUtils.query('#openai-api-key');
+        const newKey = apiKeyInput?.value.trim();
+
+        if (newKey && newKey.length > 0) {
+            const result = environmentConfig.setUserAPIKey(newKey);
+
+            if (!result.success) {
+                this.modalManager.showAlert(
+                    'Invalid API Key',
+                    result.message + (result.isDevelopmentPlaceholder ?
+                        '\n\nPlease get your real API key from https://platform.openai.com/api-keys' : '')
+                );
+                return;
             }
-        );
-    } else {
-        this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
+        }
+
+        // Save regular settings to storage
+        const result = this.storage.save('app_settings', this.appState.settings);
+
+        if (result.success) {
+            this.modalManager.showAlert(
+                'Settings Saved! 🎉',
+                'Your settings have been saved successfully!' +
+                (newKey ? '\n\nAI analysis features are now available. The app will refresh to apply changes.' : ''),
+                () => {
+                    if (newKey) {
+                        // Refresh to reinitialize services with new key
+                        window.location.reload();
+                    }
+                }
+            );
+        } else {
+            this.modalManager.showAlert('Error', 'Failed to save settings: ' + result.message);
+        }
     }
-}
 
     exportLibrary() {
         try {
             const exportData = this.library.exportLibrary();
             const blob = new Blob([exportData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement('a');
             a.href = url;
             a.download = `book-buddy-library-${DateUtils.formatDate(new Date().toISOString()).replace(/\s/g, '-')}.json`;
@@ -1760,7 +1760,7 @@ displaySearchResults(books) {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
+
             this.modalManager.showAlert('Export Complete', 'Your library has been exported successfully!');
         } catch (error) {
             this.modalManager.showAlert('Export Error', 'Failed to export library: ' + error.message);
@@ -1771,18 +1771,18 @@ displaySearchResults(books) {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
-        
+
         input.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+
             try {
                 const text = await file.text();
                 const result = await this.library.importLibrary(text);
-                
+
                 if (result.success) {
                     this.modalManager.showAlert(
-                        'Import Complete', 
+                        'Import Complete',
                         `Successfully imported ${result.results.imported} books!`
                     );
                     this.refreshLibraryView();
@@ -1793,7 +1793,7 @@ displaySearchResults(books) {
                 this.modalManager.showAlert('Import Error', 'Failed to import library: ' + error.message);
             }
         };
-        
+
         input.click();
     }
 
@@ -1804,7 +1804,7 @@ displaySearchResults(books) {
             'Clear All',
             'Cancel'
         );
-        
+
         if (confirmed) {
             const result = this.library.clear();
             if (result.success) {
@@ -1852,14 +1852,14 @@ displaySearchResults(books) {
                 setTimeout(() => {
                     const uploadBtn = DOMUtils.query('#welcome-upload');
                     const searchBtn = DOMUtils.query('#welcome-search');
-                    
+
                     if (uploadBtn) {
                         uploadBtn.addEventListener('click', () => {
                             this.modalManager.closeAllModals();
                             this.showUploadModal();
                         });
                     }
-                    
+
                     if (searchBtn) {
                         searchBtn.addEventListener('click', () => {
                             this.modalManager.closeAllModals();
@@ -1878,104 +1878,104 @@ displaySearchResults(books) {
         }
     }
 
-    
-// ✅ NEW: Enrich a book by ID
-async enrichBook(bookId) {
-   const book = this.library.getBook(bookId);
-   if (!book) {
-       console.error('Book not found:', bookId);
-       return;
-   }
-   
-   console.log(`🔍 Starting enrichment for: "${book.title}"`);
-   
-   // Show loading
-   this.loadingStateManager.startLoading('book-enrichment', {
-       message: `Enriching "${book.title}"...`,
-       showGlobal: true
-   });
-   
-   try {
-       // Try ISBN first if available
-       let result;
-       if (book.metadata?.isbn13 || book.metadata?.isbn10) {
-           const isbn = book.metadata.isbn13 || book.metadata.isbn10;
-           console.log(`🔍 Using ISBN: ${isbn}`);
-           result = await this.enrichmentCoordinator.enrichByISBN(isbn);
-       } else {
-           console.log(`🔍 Using title search: ${book.title}`);
-           // Fall back to title search
-           const titleResult = await this.enrichmentCoordinator.enrichByTitle(book.title);
-           if (titleResult.success && titleResult.enrichedBooks.length > 0) {
-               result = {
-                   success: true,
-                   enrichedBook: titleResult.enrichedBooks[0]
-               };
-           } else {
-               result = titleResult;
-           }
-       }
-       
-       this.loadingStateManager.stopLoading('book-enrichment');
-       
-       if (result.success && result.enrichedBook) {
-           // Update the book with enriched data
-           const enrichedData = {
-               ...result.enrichedBook,
-               id: book.id, // Keep original ID
-               content: book.content, // Keep original content
-               currentPosition: book.currentPosition, // Keep reading progress
-               notes: book.notes,
-               highlights: book.highlights
-           };
-           
-           const updateResult = this.library.updateBook(bookId, enrichedData);
-           
-           if (updateResult.success) {
-               this.modalManager.showAlert(
-                   'Book Enriched! ✨',
-                   `"${book.title}" has been enhanced with data from ${result.enrichedBook.sources.join(' and ')}`
-               );
-               this.refreshLibraryView();
-               
-               // ✅ NEW: Update UI to show Enhanced badge
-               setTimeout(() => {
-                   const bookCard = document.querySelector(`[data-book-id="${bookId}"]`);
-                   if (bookCard) {
-                       // Remove enrich button
-                       const enrichBtn = bookCard.querySelector('.btn-enrich');
-                       if (enrichBtn) enrichBtn.remove();
-                       
-                       // Add Enhanced badge
-                       const actionsDiv = bookCard.querySelector('.book-actions');
-                       const deleteBtn = actionsDiv.querySelector('.btn-delete');
-                       
-                       const enhancedBadge = document.createElement('div');
-                       enhancedBadge.className = 'enriched-badge';
-                       enhancedBadge.innerHTML = '✨ Enhanced';
-                       enhancedBadge.title = `Enhanced with data from ${result.enrichedBook.sources.join(' and ')}`;
-                       enhancedBadge.style.cssText = 'display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border-radius: 4px; font-size: 0.75rem; font-weight: 500; margin-right: 0.5rem;';
-                       
-                       actionsDiv.insertBefore(enhancedBadge, deleteBtn);
-                   }
-               }, 100);
-               
-           } else {
-               this.modalManager.showAlert('Error', 'Failed to save enriched book data');
-           }
-       } else {
-           this.modalManager.showAlert(
-               'Enrichment Failed',
-               result.message || 'Could not find additional data for this book'
-           );
-       }
-       
-   } catch (error) {
-       this.loadingStateManager.stopLoading('book-enrichment');
-       console.error('Enrichment error:', error);
-       this.modalManager.showAlert('Error', `Enrichment failed: ${error.message}`);
-   }
-}
+
+    // ✅ NEW: Enrich a book by ID
+    async enrichBook(bookId) {
+        const book = this.library.getBook(bookId);
+        if (!book) {
+            console.error('Book not found:', bookId);
+            return;
+        }
+
+        console.log(`🔍 Starting enrichment for: "${book.title}"`);
+
+        // Show loading
+        this.loadingStateManager.startLoading('book-enrichment', {
+            message: `Enriching "${book.title}"...`,
+            showGlobal: true
+        });
+
+        try {
+            // Try ISBN first if available
+            let result;
+            if (book.metadata?.isbn13 || book.metadata?.isbn10) {
+                const isbn = book.metadata.isbn13 || book.metadata.isbn10;
+                console.log(`🔍 Using ISBN: ${isbn}`);
+                result = await this.enrichmentCoordinator.enrichByISBN(isbn);
+            } else {
+                console.log(`🔍 Using title search: ${book.title}`);
+                // Fall back to title search
+                const titleResult = await this.enrichmentCoordinator.enrichByTitle(book.title);
+                if (titleResult.success && titleResult.enrichedBooks.length > 0) {
+                    result = {
+                        success: true,
+                        enrichedBook: titleResult.enrichedBooks[0]
+                    };
+                } else {
+                    result = titleResult;
+                }
+            }
+
+            this.loadingStateManager.stopLoading('book-enrichment');
+
+            if (result.success && result.enrichedBook) {
+                // Update the book with enriched data
+                const enrichedData = {
+                    ...result.enrichedBook,
+                    id: book.id, // Keep original ID
+                    content: book.content, // Keep original content
+                    currentPosition: book.currentPosition, // Keep reading progress
+                    notes: book.notes,
+                    highlights: book.highlights
+                };
+
+                const updateResult = this.library.updateBook(bookId, enrichedData);
+
+                if (updateResult.success) {
+                    this.modalManager.showAlert(
+                        'Book Enriched! ✨',
+                        `"${book.title}" has been enhanced with data from ${result.enrichedBook.sources.join(' and ')}`
+                    );
+                    this.refreshLibraryView();
+
+                    // ✅ NEW: Update UI to show Enhanced badge
+                    setTimeout(() => {
+                        const bookCard = document.querySelector(`[data-book-id="${bookId}"]`);
+                        if (bookCard) {
+                            // Remove enrich button
+                            const enrichBtn = bookCard.querySelector('.btn-enrich');
+                            if (enrichBtn) enrichBtn.remove();
+
+                            // Add Enhanced badge
+                            const actionsDiv = bookCard.querySelector('.book-actions');
+                            const deleteBtn = actionsDiv.querySelector('.btn-delete');
+
+                            const enhancedBadge = document.createElement('div');
+                            enhancedBadge.className = 'enriched-badge';
+                            enhancedBadge.innerHTML = '✨ Enhanced';
+                            enhancedBadge.title = `Enhanced with data from ${result.enrichedBook.sources.join(' and ')}`;
+                            enhancedBadge.style.cssText = 'display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border-radius: 4px; font-size: 0.75rem; font-weight: 500; margin-right: 0.5rem;';
+
+                            actionsDiv.insertBefore(enhancedBadge, deleteBtn);
+                        }
+                    }, 100);
+
+                } else {
+                    this.modalManager.showAlert('Error', 'Failed to save enriched book data');
+                }
+            } else {
+                this.modalManager.showAlert(
+                    'Enrichment Failed',
+                    result.message || 'Could not find additional data for this book'
+                );
+            }
+
+        } catch (error) {
+            this.loadingStateManager.stopLoading('book-enrichment');
+            console.error('Enrichment error:', error);
+            this.modalManager.showAlert('Error', `Enrichment failed: ${error.message}`);
+        }
+    }
     // ✅ NEW: Get API Foundation statistics
     getAPIFoundationStats() {
         return {
@@ -1995,7 +1995,7 @@ async enrichBook(bookId) {
                 available: !!this.googleBooksAPI,
                 stats: this.googleBooksAPI?.getStats?.() || {}
             },
-            
+
             // ✅ NEW: Add responsive layout manager stats
             responsiveLayoutManager: {
                 available: !!this.responsiveLayoutManager,
@@ -2008,7 +2008,7 @@ async enrichBook(bookId) {
     // ✅ NEW: Cleanup method for proper resource management
     destroy() {
         console.log('🗑️ Cleaning up BookBuddyApp...');
-        
+
         // ✅ NEW: Clean up responsive layout manager
         if (this.responsiveLayoutManager) {
             this.responsiveLayoutManager.destroy();
@@ -2017,10 +2017,10 @@ async enrichBook(bookId) {
         if (this.advancedSearchInterface) {
             this.advancedSearchInterface.destroy();
         }
-        
+
         // Remove global event listeners
         eventBus.clear();
-        
+
         console.log('✅ BookBuddyApp cleanup completed');
     }
 

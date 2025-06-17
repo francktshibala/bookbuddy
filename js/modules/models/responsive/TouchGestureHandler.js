@@ -2,13 +2,13 @@
  * TouchGestureHandler - Advanced touch and gesture support for BookBuddy
  * Adds swipe, pinch, and other touch interactions to enhance mobile experience
  */
-import { eventBus, EVENTS } from '../../utils/EventBus.js';
-import { DOMUtils } from '../../utils/Helpers.js';
+import { eventBus, EVENTS } from '../../../utils/EventBus.js';
+import { DOMUtils } from '../../../utils/Helpers.js';
 
 export default class TouchGestureHandler {
     constructor(breakpointManager) {
         this.breakpointManager = breakpointManager;
-        
+
         // Touch state tracking
         this.touches = new Map();
         this.isEnabled = false;
@@ -19,13 +19,13 @@ export default class TouchGestureHandler {
             longPressTime: 500,
             doubleTapTime: 300
         };
-        
+
         // Gesture recognition state
         this.lastTap = 0;
         this.longPressTimer = null;
         this.isPinching = false;
         this.initialPinchDistance = 0;
-        
+
         console.log('👆 TouchGestureHandler initializing...');
         this.initialize();
     }
@@ -35,31 +35,31 @@ export default class TouchGestureHandler {
         if (this.isTouchDevice()) {
             this.enable();
         }
-        
+
         // Listen for breakpoint changes
         eventBus.on('responsive:breakpointChanged', (data) => {
             this.handleBreakpointChange(data.to);
         });
-        
+
         console.log('✅ TouchGestureHandler initialized');
     }
 
     enable() {
         if (this.isEnabled) return;
-        
+
         this.isEnabled = true;
         this.setupGlobalTouchHandlers();
         this.setupBookBuddyGestures();
-        
+
         console.log('👆 Touch gestures enabled');
     }
 
     disable() {
         if (!this.isEnabled) return;
-        
+
         this.isEnabled = false;
         this.removeGlobalTouchHandlers();
-        
+
         console.log('🚫 Touch gestures disabled');
     }
 
@@ -72,9 +72,9 @@ export default class TouchGestureHandler {
     }
 
     isTouchDevice() {
-        return 'ontouchstart' in window || 
-               navigator.maxTouchPoints > 0 || 
-               navigator.msMaxTouchPoints > 0;
+        return 'ontouchstart' in window ||
+            navigator.maxTouchPoints > 0 ||
+            navigator.msMaxTouchPoints > 0;
     }
 
     setupGlobalTouchHandlers() {
@@ -83,7 +83,7 @@ export default class TouchGestureHandler {
         document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
         document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
         document.addEventListener('touchcancel', this.handleTouchCancel.bind(this), { passive: true });
-        
+
         console.log('🔗 Global touch handlers setup');
     }
 
@@ -105,7 +105,7 @@ export default class TouchGestureHandler {
     setupLibraryGestures() {
         // Book card swipe gestures
         this.setupBookCardGestures();
-        
+
         // Library navigation gestures
         this.setupLibraryNavigationGestures();
     }
@@ -129,13 +129,13 @@ export default class TouchGestureHandler {
                 startTime: Date.now(),
                 element: bookCard
             };
-            
+
             this.touches.set('bookCard', touchData);
-            
+
             // Setup temporary listeners for this gesture
             const handleMove = (e) => this.handleBookCardTouchMove(e, touchData);
             const handleEnd = (e) => this.handleBookCardTouchEnd(e, touchData, handleMove, handleEnd);
-            
+
             document.addEventListener('touchmove', handleMove, { passive: true });
             document.addEventListener('touchend', handleEnd, { passive: true });
         }
@@ -146,7 +146,7 @@ export default class TouchGestureHandler {
             const touch = e.touches[0];
             const deltaX = touch.clientX - touchData.startX;
             const deltaY = touch.clientY - touchData.startY;
-            
+
             // Add visual feedback for horizontal swipes
             if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > Math.abs(deltaY)) {
                 touchData.element.style.transform = `translateX(${deltaX * 0.3}px)`;
@@ -159,41 +159,41 @@ export default class TouchGestureHandler {
         // Clean up listeners
         document.removeEventListener('touchmove', moveHandler);
         document.removeEventListener('touchend', endHandler);
-        
+
         const touch = e.changedTouches[0];
         const deltaX = touch.clientX - touchData.startX;
         const deltaY = touch.clientY - touchData.startY;
         const deltaTime = Date.now() - touchData.startTime;
         const velocity = Math.abs(deltaX) / deltaTime;
-        
+
         // Reset card position
         touchData.element.style.transform = '';
         touchData.element.style.transition = '';
-        
+
         // Detect swipe gestures
-        if (Math.abs(deltaX) > this.gestureThresholds.swipeDistance && 
+        if (Math.abs(deltaX) > this.gestureThresholds.swipeDistance &&
             velocity > this.gestureThresholds.swipeVelocity &&
             Math.abs(deltaX) > Math.abs(deltaY)) {
-            
+
             if (deltaX > 0) {
                 this.handleBookCardSwipeRight(touchData.element);
             } else {
                 this.handleBookCardSwipeLeft(touchData.element);
             }
         }
-        
+
         this.touches.delete('bookCard');
     }
 
     handleBookCardSwipeRight(bookCard) {
         // Swipe right - Quick read action
         console.log('👆 Book card swiped right - opening for reading');
-        
+
         const readBtn = bookCard.querySelector('.btn-read');
         if (readBtn) {
             // Visual feedback
             this.showSwipeAction(bookCard, 'Read', 'right');
-            
+
             // Trigger read action
             setTimeout(() => {
                 readBtn.click();
@@ -204,7 +204,7 @@ export default class TouchGestureHandler {
     handleBookCardSwipeLeft(bookCard) {
         // Swipe left - Quick action menu
         console.log('👆 Book card swiped left - showing quick actions');
-        
+
         this.showSwipeAction(bookCard, 'Actions', 'left');
         this.showBookCardActions(bookCard);
     }
@@ -230,7 +230,7 @@ export default class TouchGestureHandler {
                 animation: swipeActionShow 0.3s ease forwards;
             `
         });
-        
+
         // Add animation keyframes if not exists
         if (!document.querySelector('#swipe-action-styles')) {
             const style = document.createElement('style');
@@ -243,10 +243,10 @@ export default class TouchGestureHandler {
             `;
             document.head.appendChild(style);
         }
-        
+
         element.style.position = 'relative';
         element.appendChild(indicator);
-        
+
         // Remove indicator after animation
         setTimeout(() => {
             indicator.remove();
@@ -273,14 +273,14 @@ export default class TouchGestureHandler {
                 animation: fadeIn 0.2s ease;
             `
         });
-        
+
         // Add action buttons
         const actions = [
             { icon: '📋', text: 'Details', class: 'btn-details' },
             { icon: '🤖', text: 'AI Analysis', class: 'ai-analysis-btn' },
             { icon: '🗑️', text: 'Delete', class: 'btn-delete' }
         ];
-        
+
         actions.forEach(action => {
             const btn = DOMUtils.createElement('button', {
                 className: `quick-action-btn ${action.class}`,
@@ -300,7 +300,7 @@ export default class TouchGestureHandler {
                     transition: var(--transition);
                 `
             });
-            
+
             // Copy data attributes from original button
             const originalBtn = bookCard.querySelector(`.${action.class}`);
             if (originalBtn) {
@@ -309,17 +309,17 @@ export default class TouchGestureHandler {
                         btn.setAttribute(attr.name, attr.value);
                     }
                 });
-                
+
                 // Add click handler
                 btn.addEventListener('click', () => {
                     actionsOverlay.remove();
                     originalBtn.click();
                 });
             }
-            
+
             actionsOverlay.appendChild(btn);
         });
-        
+
         // Add close button
         const closeBtn = DOMUtils.createElement('button', {
             textContent: '✕',
@@ -340,13 +340,13 @@ export default class TouchGestureHandler {
                 justify-content: center;
             `
         });
-        
+
         closeBtn.addEventListener('click', () => actionsOverlay.remove());
         actionsOverlay.appendChild(closeBtn);
-        
+
         bookCard.style.position = 'relative';
         bookCard.appendChild(actionsOverlay);
-        
+
         // Auto-close after 3 seconds
         setTimeout(() => {
             if (actionsOverlay.parentNode) {
@@ -368,37 +368,37 @@ export default class TouchGestureHandler {
         let currentY = 0;
         let isPulling = false;
         const pullThreshold = 80;
-        
+
         container.addEventListener('touchstart', (e) => {
             if (container.scrollTop === 0 && e.touches.length === 1) {
                 startY = e.touches[0].clientY;
                 isPulling = true;
             }
         }, { passive: true });
-        
+
         container.addEventListener('touchmove', (e) => {
             if (!isPulling) return;
-            
+
             currentY = e.touches[0].clientY;
             const pullDistance = Math.max(0, currentY - startY);
-            
+
             if (pullDistance > 0 && container.scrollTop === 0) {
                 e.preventDefault();
-                
+
                 // Show pull indicator
                 this.updatePullIndicator(container, pullDistance, pullThreshold);
             }
         }, { passive: false });
-        
+
         container.addEventListener('touchend', (e) => {
             if (!isPulling) return;
-            
+
             const pullDistance = currentY - startY;
-            
+
             if (pullDistance > pullThreshold) {
                 this.triggerRefresh(container);
             }
-            
+
             this.hidePullIndicator(container);
             isPulling = false;
         }, { passive: true });
@@ -406,7 +406,7 @@ export default class TouchGestureHandler {
 
     updatePullIndicator(container, distance, threshold) {
         let indicator = container.querySelector('.pull-refresh-indicator');
-        
+
         if (!indicator) {
             indicator = DOMUtils.createElement('div', {
                 className: 'pull-refresh-indicator',
@@ -428,11 +428,11 @@ export default class TouchGestureHandler {
             container.style.position = 'relative';
             container.appendChild(indicator);
         }
-        
+
         const progress = Math.min(distance / threshold, 1);
         indicator.style.top = `${Math.max(-50, -50 + distance * 0.5)}px`;
         indicator.style.opacity = progress;
-        
+
         if (progress >= 1) {
             indicator.innerHTML = '🔄 Release to refresh';
             indicator.style.background = 'var(--success-color)';
@@ -449,13 +449,13 @@ export default class TouchGestureHandler {
 
     triggerRefresh(container) {
         console.log('🔄 Pull-to-refresh triggered');
-        
+
         // Emit refresh event
         eventBus.emit('responsive:pullToRefresh', {
             container: container.id,
             timestamp: Date.now()
         });
-        
+
         // Show loading state
         const indicator = container.querySelector('.pull-refresh-indicator');
         if (indicator) {
@@ -467,7 +467,7 @@ export default class TouchGestureHandler {
     setupSearchGestures() {
         // Enhanced search result navigation
         this.setupSearchResultGestures();
-        
+
         // Search filter gestures
         this.setupSearchFilterGestures();
     }
@@ -491,11 +491,11 @@ export default class TouchGestureHandler {
                 startTime: Date.now(),
                 element: searchCard
             };
-            
+
             // Setup temporary listeners
             const handleMove = (e) => this.handleSearchCardTouchMove(e, touchData);
             const handleEnd = (e) => this.handleSearchCardTouchEnd(e, touchData, handleMove, handleEnd);
-            
+
             document.addEventListener('touchmove', handleMove, { passive: true });
             document.addEventListener('touchend', handleEnd, { passive: true });
         }
@@ -505,7 +505,7 @@ export default class TouchGestureHandler {
         if (e.touches.length === 1) {
             const touch = e.touches[0];
             const deltaX = touch.clientX - touchData.startX;
-            
+
             // Visual feedback for swipe to add
             if (deltaX > 20) {
                 touchData.element.style.transform = `translateX(${Math.min(deltaX * 0.3, 50)}px)`;
@@ -518,20 +518,20 @@ export default class TouchGestureHandler {
     handleSearchCardTouchEnd(e, touchData, moveHandler, endHandler) {
         document.removeEventListener('touchmove', moveHandler);
         document.removeEventListener('touchend', endHandler);
-        
+
         const touch = e.changedTouches[0];
         const deltaX = touch.clientX - touchData.startX;
         const velocity = Math.abs(deltaX) / (Date.now() - touchData.startTime);
-        
+
         // Reset visual state
         touchData.element.style.transform = '';
         touchData.element.style.background = '';
         touchData.element.style.transition = '';
-        
+
         // Swipe right to add to library
-        if (deltaX > this.gestureThresholds.swipeDistance && 
+        if (deltaX > this.gestureThresholds.swipeDistance &&
             velocity > this.gestureThresholds.swipeVelocity) {
-            
+
             const addBtn = touchData.element.querySelector('.btn-add-book');
             if (addBtn && !addBtn.disabled) {
                 this.showSwipeAction(touchData.element, 'Added!', 'right');
@@ -551,16 +551,16 @@ export default class TouchGestureHandler {
     setupFilterPanelSwipe(container) {
         let startY = 0;
         let isCollapsed = false;
-        
+
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 startY = e.touches[0].clientY;
             }
         }, { passive: true });
-        
+
         container.addEventListener('touchend', (e) => {
             const deltaY = e.changedTouches[0].clientY - startY;
-            
+
             // Swipe up to collapse, down to expand
             if (Math.abs(deltaY) > this.gestureThresholds.swipeDistance) {
                 if (deltaY < 0 && !isCollapsed) {
@@ -578,7 +578,7 @@ export default class TouchGestureHandler {
         container.style.height = '60px';
         container.style.overflow = 'hidden';
         container.classList.add('collapsed');
-        
+
         // Add expand hint
         if (!container.querySelector('.expand-hint')) {
             const hint = DOMUtils.createElement('div', {
@@ -603,7 +603,7 @@ export default class TouchGestureHandler {
         container.style.height = '';
         container.style.overflow = '';
         container.classList.remove('collapsed');
-        
+
         const hint = container.querySelector('.expand-hint');
         if (hint) {
             hint.remove();
@@ -619,35 +619,35 @@ export default class TouchGestureHandler {
     setupReadingNavigationGestures() {
         const readingContent = DOMUtils.query('.reading-content-wrapper');
         if (!readingContent) return;
-        
+
         let startX = 0;
         let startY = 0;
-        
+
         readingContent.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
             }
         }, { passive: true });
-        
+
         readingContent.addEventListener('touchend', (e) => {
             const touch = e.changedTouches[0];
             const deltaX = touch.clientX - startX;
             const deltaY = touch.clientY - startY;
             const velocity = Math.abs(deltaX) / 300; // Approximate time
-            
+
             // Horizontal swipes for page navigation
-            if (Math.abs(deltaX) > Math.abs(deltaY) && 
+            if (Math.abs(deltaX) > Math.abs(deltaY) &&
                 Math.abs(deltaX) > this.gestureThresholds.swipeDistance &&
                 velocity > this.gestureThresholds.swipeVelocity) {
-                
+
                 if (deltaX > 0) {
                     this.handleReadingSwipeRight();
                 } else {
                     this.handleReadingSwipeLeft();
                 }
             }
-            
+
             // Vertical swipes for menu toggle
             else if (Math.abs(deltaY) > this.gestureThresholds.swipeDistance) {
                 if (deltaY < 0) {
@@ -682,7 +682,7 @@ export default class TouchGestureHandler {
     showReadingGestureIndicator(text) {
         const readingInterface = DOMUtils.query('.reading-interface');
         if (!readingInterface) return;
-        
+
         const indicator = DOMUtils.createElement('div', {
             className: 'reading-gesture-indicator',
             textContent: text,
@@ -702,9 +702,9 @@ export default class TouchGestureHandler {
                 animation: gestureIndicatorShow 0.5s ease forwards;
             `
         });
-        
+
         document.body.appendChild(indicator);
-        
+
         setTimeout(() => {
             indicator.style.opacity = '0';
             setTimeout(() => indicator.remove(), 200);
@@ -730,44 +730,44 @@ export default class TouchGestureHandler {
     setupReadingZoomGestures() {
         const readingContent = DOMUtils.query('.book-content');
         if (!readingContent) return;
-        
+
         let initialDistance = 0;
         let initialFontSize = 16;
-        
+
         readingContent.addEventListener('touchstart', (e) => {
             if (e.touches.length === 2) {
                 this.isPinching = true;
                 initialDistance = this.getDistance(e.touches[0], e.touches[1]);
-                
+
                 // Get current font size
                 const currentSize = window.getComputedStyle(readingContent).fontSize;
                 initialFontSize = parseFloat(currentSize);
             }
         }, { passive: true });
-        
+
         readingContent.addEventListener('touchmove', (e) => {
             if (this.isPinching && e.touches.length === 2) {
                 e.preventDefault();
-                
+
                 const currentDistance = this.getDistance(e.touches[0], e.touches[1]);
                 const scale = currentDistance / initialDistance;
-                
+
                 // Calculate new font size with limits
                 const newFontSize = Math.max(12, Math.min(24, initialFontSize * scale));
                 readingContent.style.fontSize = `${newFontSize}px`;
-                
+
                 // Show zoom indicator
                 this.showZoomIndicator(Math.round(newFontSize));
             }
         }, { passive: false });
-        
+
         readingContent.addEventListener('touchend', (e) => {
             if (this.isPinching) {
                 this.isPinching = false;
-                
+
                 // Hide zoom indicator
                 this.hideZoomIndicator();
-                
+
                 // Save font size preference
                 const finalSize = parseFloat(readingContent.style.fontSize);
                 eventBus.emit('reading:fontSizeChanged', { fontSize: finalSize });
@@ -783,7 +783,7 @@ export default class TouchGestureHandler {
 
     showZoomIndicator(fontSize) {
         let indicator = DOMUtils.query('.zoom-indicator');
-        
+
         if (!indicator) {
             indicator = DOMUtils.createElement('div', {
                 className: 'zoom-indicator',
@@ -802,7 +802,7 @@ export default class TouchGestureHandler {
             });
             document.body.appendChild(indicator);
         }
-        
+
         indicator.textContent = `${fontSize}px`;
         indicator.style.opacity = '1';
     }
@@ -833,10 +833,10 @@ export default class TouchGestureHandler {
                 startTime: Date.now(),
                 element: modal
             };
-            
+
             const handleMove = (e) => this.handleModalTouchMove(e, touchData);
             const handleEnd = (e) => this.handleModalTouchEnd(e, touchData, handleMove, handleEnd);
-            
+
             document.addEventListener('touchmove', handleMove, { passive: true });
             document.addEventListener('touchend', handleEnd, { passive: true });
         }
@@ -846,7 +846,7 @@ export default class TouchGestureHandler {
         if (e.touches.length === 1) {
             const touch = e.touches[0];
             const deltaY = touch.clientY - touchData.startY;
-            
+
             // Only allow downward swipes
             if (deltaY > 0) {
                 const progress = Math.min(deltaY / 200, 1);
@@ -859,15 +859,15 @@ export default class TouchGestureHandler {
     handleModalTouchEnd(e, touchData, moveHandler, endHandler) {
         document.removeEventListener('touchmove', moveHandler);
         document.removeEventListener('touchend', endHandler);
-        
+
         const touch = e.changedTouches[0];
         const deltaY = touch.clientY - touchData.startY;
         const velocity = deltaY / (Date.now() - touchData.startTime);
-        
+
         // Reset modal position
         touchData.element.style.transform = '';
         touchData.element.style.opacity = '';
-        
+
         // Dismiss modal if swiped down significantly
         if (deltaY > 100 || velocity > 0.5) {
             const closeBtn = touchData.element.querySelector('.modal-close');
@@ -888,7 +888,7 @@ export default class TouchGestureHandler {
                 startTime: Date.now()
             });
         });
-        
+
         // Setup long press detection for single touch
         if (e.touches.length === 1) {
             this.setupLongPressDetection(e.touches[0]);
@@ -909,12 +909,12 @@ export default class TouchGestureHandler {
             clearTimeout(this.longPressTimer);
             this.longPressTimer = null;
         }
-        
+
         // Detect double tap
         if (e.changedTouches.length === 1) {
             this.detectDoubleTap(e.changedTouches[0]);
         }
-        
+
         // Clean up touch tracking
         Array.from(e.changedTouches).forEach((touch, index) => {
             this.touches.delete(`touch_${index}`);
@@ -927,7 +927,7 @@ export default class TouchGestureHandler {
             clearTimeout(this.longPressTimer);
             this.longPressTimer = null;
         }
-        
+
         this.touches.clear();
         this.isPinching = false;
     }
@@ -940,17 +940,17 @@ export default class TouchGestureHandler {
 
     handleLongPress(touch) {
         console.log('👆 Long press detected');
-        
+
         // Find element under touch
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
+
         // Emit long press event
         eventBus.emit('responsive:longPress', {
             element,
             x: touch.clientX,
             y: touch.clientY
         });
-        
+
         // Provide haptic feedback if available
         if (navigator.vibrate) {
             navigator.vibrate(50);
@@ -959,25 +959,25 @@ export default class TouchGestureHandler {
 
     detectDoubleTap(touch) {
         const now = Date.now();
-        
+
         if (now - this.lastTap < this.gestureThresholds.doubleTapTime) {
             console.log('👆 Double tap detected');
-            
+
             const element = document.elementFromPoint(touch.clientX, touch.clientY);
-            
+
             eventBus.emit('responsive:doubleTap', {
                 element,
                 x: touch.clientX,
                 y: touch.clientY
             });
         }
-        
+
         this.lastTap = now;
     }
 
     // Public API methods
     getTouchEnabled() {
-    return this.isEnabled;
+        return this.isEnabled;
     }
 
     getGestureThresholds() {
@@ -1002,13 +1002,13 @@ export default class TouchGestureHandler {
     // Cleanup
     destroy() {
         this.disable();
-        
+
         if (this.longPressTimer) {
             clearTimeout(this.longPressTimer);
         }
-        
+
         this.touches.clear();
-        
+
         console.log('🗑️ TouchGestureHandler destroyed');
     }
 }
