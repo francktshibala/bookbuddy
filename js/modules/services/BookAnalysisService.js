@@ -369,7 +369,12 @@ export default class BookAnalysisService {
         return {
             success: true,
             content: analysisResult.content,
-            // ... rest of return object
+            analysisType: analysisResult.analysisType,
+            model: analysisResult.model,
+            confidence: analysisResult.confidence,
+            usage: analysisResult.usage,
+            performance: analysisResult.performance,
+            metadata: analysisResult.metadata
         };
     } catch (error) {
         console.error(`❌ Single analysis failed:`, error);
