@@ -698,7 +698,25 @@ export default class AnalyticsDashboard {
             renderTime: this.lastRenderTime || 0
         };
     }
-    
+     
+
+    render(container) {
+    const containerId = typeof container === 'string' ? container : `#${container.id}`;
+    return this.initialize(containerId);
+}
+
+    refresh() {
+        return this.updateDashboard();
+    }
+
+    getAnalytics() {
+    return this.analyticsDataCollector?.getBasicStats() || null;
+}
+
+    updateConfig(config) {
+    Object.assign(this, config);
+    return { success: true };
+}
     /**
      * Cleanup dashboard resources
      */
