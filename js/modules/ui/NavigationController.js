@@ -77,16 +77,8 @@ export default class NavigationController {
 }
 
     setupMobileMenu() {
-        const toggleButton = DOMUtils.query('.nav-toggle');
-        const navMenu = DOMUtils.query('.nav-menu');
-
-        if (toggleButton && navMenu) {
-            toggleButton.addEventListener('click', () => {
-                DOMUtils.toggleClass(navMenu, 'active');
-                DOMUtils.toggleClass(toggleButton, 'active');
-            });
-        }
-
+    const toggleButton = DOMUtils.query('.nav-toggle');
+    const navMenu = DOMUtils.query('.nav-menu');
 
     if (toggleButton && navMenu) {
         // Add touch support
@@ -95,7 +87,7 @@ export default class NavigationController {
             setTimeout(() => toggleButton.classList.remove('touch-active'), 150);
         }, { passive: true });
         
-        // Enhanced click handler
+        // Single enhanced click handler
         toggleButton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -103,7 +95,7 @@ export default class NavigationController {
             DOMUtils.toggleClass(toggleButton, 'active');
         });
     }
-    }
+}
 
     setupEventListeners() {
         // Navigation click handlers
