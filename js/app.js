@@ -46,6 +46,7 @@ import BreakpointManager from './modules/responsive/BreakpointManager.js';
 import MobileNavigationController from './modules/responsive/MobileNavigationController.js';
 import TouchGestureHandler from './modules/responsive/TouchGestureHandler.js';
 import ProgressTracker from './modules/ui/ProgressTracker.js';
+import ErrorBoundary from './modules/ui/ErrorBoundary.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -112,6 +113,7 @@ class BookBuddyApp {
         this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
         this.responsiveLayoutManager = null; // Will be initialized after navigationController and modalManager are ready
         this.progressTracker = new ProgressTracker();
+        this.errorBoundary = new ErrorBoundary({ showUserFriendlyMessages: true, catchGlobalErrors: true });
         
     try {
         this.bookCoverManager = new BookCoverManager();
@@ -2066,3 +2068,4 @@ window.BreakpointManager = BreakpointManager;
 window.MobileNavigationController = MobileNavigationController;
 window.TouchGestureHandler = TouchGestureHandler;
 window.ProgressTracker = ProgressTracker; // Make globally available
+window.ErrorBoundary = ErrorBoundary;
