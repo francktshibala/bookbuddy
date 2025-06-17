@@ -201,6 +201,11 @@ export default class OpenAIService extends APIService {
                 estimatedCost: costEstimate.cost
             });
 
+                        // Emit API progress
+            this.eventBus.emit(EVENTS.API_REQUEST_STARTED, {
+                requestId: apiRequest.requestId, message: 'Sending API request...', model: preparedRequest.model
+            });
+
             // Make API call
             const apiResponse = await this.request('/chat/completions', {
                 method: 'POST',
@@ -232,6 +237,11 @@ export default class OpenAIService extends APIService {
                     success: true,
                     usage: result.usage,
                     responseTime
+                });
+
+                // Emit API completion  
+                this.eventBus.emit(EVENTS.API_REQUEST_COMPLETED, {
+                    requestId: apiRequest.requestId, success: true, responseTime
                 });
 
                 return result;

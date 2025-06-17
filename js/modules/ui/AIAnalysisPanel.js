@@ -15,6 +15,7 @@ export default class AIAnalysisPanel {
         this.bookAnalysisService = bookAnalysisService;
         this.eventBus = eventBusInstance || eventBus;
         this.loadingStateManager = loadingStateManager;
+        this.progressTracker = window.bookBuddyApp?.progressTracker || null;
         
         // Configuration
         this.config = {
@@ -280,11 +281,10 @@ export default class AIAnalysisPanel {
             this.state.isProcessing = true;
             this.showProgressSection();
             
-            // Start loading state
-            if (this.loadingStateManager) {
-                this.loadingStateManager.startLoading('ai-analysis', {
-                    message: `Analyzing ${analysisType}...`,
-                    type: 'ai-analysis'
+            // Start loading state  
+            if (this.progressTracker) {
+                this.progressController = this.progressTracker.startProgress(`analysis_${this.state.currentBook.id}_${analysisType}`, {
+                    title: `AI Analysis: ${analysisType}`, message: `Starting ${analysisType} analysis...`, target: document.querySelector('.progress-section')
                 });
             }
             
@@ -342,7 +342,7 @@ export default class AIAnalysisPanel {
             
             // Stop loading state
             if (this.loadingStateManager) {
-                this.loadingStateManager.stopLoading('ai-analysis');
+                if (this.progressController) this.progressController.complete('Analysis completed!');
             }
         }
     }

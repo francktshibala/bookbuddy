@@ -26,6 +26,7 @@ import BookListRenderer from './modules/ui/BookListRenderer.js';
 import ReadingInterface from './modules/ui/ReadingInterface.js';
 import AdvancedSearchInterface from './modules/ui/AdvancedSearchInterface.js';
 
+
 // ✅ NEW: Import Step 9 components
 import ErrorNotificationManager from './modules/ui/ErrorNotificationManager.js';
 import LoadingStateManager from './modules/ui/LoadingStateManager.js';
@@ -44,6 +45,7 @@ import ResponsiveLayoutManager from './modules/responsive/ResponsiveLayoutManage
 import BreakpointManager from './modules/responsive/BreakpointManager.js';
 import MobileNavigationController from './modules/responsive/MobileNavigationController.js';
 import TouchGestureHandler from './modules/responsive/TouchGestureHandler.js';
+import ProgressTracker from './modules/ui/ProgressTracker.js';
 // ✅ Make EventBus globally available for testing
 window.eventBus = eventBus;
 window.EVENTS = EVENTS;
@@ -109,6 +111,7 @@ class BookBuddyApp {
         this.readingInterface = new ReadingInterface();
         this.searchResultsRenderer = new SearchResultsRenderer(this.bookCoverManager);
         this.responsiveLayoutManager = null; // Will be initialized after navigationController and modalManager are ready
+        this.progressTracker = new ProgressTracker();
         
     try {
         this.bookCoverManager = new BookCoverManager();
@@ -2062,3 +2065,4 @@ window.ResponsiveLayoutManager = ResponsiveLayoutManager;
 window.BreakpointManager = BreakpointManager;
 window.MobileNavigationController = MobileNavigationController;
 window.TouchGestureHandler = TouchGestureHandler;
+window.ProgressTracker = ProgressTracker; // Make globally available

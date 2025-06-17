@@ -342,33 +342,32 @@ export default class BookAnalysisService {
      * Perform analysis on a single chunk/book
      */
     async performSingleAnalysis(bookData, analysisType, options, analysisId) {
-        try {
-            // Generate analysis prompt using OpenAI service
-            const analysisResult = await this.openAIService.analyzeBook(bookData, analysisType, options);
+    try {
+        this.eventBus.emit(EVENTS.AI_ANALYSIS_PROGRESS, {
+            bookId: bookData.id, analysisType, progress: 25, stage: 'sending', message: 'Sending request to AI...'
+        });
+        
+        const analysisResult = await this.openAIService.analyzeBook(bookData, analysisType, options);
 
-            if (!analysisResult.success) {
-                throw new Error(`OpenAI analysis failed: ${analysisResult.error}`);
-            }
-
-            return {
-                success: true,
-                content: analysisResult.content,
-                analysisType,
-                confidence: analysisResult.confidence || 0.85,
-                metadata: {
-                    model: analysisResult.model || 'gpt-3.5-turbo',
-                    tokens: analysisResult.usage?.totalTokens || 0,
-                    cost: analysisResult.usage?.cost || 0,
-                    processingMethod: 'single_chunk',
-                    ...analysisResult.metadata
-                }
-            };
-
-        } catch (error) {
-            console.error(`❌ Single analysis failed:`, error);
-            throw error;
+        if (!analysisResult.success) {
+            throw new Error(`OpenAI analysis failed: ${analysisResult.error}`);
         }
+
+        // Move this BEFORE return
+        this.eventBus.emit(EVENTS.AI_ANALYSIS_PROGRESS, {
+            bookId: bookData.id, analysisType, progress: 90, stage: 'processing', message: 'Processing AI response...'
+        });
+
+        return {
+            success: true,
+            content: analysisResult.content,
+            // ... rest of return object
+        };
+    } catch (error) {
+        console.error(`❌ Single analysis failed:`, error);
+        throw error;
     }
+}
 
     /**
      * Perform analysis on chunked content
